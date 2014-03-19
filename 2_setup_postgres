@@ -1,0 +1,22 @@
+- log as postgres
+charles@s17101495:~$ sudo -i -u postgres
+
+- launch psql
+postgres@s17101495:~$ psql
+
+- create user and table
+postgres=# CREATE USER charles;
+CREATE ROLE
+postgres=# ALTER ROLE charles WITH CREATEDB ;
+ALTER ROLE
+postgres=# CREATE DATABASE djangodb OWNER charles ;
+CREATE DATABASE
+postgres=# ALTER USER charles WITH ENCRYPTED PASSWORD 'sc39cf63' ;
+ALTER ROLE
+postgres=# \q
+postgres@s17101495:~$ exit
+
+
+configure phppgadmin (see https://help.ubuntu.com/community/phpPgAdmin)
+- edit /etc/phppgadmin/apache.conf to allow all (and comment 127.0.0.1)
+- reload and restart apache

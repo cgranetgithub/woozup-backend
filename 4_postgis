@@ -1,0 +1,3 @@
+createdb geoevent
+psql geoevent
+CREATE EXTENSION postgis;

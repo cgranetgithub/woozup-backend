@@ -1,0 +1,2 @@
+sudo apt-get install python-pip postgresql git phppgadmin postgresql-server-dev-9.1 python-dev 
+sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.1-postgis python-psycopg2 libgdal1 python-gdal libgeos-3.3.3 proj-bin proj-data libxml2 libjson0 

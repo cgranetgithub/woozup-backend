@@ -3,12 +3,14 @@ from django.contrib.auth.models import User
 
 class EventCategory(models.Model):
     title       = models.CharField(max_length=50)
+    short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
 
 class EventType(models.Model):
     title       = models.CharField(max_length=50)
+    short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
-    category    = models.ForeignKey(EventCategory)
+    category    = models.ManyToManyField(EventCategory)
 
 class Event(models.Model):
     title        = models.CharField(max_length=50)

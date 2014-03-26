@@ -3,7 +3,7 @@
     "model": "event.eventcategory",
     "pk": 1,
     "fields": {
-      "title": "culture",
+      "title": "me cultiver",
       "short_name": "culture"
     }
   },
@@ -11,8 +11,85 @@
     "model": "event.eventcategory",
     "pk": 2,
     "fields": {
-      "title": "sport",
+      "title": "faire du sport",
       "short_name": "sport"
+    }
+  },
+  {
+    "model": "event.eventcategory",
+    "pk": 3,
+    "fields": {
+      "title": "sortir",
+      "short_name": "sortir"
+    }
+  },
+  {
+    "model": "event.eventcategory",
+    "pk": 4,
+    "fields": {
+      "title": "m'aérer",
+      "short_name": "extérieur"
+    }
+  },
+  {
+    "model": "event.eventcategory",
+    "pk": 5,
+    "fields": {
+      "title": "déjeuner, diner",
+      "short_name": "repas"
+    }
+  },
+  {
+    "model": "event.eventcategory",
+    "pk": 6,
+    "fields": {
+      "title": "boire un verre, prendre un café",
+      "short_name": "verre"
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 1,
+    "fields": {
+      "title": "boire une bière",
+      "short_name": "bière",
+      "category": [3, 6]
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 2,
+    "fields": {
+      "title": "prendre un café",
+      "short_name": "café",
+      "category": [3, 6]
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 3,
+    "fields": {
+      "title": "salon de thé",
+      "short_name": "thé",
+      "category": [6]
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 4,
+    "fields": {
+      "title": "en terrasse",
+      "short_name": "terrasse",
+      "category": [6]
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 5,
+    "fields": {
+      "title": "boire un verre",
+      "short_name": "verre",
+      "category": [3, 6]
     }
   }
 ]

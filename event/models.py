@@ -5,12 +5,14 @@ class EventCategory(models.Model):
     title       = models.CharField(max_length=50)
     short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
+    order       = models.PositiveSmallIntegerField(blank=True, null=True)
 
 class EventType(models.Model):
     title       = models.CharField(max_length=50)
     short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
     category    = models.ManyToManyField(EventCategory)
+    order       = models.PositiveSmallIntegerField(blank=True, null=True)
 
 class Event(models.Model):
     title        = models.CharField(max_length=50)

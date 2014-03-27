@@ -66,12 +66,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 from s3_storage import *
-TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, 'templates'),
-)
-LOCALE_PATHS = (
-    os.path.join(BASE_DIR, 'locale'),
-)
+
+#TEMPLATE_DIRS = (
+    #os.path.join(BASE_DIR, 'templates'),
+#)
+#LOCALE_PATHS = (
+    #os.path.join(BASE_DIR, 'locale'),
+#)
 
 # Email
 EMAIL_HOST = "smtp.sendgrid.net"

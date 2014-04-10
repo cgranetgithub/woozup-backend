@@ -1,5 +1,53 @@
 [
   {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "username": "john",
+      "password": "john"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "username": "jack",
+      "password": "jack"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "username": "dick",
+      "password": "dick"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "username": "alex",
+      "password": "alex"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "username": "chuck",
+      "password": "chuck"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "username": "mike",
+      "password": "mike"
+    }
+  },
+  {
     "model": "event.eventcategory",
     "pk": 1,
     "fields": {
@@ -91,5 +139,96 @@
       "short_name": "verre",
       "category": [3, 6]
     }
+  },
+  {
+    "model": "event.event",
+    "pk": 1,
+    "fields": {
+      "title": "let's have a beer",
+      "start_date": "2014-04-11",
+      "start_time": "18:00",
+      "end_date": "2014-04-11",
+      "end_time": "19:00",
+      "event_type": 1,
+      "owner": 1,
+      "participants": [2, 3],
+      "position": "48.790367,2.055572"
+    }
+  },
+  {
+    "model": "event.event",
+    "pk": 2,
+    "fields": {
+      "title": "cofee time?",
+      "start_date": "2014-04-12",
+      "start_time": "14:00",
+      "end_date": "2014-04-12",
+      "end_time": "15:00",
+      "event_type": 2,
+      "owner": 2,
+      "participants": [3, 4],
+      "position": "48.890367,2.155572"
+    }
+  },
+  {
+    "model": "event.event",
+    "pk": 3,
+    "fields": {
+      "title": "with a milk cloud",
+      "start_date": "2014-04-13",
+      "start_time": "14:00",
+      "end_date": "2014-04-13",
+      "end_time": "15:00",
+      "event_type": 3,
+      "owner": 3,
+      "participants": [1, 5],
+      "position": "47.990367,3.155572"
+    }
+  },
+  {
+    "model": "event.event",
+    "pk": 4,
+    "fields": {
+      "title": "cup of tea",
+      "start_date": "2014-04-14",
+      "start_time": "14:00",
+      "end_date": "2014-04-14",
+      "end_time": "15:00",
+      "event_type": 3,
+      "owner": 3,
+      "participants": [4, 5],
+      "position": "47.990367,3.155572"
+    }
+  },
+  {
+    "model": "event.event",
+    "pk": 5,
+    "fields": {
+      "title": "au soleil",
+      "start_date": "2014-04-15",
+      "start_time": "14:00",
+      "end_date": "2014-04-15",
+      "end_time": "15:00",
+      "event_type": 4,
+      "owner": 2,
+      "participants": [3, 5],
+      "position": "48.120367,2.555572"
+    }
+  },
+  {
+    "model": "event.event",
+    "pk": 6,
+    "fields": {
+      "title": "drink?",
+      "start_date": "2014-04-16",
+      "start_time": "14:00",
+      "end_date": "2014-04-16",
+      "end_time": "15:00",
+      "event_type": 5,
+      "owner": 1,
+      "participants": [2, 5],
+      "position": "48.020367,3.355572"
+    }
   }
 ]
+

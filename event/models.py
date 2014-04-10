@@ -16,7 +16,8 @@ class EventType(models.Model):
 
 class Event(models.Model):
     title        = models.CharField(max_length=50)
-    comment      = models.CharField(max_length=255)
+    comment      = models.CharField(max_length=255, blank=True)
+    special      = models.BooleanField(default=False)
     start_date   = models.DateField()
     start_time   = models.TimeField()
     end_date     = models.DateField()

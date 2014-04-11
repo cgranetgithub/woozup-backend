@@ -145,10 +145,8 @@
     "pk": 1,
     "fields": {
       "title": "let's have a beer",
-      "start_date": "2014-04-11",
-      "start_time": "18:00",
-      "end_date": "2014-04-11",
-      "end_time": "19:00",
+      "start": "2014-04-11T18:00",
+      "end": "2014-04-11T19:00",
       "event_type": 1,
       "owner": 1,
       "participants": [2, 3],
@@ -160,10 +158,8 @@
     "pk": 2,
     "fields": {
       "title": "cofee time?",
-      "start_date": "2014-04-12",
-      "start_time": "14:00",
-      "end_date": "2014-04-12",
-      "end_time": "15:00",
+      "start": "2014-04-12T14:00",
+      "end": "2014-04-12T15:00",
       "event_type": 2,
       "owner": 2,
       "participants": [3, 4],
@@ -175,10 +171,8 @@
     "pk": 3,
     "fields": {
       "title": "with a milk cloud",
-      "start_date": "2014-04-13",
-      "start_time": "14:00",
-      "end_date": "2014-04-13",
-      "end_time": "15:00",
+      "start": "2014-04-13T14:00",
+      "end": "2014-04-13T15:00",
       "event_type": 3,
       "owner": 3,
       "participants": [1, 5],
@@ -190,10 +184,7 @@
     "pk": 4,
     "fields": {
       "title": "cup of tea",
-      "start_date": "2014-04-14",
-      "start_time": "14:00",
-      "end_date": "2014-04-14",
-      "end_time": "15:00",
+      "start": "2014-04-14T14:00",
       "event_type": 3,
       "owner": 3,
       "participants": [4, 5],
@@ -205,10 +196,7 @@
     "pk": 5,
     "fields": {
       "title": "au soleil",
-      "start_date": "2014-04-15",
-      "start_time": "14:00",
-      "end_date": "2014-04-15",
-      "end_time": "15:00",
+      "start": "2014-04-15T14:00",
       "event_type": 4,
       "owner": 2,
       "participants": [3, 5],
@@ -220,13 +208,9 @@
     "pk": 6,
     "fields": {
       "title": "drink?",
-      "start_date": "2014-04-16",
-      "start_time": "14:00",
-      "end_date": "2014-04-16",
-      "end_time": "15:00",
+      "start": "2014-04-16T14:00",
       "event_type": 5,
       "owner": 1,
-      "participants": [2, 5],
       "position": "48.020367,3.355572"
     }
   }

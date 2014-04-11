@@ -15,13 +15,11 @@ class EventType(models.Model):
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
 
 class Event(models.Model):
-    title        = models.CharField(max_length=50)
+    title        = models.CharField(max_length=50, blank=True)
     comment      = models.CharField(max_length=255, blank=True)
     special      = models.BooleanField(default=False)
-    start_date   = models.DateField()
-    start_time   = models.TimeField()
-    end_date     = models.DateField()
-    end_time     = models.TimeField()
+    start        = models.DateTimeField()
+    end          = models.DateTimeField(blank=True, null=True)
     event_type   = models.ForeignKey(EventType)
     owner        = models.ForeignKey(User, related_name='events_as_owner')
     participants = models.ManyToManyField(User, related_name='events_as_participant')

@@ -68,7 +68,8 @@
     "pk": 1,
     "fields": {
       "title": "me cultiver",
-      "short_name": "culture"
+      "short_name": "culture",
+      "icon": "glyph/icon_6485.png"
     }
   },
   {
@@ -76,7 +77,8 @@
     "pk": 2,
     "fields": {
       "title": "faire du sport",
-      "short_name": "sport"
+      "short_name": "sport",
+      "icon": "glyph/icon_503.png"
     }
   },
   {
@@ -84,7 +86,8 @@
     "pk": 3,
     "fields": {
       "title": "faire la fête",
-      "short_name": "fête"
+      "short_name": "fête",
+      "icon": "glyph/icon_29735.png"
     }
   },
   {
@@ -92,7 +95,8 @@
     "pk": 4,
     "fields": {
       "title": "plein air",
-      "short_name": "plein air"
+      "short_name": "plein air",
+      "icon": "glyph/icon_30541.png"
     }
   },
   {
@@ -100,7 +104,8 @@
     "pk": 5,
     "fields": {
       "title": "déjeuner, diner",
-      "short_name": "repas"
+      "short_name": "repas",
+      "icon": "glyph/icon_8907_2.png"
     }
   },
   {
@@ -108,7 +113,8 @@
     "pk": 6,
     "fields": {
       "title": "boire un verre, un café",
-      "short_name": "verre"
+      "short_name": "verre",
+      "icon": "glyph/icon_16.png"
     }
   },
   {

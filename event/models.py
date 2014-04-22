@@ -6,6 +6,7 @@ class EventCategory(models.Model):
     short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
+    icon        = models.ImageField(upload_to='glyph')
     def __unicode__(self):
         return self.title
  
@@ -15,8 +16,14 @@ class EventType(models.Model):
     description = models.CharField(max_length=255)
     category    = models.ManyToManyField(EventCategory)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
+    icon        = models.ImageField(upload_to='glyph',
+                                    blank=True, null=True)
     def __unicode__(self):
         return self.title
+
+def image_path(instance, filename):
+    filename_base, filename_ext = os.path.splitext(filename)
+    return 'event/%d%s'%(instance.id, filename_ext.lower())
 
 class Event(models.Model):
     title        = models.CharField(max_length=50, blank=True)
@@ -30,5 +37,7 @@ class Event(models.Model):
                                           related_name='events_as_participant', 
                                           blank=True, null=True)
     position     = models.CharField(max_length=255) # !!! WARNING to be changed
+    image        = models.ImageField(upload_to=image_path,
+                                     blank=True, null=True)
     def __unicode__(self):
         return self.title + ' (' + unicode(self.event_type) + ')'

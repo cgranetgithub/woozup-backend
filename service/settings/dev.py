@@ -2,6 +2,7 @@ from prod import *
 
 DEBUG = True
 TEMPLATE_DEBUG = True
+TASTYPIE_FULL_DEBUG = True
 
 SECRET_KEY = '(jut!-c_9j^a==v$+6(-w4x8v#%*ljd7y3h0w-=*d5r@f5hy-z'
 

@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "username": "john",
-      "password": "john"
+      "password": "pbkdf2_sha256$12000$qxjEZbpLXgK6$cTyS03Qlokz/KcajEBXraFIJgHMF9VFXXtF4T0hFSfE="
     }
   },
   {
@@ -12,7 +12,7 @@
     "pk": 2,
     "fields": {
       "username": "jack",
-      "password": "jack"
+      "password": "pbkdf2_sha256$12000$kEFcEsegQIFW$2Tw1KIq0gy+dY73kZpl6VSUUXXQ/gU+go9vKoOHlyNY="
     }
   },
   {
@@ -20,7 +20,7 @@
     "pk": 3,
     "fields": {
       "username": "dick",
-      "password": "dick"
+      "password": "pbkdf2_sha256$12000$GhREXYpEZka5$UIrlkurVeRJlkbQwzpVfUCQM4VCTPvBB3z1dIIgKKDo="
     }
   },
   {
@@ -28,7 +28,7 @@
     "pk": 4,
     "fields": {
       "username": "alex",
-      "password": "alex"
+      "password": "pbkdf2_sha256$12000$54OzPILmENkK$g7dcYHMyfKhcQPtspoT/wr9B7Jj+Awk/j63cQTbzv5o="
     }
   },
   {
@@ -45,6 +45,22 @@
     "fields": {
       "username": "mike",
       "password": "mike"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 7,
+    "fields": {
+      "username": "charles",
+      "password": "charles"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 8,
+    "fields": {
+      "username": "michael",
+      "password": "michael"
     }
   },
   {
@@ -67,16 +83,16 @@
     "model": "event.eventcategory",
     "pk": 3,
     "fields": {
-      "title": "sortir",
-      "short_name": "sortir"
+      "title": "faire la fête",
+      "short_name": "fête"
     }
   },
   {
     "model": "event.eventcategory",
     "pk": 4,
     "fields": {
-      "title": "m'aérer",
-      "short_name": "extérieur"
+      "title": "plein air",
+      "short_name": "plein air"
     }
   },
   {
@@ -91,7 +107,7 @@
     "model": "event.eventcategory",
     "pk": 6,
     "fields": {
-      "title": "boire un verre, prendre un café",
+      "title": "boire un verre, un café",
       "short_name": "verre"
     }
   },
@@ -135,9 +151,54 @@
     "model": "event.eventtype",
     "pk": 5,
     "fields": {
-      "title": "boire un verre",
-      "short_name": "verre",
-      "category": [3, 6]
+      "title": "aller au cinéma",
+      "short_name": "cinéma",
+      "category": [1]
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 6,
+    "fields": {
+      "title": "aller au théâtre",
+      "short_name": "théâtre",
+      "category": [1]
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 7,
+    "fields": {
+      "title": "tennis",
+      "short_name": "tennis",
+      "category": [2]
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 8,
+    "fields": {
+      "title": "foot",
+      "short_name": "foot",
+      "category": [2]
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 9,
+    "fields": {
+      "title": "aller dans un parc",
+      "short_name": "parc",
+      "category": [4]
+    }
+  },
+  {
+    "model": "event.eventtype",
+    "pk": 10,
+    "fields": {
+      "title": "faire une balade en forêt",
+      "short_name": "forêt",
+      "category": [4]
     }
   },
   {

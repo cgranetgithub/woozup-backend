@@ -8,15 +8,13 @@ from tastypie.authentication import SessionAuthentication
 from django.conf.urls import url
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-#from django.contrib.auth.hashers import make_password
-
 
 class UserResource(ModelResource):
     class Meta:
         resource_name = 'user'
         queryset = User.objects.all()
-        list_allowed_methods = ['get', 'post']
-        detail_allowed_methods = ['get', 'post', 'put', 'delete']
+        list_allowed_methods = []
+        detail_allowed_methods = ['get', 'put', 'delete']
         excludes = ['email', 'password', 'is_superuser', 'is_staff']
         filtering = {
                     'username': ALL,
@@ -24,11 +22,27 @@ class UserResource(ModelResource):
         authorization  = DjangoAuthorization()
         authentication = SessionAuthentication()
 
+    def prepend_urls(self):
+        return [
+            url(r'^(?P<resource_name>%s)/logout%s$' %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('logout'), name='api_logout'),
+        ]
+
+    def logout(self, request, **kwargs):
+        self.method_check(request, allowed=['get'])
+        if request.user and request.user.is_authenticated():
+            logout(request)
+            return self.create_response(request, { 'success': True })
+        else:
+            return self.create_response(request, { 'success': False }, 
+                                                 HttpUnauthorized)
+
 class AuthResource(ModelResource):
     class Meta:
         queryset = User.objects.all()
         fields = ['first_name', 'last_name', 'email']
-        allowed_methods = ['get', 'post']
+        allowed_methods = []
         resource_name = 'auth'
 
     def prepend_urls(self):
@@ -39,9 +53,6 @@ class AuthResource(ModelResource):
             url(r"^(?P<resource_name>%s)/login%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('login'), name="api_login"),
-            url(r'^(?P<resource_name>%s)/logout%s$' %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('logout'), name='api_logout'),
         ]
 
     def register(self, request, **kwargs):
@@ -60,15 +71,15 @@ class AuthResource(ModelResource):
                 #user = authenticate(username=username, password=password)
                 login(request, user)
                 return self.create_response(request, {'success': True}, 
-                                                     HttpCreated)
+                                            HttpCreated)
             else:
                 return self.create_response(request, {'success': False,
-                                                      'reason': 'disabled'}, 
-                                                     HttpForbidden )
+                                                      'reason': 'disabled'},
+                                            HttpForbidden )
         else:
             return self.create_response(request, {'success': False,
                                                   'reason': 'incorrect'},
-                                                 HttpUnauthorized )
+                                        HttpUnauthorized )
 
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -90,45 +101,3 @@ class AuthResource(ModelResource):
             return self.create_response(request, {'success': False,
                                                   'reason': 'incorrect'},
                                                  HttpUnauthorized )
-
-    def logout(self, request, **kwargs):
-        self.method_check(request, allowed=['get'])
-        if request.user and request.user.is_authenticated():
-            logout(request)
-            return self.create_response(request, { 'success': True })
-        else:
-            return self.create_response(request, { 'success': False }, 
-                                                 HttpUnauthorized)
-
-#class SigninResource(ModelResource):
-    #class Meta:
-        #resource_name = 'signin'
-        #queryset = User.objects.all()
-        #list_allowed_methods = ['post']
-        #detail_allowed_methods = []
-        #fields = ['username', 'password']
-        #authorization  = Authorization()
-        
-    #def obj_create(self, bundle, **kwargs):
-        ##return super(SignupResource, self).obj_create(bundle)
-        #user = authenticate(username=bundle.data['username'],
-                            #password=bundle.data['password'])
-        #if user is not None:
-            #if user.is_active:
-                #return login(bundle.request, user)
-                ##return self.create_response(bundle.request, 
-                                            ##{'success': True})
-        #raise BadRequest('username/password incorrect')
-#class SignupResource(ModelResource):
-    #class Meta:
-        #resource_name = 'signup'
-        #queryset = User.objects.all()
-        #list_allowed_methods = ['post']
-        #detail_allowed_methods = []
-        #fields = ['username', 'password', 'first_name']
-        #authorization  = Authorization()
-
-    #def obj_create(self, bundle, **kwargs):
-        #hashed_passwd = make_password(bundle.data['password'])
-        #bundle.data['password'] = hashed_passwd
-        #return super(SignupResource, self).obj_create(bundle)

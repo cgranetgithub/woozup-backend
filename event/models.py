@@ -7,6 +7,8 @@ class EventCategory(models.Model):
     description = models.CharField(max_length=255)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
     icon        = models.ImageField(upload_to='glyph')
+    created_at  = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at  = models.DateTimeField(auto_now=True, null=True)
     def __unicode__(self):
         return self.title
  
@@ -18,6 +20,8 @@ class EventType(models.Model):
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
     icon        = models.ImageField(upload_to='glyph',
                                     blank=True, null=True)
+    created_at  = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at  = models.DateTimeField(auto_now=True, null=True)
     def __unicode__(self):
         return self.title
 
@@ -39,5 +43,7 @@ class Event(models.Model):
     position     = models.CharField(max_length=255) # !!! WARNING to be changed
     image        = models.ImageField(upload_to=image_path,
                                      blank=True, null=True)
+    created_at  = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at  = models.DateTimeField(auto_now=True, null=True)
     def __unicode__(self):
         return self.title + ' (' + unicode(self.event_type) + ')'

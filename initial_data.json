@@ -1,285 +1,168 @@
 [
-  {
-    "model": "auth.user",
-    "pk": 1,
-    "fields": {
-      "username": "john",
-      "password": "pbkdf2_sha256$12000$qxjEZbpLXgK6$cTyS03Qlokz/KcajEBXraFIJgHMF9VFXXtF4T0hFSfE="
+    {
+        "model": "event.eventcategory",
+        "pk": 1,
+        "fields": {
+            "title": "me cultiver",
+            "short_name": "culture",
+            "icon": "glyph/icon_6485.png"
+        }
+    },
+    {
+        "model": "event.eventcategory",
+        "pk": 2,
+        "fields": {
+            "title": "faire du sport",
+            "short_name": "sport",
+            "icon": "glyph/icon_503.png"
+        }
+    },
+    {
+        "model": "event.eventcategory",
+        "pk": 3,
+        "fields": {
+            "title": "faire la fête",
+            "short_name": "fête",
+            "icon": "glyph/icon_29735.png"
+        }
+    },
+    {
+        "model": "event.eventcategory",
+        "pk": 4,
+        "fields": {
+            "title": "plein air",
+            "short_name": "plein air",
+            "icon": "glyph/icon_30541.png"
+        }
+    },
+    {
+        "model": "event.eventcategory",
+        "pk": 5,
+        "fields": {
+            "title": "déjeuner, diner",
+            "short_name": "repas",
+            "icon": "glyph/icon_8907_2.png"
+        }
+    },
+    {
+        "model": "event.eventcategory",
+        "pk": 6,
+        "fields": {
+            "title": "boire un verre, un café",
+            "short_name": "verre",
+            "icon": "glyph/icon_16.png"
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 1,
+        "fields": {
+            "title": "boire une bière",
+            "short_name": "bière",
+            "category": [
+                3,
+                6
+            ]
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 2,
+        "fields": {
+            "title": "prendre un café",
+            "short_name": "café",
+            "category": [
+                3,
+                6
+            ]
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 3,
+        "fields": {
+            "title": "salon de thé",
+            "short_name": "thé",
+            "category": [
+                6
+            ]
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 4,
+        "fields": {
+            "title": "en terrasse",
+            "short_name": "terrasse",
+            "category": [
+                6
+            ]
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 5,
+        "fields": {
+            "title": "aller au cinéma",
+            "short_name": "cinéma",
+            "category": [
+                1
+            ]
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 6,
+        "fields": {
+            "title": "aller au théâtre",
+            "short_name": "théâtre",
+            "category": [
+                1
+            ]
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 7,
+        "fields": {
+            "title": "tennis",
+            "short_name": "tennis",
+            "category": [
+                2
+            ]
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 8,
+        "fields": {
+            "title": "foot",
+            "short_name": "foot",
+            "category": [
+                2
+            ]
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 9,
+        "fields": {
+            "title": "aller dans un parc",
+            "short_name": "parc",
+            "category": [
+                4
+            ]
+        }
+    },
+    {
+        "model": "event.eventtype",
+        "pk": 10,
+        "fields": {
+            "title": "faire une balade en forêt",
+            "short_name": "forêt",
+            "category": [
+                4
+            ]
+        }
     }
-  },
-  {
-    "model": "auth.user",
-    "pk": 2,
-    "fields": {
-      "username": "jack",
-      "password": "pbkdf2_sha256$12000$kEFcEsegQIFW$2Tw1KIq0gy+dY73kZpl6VSUUXXQ/gU+go9vKoOHlyNY="
-    }
-  },
-  {
-    "model": "auth.user",
-    "pk": 3,
-    "fields": {
-      "username": "dick",
-      "password": "pbkdf2_sha256$12000$GhREXYpEZka5$UIrlkurVeRJlkbQwzpVfUCQM4VCTPvBB3z1dIIgKKDo="
-    }
-  },
-  {
-    "model": "auth.user",
-    "pk": 4,
-    "fields": {
-      "username": "alex",
-      "password": "pbkdf2_sha256$12000$54OzPILmENkK$g7dcYHMyfKhcQPtspoT/wr9B7Jj+Awk/j63cQTbzv5o="
-    }
-  },
-  {
-    "model": "auth.user",
-    "pk": 5,
-    "fields": {
-      "username": "chuck",
-      "password": "chuck"
-    }
-  },
-  {
-    "model": "auth.user",
-    "pk": 6,
-    "fields": {
-      "username": "mike",
-      "password": "mike"
-    }
-  },
-  {
-    "model": "auth.user",
-    "pk": 7,
-    "fields": {
-      "username": "charles",
-      "password": "charles"
-    }
-  },
-  {
-    "model": "auth.user",
-    "pk": 8,
-    "fields": {
-      "username": "michael",
-      "password": "michael"
-    }
-  },
-  {
-    "model": "event.eventcategory",
-    "pk": 1,
-    "fields": {
-      "title": "me cultiver",
-      "short_name": "culture",
-      "icon": "glyph/icon_6485.png"
-    }
-  },
-  {
-    "model": "event.eventcategory",
-    "pk": 2,
-    "fields": {
-      "title": "faire du sport",
-      "short_name": "sport",
-      "icon": "glyph/icon_503.png"
-    }
-  },
-  {
-    "model": "event.eventcategory",
-    "pk": 3,
-    "fields": {
-      "title": "faire la fête",
-      "short_name": "fête",
-      "icon": "glyph/icon_29735.png"
-    }
-  },
-  {
-    "model": "event.eventcategory",
-    "pk": 4,
-    "fields": {
-      "title": "plein air",
-      "short_name": "plein air",
-      "icon": "glyph/icon_30541.png"
-    }
-  },
-  {
-    "model": "event.eventcategory",
-    "pk": 5,
-    "fields": {
-      "title": "déjeuner, diner",
-      "short_name": "repas",
-      "icon": "glyph/icon_8907_2.png"
-    }
-  },
-  {
-    "model": "event.eventcategory",
-    "pk": 6,
-    "fields": {
-      "title": "boire un verre, un café",
-      "short_name": "verre",
-      "icon": "glyph/icon_16.png"
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 1,
-    "fields": {
-      "title": "boire une bière",
-      "short_name": "bière",
-      "category": [3, 6]
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 2,
-    "fields": {
-      "title": "prendre un café",
-      "short_name": "café",
-      "category": [3, 6]
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 3,
-    "fields": {
-      "title": "salon de thé",
-      "short_name": "thé",
-      "category": [6]
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 4,
-    "fields": {
-      "title": "en terrasse",
-      "short_name": "terrasse",
-      "category": [6]
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 5,
-    "fields": {
-      "title": "aller au cinéma",
-      "short_name": "cinéma",
-      "category": [1]
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 6,
-    "fields": {
-      "title": "aller au théâtre",
-      "short_name": "théâtre",
-      "category": [1]
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 7,
-    "fields": {
-      "title": "tennis",
-      "short_name": "tennis",
-      "category": [2]
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 8,
-    "fields": {
-      "title": "foot",
-      "short_name": "foot",
-      "category": [2]
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 9,
-    "fields": {
-      "title": "aller dans un parc",
-      "short_name": "parc",
-      "category": [4]
-    }
-  },
-  {
-    "model": "event.eventtype",
-    "pk": 10,
-    "fields": {
-      "title": "faire une balade en forêt",
-      "short_name": "forêt",
-      "category": [4]
-    }
-  },
-  {
-    "model": "event.event",
-    "pk": 1,
-    "fields": {
-      "title": "let's have a beer",
-      "start": "2014-04-11T18:00",
-      "end": "2014-04-11T19:00",
-      "event_type": 1,
-      "owner": 1,
-      "participants": [2, 3],
-      "position": "48.790367,2.055572"
-    }
-  },
-  {
-    "model": "event.event",
-    "pk": 2,
-    "fields": {
-      "title": "cofee time?",
-      "start": "2014-04-12T14:00",
-      "end": "2014-04-12T15:00",
-      "event_type": 2,
-      "owner": 2,
-      "participants": [3, 4],
-      "position": "48.890367,2.155572"
-    }
-  },
-  {
-    "model": "event.event",
-    "pk": 3,
-    "fields": {
-      "title": "with a milk cloud",
-      "start": "2014-04-13T14:00",
-      "end": "2014-04-13T15:00",
-      "event_type": 3,
-      "owner": 3,
-      "participants": [1, 5],
-      "position": "47.990367,3.155572"
-    }
-  },
-  {
-    "model": "event.event",
-    "pk": 4,
-    "fields": {
-      "title": "cup of tea",
-      "start": "2014-04-14T14:00",
-      "event_type": 3,
-      "owner": 3,
-      "participants": [4, 5],
-      "position": "47.990367,3.155572"
-    }
-  },
-  {
-    "model": "event.event",
-    "pk": 5,
-    "fields": {
-      "title": "au soleil",
-      "start": "2014-04-15T14:00",
-      "event_type": 4,
-      "owner": 2,
-      "participants": [3, 5],
-      "position": "48.120367,2.555572"
-    }
-  },
-  {
-    "model": "event.event",
-    "pk": 6,
-    "fields": {
-      "title": "drink?",
-      "start": "2014-04-16T14:00",
-      "event_type": 5,
-      "owner": 1,
-      "position": "48.020367,3.355572"
-    }
-  }
 ]
-

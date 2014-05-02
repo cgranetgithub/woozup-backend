@@ -5,7 +5,7 @@ from tastypie.api import Api
 
 from link.api import LinkResource
 from event.api import EventCategoryResource, EventTypeResource, EventResource
-from userprofile.api import UserResource, AuthResource
+from userprofile.api import UserResource, AuthResource, FriendResource
 
 admin.autodiscover()
 
@@ -15,6 +15,7 @@ v1_api.register(EventTypeResource())
 v1_api.register(EventCategoryResource())
 v1_api.register(UserResource())
 v1_api.register(AuthResource())
+v1_api.register(FriendResource())
 v1_api.register(LinkResource())
 
 urlpatterns = patterns('',

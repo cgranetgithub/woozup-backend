@@ -14,8 +14,8 @@ class Link(models.Model):
 		    (ACCEPTED, 'accepted'),
 		    (REJECTED, 'rejected'),
 		    (BLOCKED , 'blocked' ) )
-    sender   = models.ForeignKey(User, related_name="links_as_initiator")
-    receiver = models.ForeignKey(User, related_name="links_as_receiver")
+    sender   = models.ForeignKey(User, related_name="link_as_sender")
+    receiver = models.ForeignKey(User, related_name="link_as_receiver")
     sender_status   = models.CharField(max_length=3, choices=LINK_STATUS)
     receiver_status = models.CharField(max_length=3, choices=LINK_STATUS)
     sent_at     = models.DateTimeField(blank=True, null=True)

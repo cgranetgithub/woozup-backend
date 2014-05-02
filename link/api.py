@@ -1,6 +1,6 @@
+from tastypie.http import HttpUnauthorized, HttpForbidden, HttpCreated
 from tastypie.utils import trailing_slash
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
-from tastypie.http import HttpUnauthorized, HttpForbidden, HttpCreated
 from tastypie.authorization import DjangoAuthorization
 from tastypie.authentication import SessionAuthentication
 

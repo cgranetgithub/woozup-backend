@@ -9,7 +9,13 @@ from django.conf.urls import url
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
+from django.db.models import Q
+
+
 class UserResource(ModelResource):
+    """
+    An API for getting a user, requires authentication
+    """
     class Meta:
         resource_name = 'user'
         queryset = User.objects.all()
@@ -39,6 +45,9 @@ class UserResource(ModelResource):
                                                  HttpUnauthorized)
 
 class AuthResource(ModelResource):
+    """
+    An API for loging in / registering, no authentication required
+    """
     class Meta:
         queryset = User.objects.all()
         fields = ['first_name', 'last_name', 'email']
@@ -101,3 +110,85 @@ class AuthResource(ModelResource):
             return self.create_response(request, {'success': False,
                                                   'reason': 'incorrect'},
                                                  HttpUnauthorized )
+
+class FriendResource(ModelResource):
+    """
+    An API to get friends list, authentication required
+    """
+    class Meta:
+        resource_name = 'friends'
+        queryset = User.objects.all()
+        list_allowed_methods = ['get']
+        detail_allowed_methods = []
+        excludes = ['password', 'is_superuser', 'is_staff']
+        filtering = {
+                    'username': ALL,
+                    }
+        authorization  = DjangoAuthorization()
+        authentication = SessionAuthentication()
+
+    def build_filters(self, filters=None):
+        #if filters is None:
+            #filters = {}
+        orm_filters = super(FriendResource, self).build_filters(filters)
+        #if('query' in filters):
+            #query = filters['query']
+            #qset = (
+                    #Q(name__icontains=query) |
+                    #Q(description__icontains=query) |
+                    #Q(email__icontains=query)
+                    #)
+            #orm_filters.update({'custom': qset})
+        return orm_filters
+
+    def apply_filters(self, request, applicable_filters):
+        #if 'custom' in applicable_filters:
+            #custom = applicable_filters.pop('custom')
+        #else:
+            #custom = None
+        semi_filtered = super(FriendResource, self).apply_filters(
+                                                            request,
+                                                            applicable_filters)
+        res = semi_filtered.filter(
+            ( Q(link_as_sender__sender    =request.user) | 
+              Q(link_as_sender__receiver  =request.user) | 
+              Q(link_as_receiver__sender  =request.user) | 
+              Q(link_as_receiver__receiver=request.user) ),
+            ( Q(link_as_sender__sender_status='ACC') & 
+              Q(link_as_sender__receiver_status='ACC') ) | 
+            ( Q(link_as_receiver__sender_status='ACC') & 
+              Q(link_as_receiver__receiver_status='ACC') ) ).exclude(
+                  username=request.user.username)
+        return res
+        #return semi_filtered.filter(custom) if custom else semi_filtered
+
+    #def myfriends(self, request, **kwargs):
+        #""" Get my friends list, that users which have an ACC/ACC link with me
+        #Arguments: """
+        ##self.method_check(request, allowed=['get'])
+        ##data = self.deserialize(request, request.body, 
+                                ##format=request.META.get('CONTENT_TYPE', 
+                                                        ##'application/json'))
+        ##try:
+        #friends = User.objects.filter(
+            #( Q(link_as_sender__sender    =request.user) | 
+              #Q(link_as_sender__receiver  =request.user) | 
+              #Q(link_as_receiver__sender  =request.user) | 
+              #Q(link_as_receiver__receiver=request.user) ),
+            #link_as_sender__sender_status='ACC',
+            #link_as_receiver__sender_status='ACC',
+        ##| Q(link__receiver=request.user), Q(link__receiver_status='ACC')
+            #)
+        #print friends
+        #from django.core import serializers
+        #data = serializers.serialize("json", friends)
+        #print data
+        ##import json
+        ##print json.dumps(friends)
+        #return self.create_response(request, {'objects': data}, 
+                                    #HttpCreated)
+        ##except:
+            ##return self.create_response(request, {'success': False}, 
+                                        ##HttpUnauthorized) # to be improved
+
+

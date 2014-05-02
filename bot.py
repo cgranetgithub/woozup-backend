@@ -3,8 +3,8 @@
 
 import json, requests, datetime, random, string, pytz
 
-hostname = '127.0.0.1:8000'
-#hostname = 'geoevent.herokuapp.com'
+#hostname = '127.0.0.1:8000'
+hostname = 'geoevent.herokuapp.com'
 api_url = 'http://%s/api/v1/'%hostname
 
 def random_string():
@@ -16,7 +16,8 @@ for i in range(2):
     # create new users
     email = '%s@%s.%s'%(random_string(), random_string(), random_string())
     r = requests.post(api_url + 'auth/register/', 
-                      data=json.dumps({'username':email, 'password':'pwd'}),
+                      data=json.dumps({'username':email, 'password':'pwd',
+                                       'first_name':random_string()}),
                       headers = {'content-type': 'application/json'})
     # get sessionid + csrftoken for POST)
     cookies = r.cookies

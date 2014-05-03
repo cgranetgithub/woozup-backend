@@ -12,37 +12,62 @@ def random_string():
 
 types = json.loads(requests.get(api_url + 'type/').content)['objects']
 
-for i in range(2):
-    # create new users
-    email = '%s@%s.%s'%(random_string(), random_string(), random_string())
+file = open('nbuser.txt', 'r')
+nb_user = int(file.read())
+
+
+for i in range(7*nb_user/10):
+    # login
+    email = 'user%d@fr.fr'%(random.randint(1, nb_user))
+    data = {'username':email, 'password':'pwd'}
+    r = requests.post(api_url + 'auth/login/',
+                        data = json.dumps(data),
+                        headers = {'content-type': 'application/json'})
+    # get sessionid + csrftoken for POST)
+    cookies = r.cookies
+    sessionid = cookies['sessionid']
+    csrftoken = cookies['csrftoken']
+    # accept pending links
+    
+    
+
+
+nb = 2
+
+for i in range(nb):
+    # create nb new users
+    name = 'user%d'%(nb_user+i+1)
+    email = '%s@fr.fr'%name
     r = requests.post(api_url + 'auth/register/', 
                       data=json.dumps({'username':email, 'password':'pwd',
-                                       'first_name':random_string()}),
+                                       'first_name':name}),
                       headers = {'content-type': 'application/json'})
     # get sessionid + csrftoken for POST)
     cookies = r.cookies
     sessionid = cookies['sessionid']
     csrftoken = cookies['csrftoken']
-    # connect to friends
-    data = {'receiver' : 2}
-    r = requests.post(api_url + 'link/connect/',
-                      data = json.dumps(data),
-                      headers = {'content-type': 'application/json',
-                                 'X-CSRFToken' : csrftoken},
-                      cookies=cookies)
+    # connect to nb friends
+    for i in range(nb):
+        data = {'receiver' : random.randint(1, nb_user)}
+        r = requests.post(api_url + 'link/connect/',
+                        data = json.dumps(data),
+                        headers = {'content-type': 'application/json',
+                                    'X-CSRFToken' : csrftoken},
+                        cookies=cookies)
     # create events
-    dt = datetime.datetime.now(pytz.UTC) + datetime.timedelta(1)
-    dt = dt.strftime("%Y-%m-%dT%H:%M:%SZ%Z")
-    t = random.choice(types)
-    p = "%f, %f"%(random.random() * 100, random.random() * 100)
-    data = {'start' : dt, 'type' : t['resource_uri'], 'position' : p}
-    r = requests.post(api_url + 'event/',
-                      data = json.dumps(data),
-                      headers = {'content-type': 'application/json',
-                                 'X-CSRFToken' : csrftoken},
-                      cookies=cookies)
+    for i in range(3):
+        dt = datetime.datetime.now(pytz.UTC) + datetime.timedelta(i+1)
+        dt = dt.strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        t = random.choice(types)
+        p = "%f, %f"%(random.random() * 100, random.random() * 100)
+        data = {'start' : dt, 'type' : t['resource_uri'], 'position' : p}
+        r = requests.post(api_url + 'event/',
+                        data = json.dumps(data),
+                        headers = {'content-type': 'application/json',
+                                    'X-CSRFToken' : csrftoken},
+                        cookies=cookies)
 
+file = open("nbuser.txt", "w")
+file.write("%d"%(nb_user+nb))
+file.close()
 
-    # get events
-    #r = requests.get(api_url + 'event/',
-                      #cookies=cookies)

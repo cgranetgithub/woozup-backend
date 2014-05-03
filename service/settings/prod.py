@@ -28,8 +28,9 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 #    'django.contrib.gis',
-    'tastypie',   # for the API
-    'storages',   # for static files on S3
+    'tastypie',           # for the API
+    'storages',           # for static files on S3
+    'push_notifications', # for notif to Android/iOS
     'event',
     'link',
     'userprofile',
@@ -80,6 +81,12 @@ EMAIL_HOST_USER = os.environ.get("SENDGRID_USERNAME", "")
 EMAIL_HOST_PASSWORD = os.environ.get("SENDGRID_PASSWORD", "")
 EMAIL_PORT = 25
 EMAIL_USE_TLS = False
+
+# Notification to mobiles
+PUSH_NOTIFICATIONS_SETTINGS = {
+        "GCM_API_KEY": os.environ.get("GCM_API_KEY", ""),
+        "APNS_CERTIFICATE": "/path/to/your/certificate.pem",
+        }
 
 # Cache settings.
 CACHES = {

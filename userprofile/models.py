@@ -18,6 +18,11 @@ class UserProfile(models.Model):
                               blank=True, null=True)
     avatar = models.ImageField(upload_to=image_path,
                                blank=True, null=True)
+    @property
+    def name(self):
+        return self.user.get_full_name()
+    def __unicode__(self):
+        return unicode(self.user) + ' profile'
 
 class UserPosition(models.Model):
     user    = models.OneToOneField(User)

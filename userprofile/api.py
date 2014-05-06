@@ -5,12 +5,12 @@ from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authorization import DjangoAuthorization
 from tastypie.authentication import SessionAuthentication
 
+from django.db.models import Q
 from django.conf.urls import url
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
-from django.db.models import Q
-
+from userprofile.models import UserProfile
 
 class UserResource(ModelResource):
     """
@@ -111,10 +111,21 @@ class AuthResource(ModelResource):
                                                   'reason': 'incorrect'},
                                                  HttpUnauthorized )
 
+class ProfileResource(ModelResource):
+    name = fields.CharField(attribute='name', readonly=True)
+    class Meta:
+        resource_name = 'profile'
+        queryset = UserProfile.objects.all()
+        authorization  = DjangoAuthorization()
+        authentication = SessionAuthentication()
+    
+
 class FriendResource(ModelResource):
     """
     An API to get friends list, authentication required
     """
+    profile = fields.ToOneField(ProfileResource, 
+                                attribute='userprofile', full=True)
     class Meta:
         resource_name = 'friends'
         queryset = User.objects.all()

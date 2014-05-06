@@ -1,0 +1,8 @@
+          local                                   |    heroku
+--------------------------------------------------|------------------------------------------------
+pip install -r requirements.txt                   | automatic
+export s3 env var                                 | set s3 config
+python manage.py syncdb --setting...              | heroku run python manage.py syncdb
+python manage.py create_initial_data --setting... | heroku run python manage.py create_initial_data
+
+

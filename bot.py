@@ -28,8 +28,6 @@ for i in range(7*nb_user/10):
     sessionid = cookies['sessionid']
     csrftoken = cookies['csrftoken']
     # accept pending links
-    
-    
 
 
 nb = 2

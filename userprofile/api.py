@@ -138,6 +138,38 @@ class FriendResource(ModelResource):
         authorization  = DjangoAuthorization()
         authentication = SessionAuthentication()
 
+    def prepend_urls(self):
+        return [
+            url(r'^(?P<resource_name>%s)/sort%s$' %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('sort'), name='api_sort'),
+        ]
+
+    def sort(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        if request.user and request.user.is_authenticated():                    
+            data = self.deserialize(request, request.body,
+                                    format=request.META.get('CONTENT_TYPE',
+                                                        'application/json'))
+            print data
+            res = {'unknown':[], 'user':[], 'friend':[]}
+            for i in data:
+                print i['email']
+                try:
+                    user = User.objects.get(username=i['email'])
+                    res['user'].append(user)
+                    print user
+                except User.DoesNotExist:
+                    res['unknown'].append(i)
+                    print 'h'
+                else:
+                    print 'bad'
+            print res
+            return self.create_response(request, res)
+        else:
+            return self.create_response(request, { 'success': False }, 
+                                                 HttpUnauthorized)
+
     def build_filters(self, filters=None):
         #if filters is None:
             #filters = {}

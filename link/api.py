@@ -40,34 +40,42 @@ class LinkResource(ModelResource):
         and the user invited, passed as an argument
         Arguments:
         <receiver> User id of the invited user """
-        self.method_check(request, allowed=['post'])
-        data = self.deserialize(request, request.body, 
-                                format=request.META.get('CONTENT_TYPE', 
-                                                        'application/json'))
-        try:
-            receiver = User.objects.get(id=data.get('receiver', ''))
-            Link.objects.create(sender=request.user, receiver=receiver,
-                                sender_status='ACC', receiver_status='PEN')
-            return self.create_response(request, {'success': True}, 
-                                        HttpCreated)
-        except:
-            return self.create_response(request, {'success': False}, 
-                                        HttpUnauthorized) # to be improved
+        if request.user and request.user.is_authenticated():
+            self.method_check(request, allowed=['post'])
+            data = self.deserialize(request, request.body, 
+                                    format=request.META.get('CONTENT_TYPE', 
+                                                            'application/json'))
+            try:
+                receiver = User.objects.get(id=data.get('receiver', ''))
+                Link.objects.create(sender=request.user, receiver=receiver,
+                                    sender_status='ACC', receiver_status='PEN')
+                return self.create_response(request, {'success': True}, 
+                                            HttpCreated)
+            except:
+                return self.create_response(request, {'success': False}, 
+                                            HttpUnauthorized) # to be improved
+        else:
+            return self.create_response(request, { 'success': False }, 
+                                                 HttpUnauthorized)
 
     def accept(self, request, **kwargs):
         """ Accept a new link. This action is done by the receiver
         Arguments:
         <link> Link id """
         self.method_check(request, allowed=['put'])
-        data = self.deserialize(request, request.body, 
-                                format=request.META.get('CONTENT_TYPE', 
-                                                        'application/json'))
-        try:
-            link = Link.objects.get(id=data.get('link', ''))
-            link.receiver_status='ACC'
-            link.save()
-            return self.create_response(request, {'success': True}, 
-                                        HttpCreated)
-        except:
-            return self.create_response(request, {'success': False}, 
-                                        HttpUnauthorized) # to be improved
+        if request.user and request.user.is_authenticated():
+            data = self.deserialize(request, request.body, 
+                                    format=request.META.get('CONTENT_TYPE', 
+                                                            'application/json'))
+            try:
+                link = Link.objects.get(id=data.get('link', ''))
+                link.receiver_status='ACC'
+                link.save()
+                return self.create_response(request, {'success': True}, 
+                                            HttpCreated)
+            except:
+                return self.create_response(request, {'success': False}, 
+                                            HttpUnauthorized) # to be improved
+        else:
+            return self.create_response(request, { 'success': False }, 
+                                                 HttpUnauthorized)

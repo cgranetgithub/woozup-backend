@@ -10,18 +10,29 @@ from django.conf.urls import url
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
+from link.models import Link
 from userprofile.models import UserProfile
 
+class ProfileResource(ModelResource):
+    name = fields.CharField(attribute='name', readonly=True)
+    class Meta:
+        resource_name = 'profile'
+        queryset = UserProfile.objects.all()
+        authorization  = DjangoAuthorization()
+        authentication = SessionAuthentication()
+    
 class UserResource(ModelResource):
     """
     An API for getting a user, requires authentication
     """
+    profile = fields.ToOneField(ProfileResource, 
+                                attribute='userprofile', full=True)
     class Meta:
         resource_name = 'user'
         queryset = User.objects.all()
         list_allowed_methods = []
         detail_allowed_methods = ['get', 'put', 'delete']
-        excludes = ['email', 'password', 'is_superuser', 'is_staff']
+        excludes = ['password', 'is_superuser', 'is_staff']
         filtering = {
                     'username': ALL,
                     }
@@ -43,6 +54,7 @@ class UserResource(ModelResource):
         else:
             return self.create_response(request, { 'success': False }, 
                                                  HttpUnauthorized)
+     #WARNING must restrict to the use himself
 
 class AuthResource(ModelResource):
     """
@@ -111,127 +123,128 @@ class AuthResource(ModelResource):
                                                   'reason': 'incorrect'},
                                                  HttpUnauthorized )
 
-class ProfileResource(ModelResource):
-    name = fields.CharField(attribute='name', readonly=True)
-    class Meta:
-        resource_name = 'profile'
-        queryset = UserProfile.objects.all()
-        authorization  = DjangoAuthorization()
-        authentication = SessionAuthentication()
-    
+#class FriendResource(ModelResource):
+    #"""
+    #An API to get friends list, authentication required
+    #"""
+    #profile = fields.ToOneField(ProfileResource, 
+                                #attribute='userprofile', full=True)
+    #class Meta:
+        #resource_name = 'friends'
+        #queryset = User.objects.all()
+        #list_allowed_methods = ['get']
+        #detail_allowed_methods = []
+        #excludes = ['password', 'is_superuser', 'is_staff']
+        #filtering = {
+                    #'username': ALL,
+                    #}
+        #authorization  = DjangoAuthorization()
+        #authentication = SessionAuthentication()
 
-class FriendResource(ModelResource):
-    """
-    An API to get friends list, authentication required
-    """
-    profile = fields.ToOneField(ProfileResource, 
-                                attribute='userprofile', full=True)
-    class Meta:
-        resource_name = 'friends'
-        queryset = User.objects.all()
-        list_allowed_methods = ['get']
-        detail_allowed_methods = []
-        excludes = ['password', 'is_superuser', 'is_staff']
-        filtering = {
-                    'username': ALL,
-                    }
-        authorization  = DjangoAuthorization()
-        authentication = SessionAuthentication()
+    ##def build_filters(self, filters=None):
+        ##if filters is None:
+            ##filters = {}
+        ##orm_filters = super(FriendResource, self).build_filters(filters)
+        ##if('query' in filters):
+            ##query = filters['query']
+            ##qset = (
+                    ##Q(name__icontains=query) |
+                    ##Q(description__icontains=query) |
+                    ##Q(email__icontains=query)
+                    ##)
+            ##orm_filters.update({'custom': qset})
+        ##return orm_filters
 
-    def prepend_urls(self):
-        return [
-            url(r'^(?P<resource_name>%s)/sort%s$' %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('sort'), name='api_sort'),
-        ]
-
-    def sort(self, request, **kwargs):
-        self.method_check(request, allowed=['post'])
-        if request.user and request.user.is_authenticated():                    
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get('CONTENT_TYPE',
-                                                        'application/json'))
-            print data
-            res = {'unknown':[], 'user':[], 'friend':[]}
-            for i in data:
-                print i['email']
-                try:
-                    user = User.objects.get(username=i['email'])
-                    res['user'].append(user)
-                    print user
-                except User.DoesNotExist:
-                    res['unknown'].append(i)
-                    print 'h'
-                else:
-                    print 'bad'
-            print res
-            return self.create_response(request, res)
-        else:
-            return self.create_response(request, { 'success': False }, 
-                                                 HttpUnauthorized)
-
-    def build_filters(self, filters=None):
-        #if filters is None:
-            #filters = {}
-        orm_filters = super(FriendResource, self).build_filters(filters)
-        #if('query' in filters):
-            #query = filters['query']
-            #qset = (
-                    #Q(name__icontains=query) |
-                    #Q(description__icontains=query) |
-                    #Q(email__icontains=query)
-                    #)
-            #orm_filters.update({'custom': qset})
-        return orm_filters
-
-    def apply_filters(self, request, applicable_filters):
-        #if 'custom' in applicable_filters:
-            #custom = applicable_filters.pop('custom')
-        #else:
-            #custom = None
-        semi_filtered = super(FriendResource, self).apply_filters(
-                                                            request,
-                                                            applicable_filters)
-        res = semi_filtered.filter(
-            ( Q(link_as_sender__sender    =request.user) | 
-              Q(link_as_sender__receiver  =request.user) | 
-              Q(link_as_receiver__sender  =request.user) | 
-              Q(link_as_receiver__receiver=request.user) ),
-            ( Q(link_as_sender__sender_status='ACC') & 
-              Q(link_as_sender__receiver_status='ACC') ) | 
-            ( Q(link_as_receiver__sender_status='ACC') & 
-              Q(link_as_receiver__receiver_status='ACC') ) ).exclude(
-                  username=request.user.username)
-        return res
-        #return semi_filtered.filter(custom) if custom else semi_filtered
-
-    #def myfriends(self, request, **kwargs):
-        #""" Get my friends list, that users which have an ACC/ACC link with me
-        #Arguments: """
-        ##self.method_check(request, allowed=['get'])
-        ##data = self.deserialize(request, request.body, 
-                                ##format=request.META.get('CONTENT_TYPE', 
-                                                        ##'application/json'))
-        ##try:
-        #friends = User.objects.filter(
+    #def apply_filters(self, request, applicable_filters):
+        ##if 'custom' in applicable_filters:
+            ##custom = applicable_filters.pop('custom')
+        ##else:
+            ##custom = None
+        #semi_filtered = super(FriendResource, self).apply_filters(
+                                                            #request,
+                                                            #applicable_filters)
+        #res = semi_filtered.filter(
             #( Q(link_as_sender__sender    =request.user) | 
               #Q(link_as_sender__receiver  =request.user) | 
               #Q(link_as_receiver__sender  =request.user) | 
               #Q(link_as_receiver__receiver=request.user) ),
-            #link_as_sender__sender_status='ACC',
-            #link_as_receiver__sender_status='ACC',
-        ##| Q(link__receiver=request.user), Q(link__receiver_status='ACC')
-            #)
-        #print friends
-        #from django.core import serializers
-        #data = serializers.serialize("json", friends)
-        #print data
-        ##import json
-        ##print json.dumps(friends)
-        #return self.create_response(request, {'objects': data}, 
-                                    #HttpCreated)
-        ##except:
-            ##return self.create_response(request, {'success': False}, 
-                                        ##HttpUnauthorized) # to be improved
+            #( Q(link_as_sender__sender_status='ACC') & 
+              #Q(link_as_sender__receiver_status='ACC') ) | 
+            #( Q(link_as_receiver__sender_status='ACC') & 
+              #Q(link_as_receiver__receiver_status='ACC') ) ).exclude(
+                  #username=request.user.username)
+        #return res
+        ##return semi_filtered.filter(custom) if custom else semi_filtered
 
+    ##def myfriends(self, request, **kwargs):
+        ##""" Get my friends list, that users which have an ACC/ACC link with me
+        ##Arguments: """
+        ###self.method_check(request, allowed=['get'])
+        ###data = self.deserialize(request, request.body, 
+                                ###format=request.META.get('CONTENT_TYPE', 
+                                                        ###'application/json'))
+        ###try:
+        ##friends = User.objects.filter(
+            ##( Q(link_as_sender__sender    =request.user) | 
+              ##Q(link_as_sender__receiver  =request.user) | 
+              ##Q(link_as_receiver__sender  =request.user) | 
+              ##Q(link_as_receiver__receiver=request.user) ),
+            ##link_as_sender__sender_status='ACC',
+            ##link_as_receiver__sender_status='ACC',
+        ###| Q(link__receiver=request.user), Q(link__receiver_status='ACC')
+            ##)
+        ##print friends
+        ##from django.core import serializers
+        ##data = serializers.serialize("json", friends)
+        ##print data
+        ###import json
+        ###print json.dumps(friends)
+        ##return self.create_response(request, {'objects': data}, 
+                                    ##HttpCreated)
+        ###except:
+            ###return self.create_response(request, {'success': False}, 
+                                        ###HttpUnauthorized) # to be improved
 
+#class UserToConnectResource(FriendResource):
+    #"""
+    #An API to get list of User I can connect to, authentication required
+    #"""
+    #class Meta(FriendResource.Meta):
+        #resource_name = 'userstoconnect'
+
+    #def apply_filters(self, request, applicable_filters):
+        #semi_filtered = super(FriendResource, self).apply_filters(
+                                                            #request,
+                                                            #applicable_filters)
+        #res = semi_filtered.filter(
+                  #(  Q(link_as_sender__sender=request.user)
+                   #& Q(link_as_sender__sender_status='NEW')
+                  #)
+                #| (  Q(link_as_receiver__sender=request.user)
+                   #& Q(link_as_receiver__sender_status='NEW') 
+                  #)
+                #| (  Q(link_as_sender__receiver=request.user)
+                   #& Q(link_as_sender__receiver_status__in=['NEW', 'PEN'])
+                  #)
+                #| (  Q(link_as_receiver__receiver=request.user)
+                   #& Q(link_as_receiver__receiver_status__in=['NEW', 'PEN']) 
+                  #)
+                #).exclude(username=request.user.username)
+        #return res
+
+#class PeopleToInviteResource(FriendResource):
+    #"""
+    #An API to get list of non-User I can invite, authentication required
+    #"""
+    #class Meta(FriendResource.Meta):
+        #resource_name = 'peopletoinvite'
+
+    #def apply_filters(self, request, applicable_filters):
+        #semi_filtered = super(FriendResource, self).apply_filters(
+                                                            #request,
+                                                            #applicable_filters)
+        #res = semi_filtered.filter(
+                  #(  Q(invite__sender=request.user)
+                   #& Q(invite__status='NEW')
+                  #) )
+        #return res

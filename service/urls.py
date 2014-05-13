@@ -3,9 +3,9 @@ from django.contrib import admin
 
 from tastypie.api import Api
 
-from link.api import LinkResource
-from event.api import EventCategoryResource, EventTypeResource, EventResource
-from userprofile.api import UserResource, AuthResource, FriendResource
+from link.api import *
+from event.api import *
+from userprofile.api import *
 
 admin.autodiscover()
 
@@ -15,8 +15,11 @@ v1_api.register(EventTypeResource())
 v1_api.register(EventCategoryResource())
 v1_api.register(UserResource())
 v1_api.register(AuthResource())
-v1_api.register(FriendResource())
+#v1_api.register(FriendResource())
+#v1_api.register(UserToConnectResource())
+#v1_api.register(PeopleToInviteResource())
 v1_api.register(LinkResource())
+v1_api.register(ContactResource())
 
 urlpatterns = patterns('',
     url(r'^api/'  , include(v1_api.urls)),

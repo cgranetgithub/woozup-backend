@@ -1,4 +1,4 @@
-import json, requests
+import json
 
 from django.test import TestCase
 from django.test.client import Client
@@ -7,6 +7,18 @@ from django.contrib.auth.models import User
 #from tastypie.test import ResourceTestCase
 
 from link.models import Link, Invite
+
+def cmp_result(content, searchfor):
+    """
+    compare content with expected result
+    - content is a list of dict return by the API
+    - expected is a tuple of tuple
+    """
+    found = 0
+    for i in content:
+        if (i['sender']['username'], i['receiver']['username']) in searchfor:
+            found += 1
+    return found
 
 class LinkTestCase(TestCase):
     c = Client()
@@ -32,19 +44,31 @@ class LinkTestCase(TestCase):
         Link.objects.create(sender=u06, receiver=u01)
         Link.objects.create(sender=u07, receiver=u08)
         Link.objects.create(sender=u09, receiver=u10)
-        (self.sessionid, self.csrftoken) = self.login()
 
     def test_my_links(self):
         """links that belong to me"""
-        res = self.c.get('/api/v1/link/', sessionid=self.sessionid)
+        (sessionid, csrftoken) = self.login()
+        res = self.c.get('/api/v1/link/', sessionid=sessionid)
         data = json.loads(res.content)
         self.assertEqual(data['meta']['total_count'], 5)
-        # need more tests
+        expected = ( ('user1@fr.fr', 'user2@fr.fr'),
+                     ('user1@fr.fr', 'user3@fr.fr'),
+                     ('user1@fr.fr', 'user4@fr.fr'),
+                     ('user5@fr.fr', 'user1@fr.fr'),
+                     ('user6@fr.fr', 'user1@fr.fr') )
+        self.assertEqual(cmp_result(data['objects'], expected), 5)
+        unexpected = ( ('user1@fr.fr', 'user1@fr.fr'),
+                       ('user2@fr.fr', 'user1@fr.fr'),
+                       ('user1@fr.fr', 'user5@fr.fr'),
+                       ('user7@fr.fr', 'user8@fr.fr'),
+                       ('user9@fr.fr', 'user10@fr.fr') )
+        self.assertEqual(cmp_result(data['objects'], unexpected), 0)
 
     def test_my_friends(self):
         """users I am connected to"""
+        (sessionid, csrftoken) = self.login()
         res = self.c.get('/api/v1/link/?sender_status=ACC&receiver_status=ACC',
-                         sessionid=self.sessionid)
+                         sessionid=sessionid)
         data = json.loads(res.content)
         self.assertEqual(data['meta']['total_count'], 0)
         # need more tests
@@ -58,11 +82,11 @@ class LinkTestCase(TestCase):
         # can access my link detail
         # cannot access others link detail
         pass
-    
+
     def test_not_auth(self):
         """trying as non-authorized user"""
         pass
-    
+
     def test_forbidden_method(self):
         pass
     

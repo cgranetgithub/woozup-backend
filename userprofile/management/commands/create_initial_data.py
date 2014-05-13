@@ -7,13 +7,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.createStdGroup()
-        self.stdout.write('Successfully create std group')
+        #self.stdout.write('Successfully create std group')
 
     def createStdGroup(self):
-        p1 = Permission.objects.get(codename='add_event')
-        p2 = Permission.objects.get(codename='change_event')
-        p3 = Permission.objects.get(codename='delete_event')
+        p = []
+        for i in ['add_event', 'change_event', 'delete_event',
+                  'add_link' , 'change_link' , 'delete_link'] :
+            p.append(Permission.objects.get(codename=i))
         grp = Group.objects.create(name='std')
-        grp.permissions.add(p1, p2, p3)
+        grp.permissions = p
         return grp
-        

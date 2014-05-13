@@ -1,5 +1,5 @@
 from tastypie import fields
-from tastypie.http import HttpUnauthorized, HttpForbidden, HttpCreated
+from tastypie.http import HttpUnauthorized, HttpForbidden
 from tastypie.utils import trailing_slash
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authorization import DjangoAuthorization
@@ -46,8 +46,10 @@ class LinkResource(ModelResource):
     class Meta:
         resource_name = 'link'
         queryset = Link.objects.all()
-        list_allowed_methods = ['get']
+        list_allowed_methods   = ['get']
+                               #no POST: links are created by the backend
         detail_allowed_methods = ['get']
+                               #no PUT: links are modified via custom commands
         filtering = {
                     'sender': ALL_WITH_RELATIONS,
                     'receiver': ALL_WITH_RELATIONS,
@@ -61,81 +63,124 @@ class LinkResource(ModelResource):
         return Link.objects.filter(  Q(sender=request.user)
                                    | Q(receiver=request.user) )
 
-    #def prepend_urls(self):
-        #return [
-            #url(r"^(?P<resource_name>%s)/new%s$" %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('new'), name="api_new_link"),
-            #url(r"^(?P<resource_name>%s)/accept%s$" %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('accept'), name="api_accept_link"),
-            #url(r'^(?P<resource_name>%s)/reject%s$' %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('reject'), name='api_reject_link'),
-        #]
+    def prepend_urls(self):
+        return [
+            url(r"^(?P<resource_name>%s)/(?P<link_id>\w[\w/-]*)/connect%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('connect'), name="api_connect"),
+            url(r"^(?P<resource_name>%s)/(?P<link_id>\w[\w/-]*)/accept%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('accept'), name="api_accept_link"),
+            url(r'^(?P<resource_name>%s)/(?P<link_id>\w[\w/-]*)/reject%s$' %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('reject'), name='api_reject_link'),
+        ]
 
-    #def new(self, request, **kwargs):
-        #""" Create a new link between the user himself, as the sender
-        #and the user invited, passed as an argument
-        #Arguments:
-        #<receiver> User id of the invited user
-        
-        #Note: we do this for security reason, to avoid someone to create links
-        #for others
-        #"""
-        #if request.user and request.user.is_authenticated():
-            #self.method_check(request, allowed=['post'])
+    def connect(self, request, **kwargs):
+        """ Invite a user to connect. This action is done by the sender
+        Arguments:
+
+        Note: we do this for security reason, to avoid someone to manipulate
+        links directly with a PUT        
+        """
+        self.method_check(request, allowed=['post'])
+        if request.user and request.user.is_authenticated():
+            try:
+                link = Link.objects.get(id=kwargs['link_id'])
+                if link.sender == request.user:
+                    link.sender_status='ACC'
+                    link.receiver_status='PEN'
+                    link.save()
+                    return self.create_response(request, {'success': True})
+                else:
+                    return self.create_response(
+                                    request, 
+                                    {'reason': 'Link does not below to you'},
+                                    HttpForbidden)
+            except Link.DoesNotExist:
+                return self.create_response(request, 
+                                            {'reason': 'Link not found'},
+                                            HttpForbidden)
+            else:
+                return self.create_response(request, 
+                                            {'reason': 'Unexpected'},
+                                            HttpForbidden)
+        else:
+            return self.create_response(
+                                    request,
+                                    {'reason': "You are not authenticated"},
+                                    HttpUnauthorized )
+
+    def accept(self, request, **kwargs):
+        """ Accept a link. This action is done by the receiver.
+        Arguments:
+
+        Note: we do this for security reason, to avoid someone to manipulate
+        links directly with a PUT        
+        """
+        self.method_check(request, allowed=['post'])
+        if request.user and request.user.is_authenticated():
+            try:
+                link = Link.objects.get(id=kwargs['link_id'])
+                if link.receiver == request.user:
+                    link.receiver_status='ACC'
+                    link.save()
+                    return self.create_response(request, {'success': True})
+                else:
+                    return self.create_response(
+                                    request, 
+                                    {'reason': 'Link does not below to you'},
+                                    HttpForbidden)
+            except Link.DoesNotExist:
+                return self.create_response(request, 
+                                            {'reason': 'Link not found'},
+                                            HttpForbidden)
+            else:
+                return self.create_response(request, 
+                                            {'reason': 'Unexpected'},
+                                            HttpForbidden)
+        else:
+            return self.create_response(
+                                    request,
+                                    {'reason': "You are not authenticated"},
+                                    HttpUnauthorized )
+    
+    def reject(self, request, **kwargs):
+        """ Reject a link. This action is done by the receiver.
+        Arguments:
+
+        Note: we do this for security reason, to avoid someone to manipulate
+        links directly with a PUT        
+        """
+        self.method_check(request, allowed=['post'])
+        if request.user and request.user.is_authenticated():
             #data = self.deserialize(request, request.body, 
                                     #format=request.META.get('CONTENT_TYPE', 
                                                            #'application/json'))
-            #try:
-                #receiver = User.objects.get(id=data.get('receiver', ''))
-                #Link.objects.create(sender=request.user, receiver=receiver,
-                                    #sender_status='ACC', receiver_status='PEN')
-                #return self.create_response(request, {'success': True}, 
-                                            #HttpCreated)
-            #except:
-                #return self.create_response(request, {'success': False}, 
-                                            #HttpUnauthorized) # to be improved
-        #else:
-            #return self.create_response(request, { 'success': False }, 
-                                                 #HttpUnauthorized)
-
-    ## WARNING PROBABLY NOT NECESSARY, USE PUT INSTEAD
-    #def accept(self, request, **kwargs):
-        #""" Accept a new link. This action is done by the receiver
-        #Arguments:
-        #<link> Link id 
-
-        #Note: we do this for security reason, to avoid someone to create links
-        #for others        
-        #"""
-        #self.method_check(request, allowed=['put'])
-        #if request.user and request.user.is_authenticated():
-            #data = self.deserialize(request, request.body, 
-                                    #format=request.META.get('CONTENT_TYPE', 
-                                                           #'application/json'))
-            #try:
-                #link = Link.objects.get(id=data.get('link', ''))
-                #link.receiver_status='ACC'
-                #link.save()
-                #return self.create_response(request, {'success': True}, 
-                                            #HttpCreated)
-            #except:
-                #return self.create_response(request, {'success': False}, 
-                                            #HttpUnauthorized) # to be improved
-        #else:
-            #return self.create_response(request, { 'success': False }, 
-                                                 #HttpUnauthorized)
-
-    #def apply_filters(self, request, applicable_filters):
-        #semi_filtered = super(FriendResource, self
-                              #).apply_filters(request, applicable_filters)
-        #res = semi_filtered.filter(  Q(sender  =request.user)
-                                   #| Q(receiver=request.user)
-                                  #)
-        #return res
-
+            try:
+                link = Link.objects.get(id=kwargs['link_id'])
+                if link.receiver == request.user:
+                    link.receiver_status='REJ'
+                    link.save()
+                    return self.create_response(request, {'success': True})
+                else:
+                    return self.create_response(
+                                    request, 
+                                    {'reason': 'Link does not below to you'},
+                                    HttpForbidden)
+            except Link.DoesNotExist:
+                return self.create_response(request, 
+                                            {'reason': 'Link not found'},
+                                            HttpForbidden)
+            else:
+                return self.create_response(request, 
+                                            {'reason': 'Unexpected'},
+                                            HttpForbidden)
+        else:
+            return self.create_response(
+                                    request,
+                                    {'reason': "You are not authenticated"},
+                                    HttpUnauthorized )
     
 class ContactResource(Resource):
     class Meta:

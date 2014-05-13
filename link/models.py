@@ -38,8 +38,10 @@ class Link(models.Model):
                     (BLOCKED , 'blocked' ) )
     sender   = models.ForeignKey(User, related_name="link_as_sender")
     receiver = models.ForeignKey(User, related_name="link_as_receiver")
-    sender_status   = models.CharField(max_length=3, choices=LINK_STATUS)
-    receiver_status = models.CharField(max_length=3, choices=LINK_STATUS)
+    sender_status   = models.CharField(max_length=3, choices=LINK_STATUS,
+                                                     default=NEW)
+    receiver_status = models.CharField(max_length=3, choices=LINK_STATUS,
+                                                     default=NEW)
     sent_at     = models.DateTimeField(blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
@@ -47,7 +49,7 @@ class Link(models.Model):
         unique_together = ("sender", "receiver")
         
     def validate_unique(self, **kwargs):
-        # check "reverse link"
+        # check "reverse link" and ensure uniqueness
         l = None
         try:
             l = Link.objects.get(sender=self.receiver, receiver=self.sender)
@@ -60,8 +62,10 @@ class Link(models.Model):
         super(Link, self).validate_unique(**kwargs)
         
     def __unicode__(self):
-        return unicode(self.sender) + '  ->  ' + unicode(self.receiver)
-
+        return '[%d] %s(%s) -> %s(%s)'%(self.id, unicode(self.sender),
+                                                 self.sender_status,
+                                                 unicode(self.receiver),
+                                                 self.receiver_status)
 
 class Invite(models.Model):
     """ INVITE behavior

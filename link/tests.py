@@ -45,57 +45,131 @@ class LinkTestCase(TestCase):
         Link.objects.create(sender=u07, receiver=u08)
         Link.objects.create(sender=u09, receiver=u10)
 
+    def test_journey(self):
+        """do typical sequence of calls an app would do"""
+        l = Link.objects.get(id=1)
+        self.assertEqual(l.sender.username, 'user1@fr.fr')
+        self.assertEqual(l.receiver.username, 'user2@fr.fr')
+        self.assertEqual(l.sender_status, 'NEW')
+        self.assertEqual(l.receiver_status, 'NEW')
+        l = Link.objects.get(id=2)
+        self.assertEqual(l.sender.username, 'user1@fr.fr')
+        self.assertEqual(l.receiver.username, 'user3@fr.fr')
+        self.assertEqual(l.sender_status, 'NEW')
+        self.assertEqual(l.receiver_status, 'NEW')
+        (sessionid, csrftoken) = self.login('user1@fr.fr')
+        #user1 wants to connect to some users
+        res = self.c.post('/api/v1/link/1/connect/', sessionid=sessionid)
+        res = self.c.post('/api/v1/link/2/connect/', sessionid=sessionid)
+        l = Link.objects.get(id=1)
+        self.assertEqual(l.sender_status, 'ACC')
+        self.assertEqual(l.receiver_status, 'PEN')
+        l = Link.objects.get(id=2)
+        self.assertEqual(l.sender_status, 'ACC')
+        self.assertEqual(l.receiver_status, 'PEN')
+        #user2 accepts connection
+        (sessionid, csrftoken) = self.login('user2@fr.fr')
+        res = self.c.post('/api/v1/link/1/accept/', sessionid=sessionid)
+        l = Link.objects.get(id=1)
+        self.assertEqual(l.sender_status, 'ACC')
+        self.assertEqual(l.receiver_status, 'ACC')
+        #user3 rejects connection
+        (sessionid, csrftoken) = self.login('user3@fr.fr')
+        res = self.c.post('/api/v1/link/2/reject/', sessionid=sessionid)
+        l = Link.objects.get(id=2)
+        self.assertEqual(l.sender_status, 'ACC')
+        self.assertEqual(l.receiver_status, 'REJ')
+
+
     def test_my_links(self):
         """links that belong to me"""
-        (sessionid, csrftoken) = self.login()
+        (sessionid, csrftoken) = self.login('user1@fr.fr')
         res = self.c.get('/api/v1/link/', sessionid=sessionid)
-        data = json.loads(res.content)
-        self.assertEqual(data['meta']['total_count'], 5)
+        content = json.loads(res.content)
+        self.assertEqual(content['meta']['total_count'], 5)
         expected = ( ('user1@fr.fr', 'user2@fr.fr'),
                      ('user1@fr.fr', 'user3@fr.fr'),
                      ('user1@fr.fr', 'user4@fr.fr'),
                      ('user5@fr.fr', 'user1@fr.fr'),
                      ('user6@fr.fr', 'user1@fr.fr') )
-        self.assertEqual(cmp_result(data['objects'], expected), 5)
+        self.assertEqual(cmp_result(content['objects'], expected), 5)
         unexpected = ( ('user1@fr.fr', 'user1@fr.fr'),
                        ('user2@fr.fr', 'user1@fr.fr'),
                        ('user1@fr.fr', 'user5@fr.fr'),
                        ('user7@fr.fr', 'user8@fr.fr'),
                        ('user9@fr.fr', 'user10@fr.fr') )
-        self.assertEqual(cmp_result(data['objects'], unexpected), 0)
+        self.assertEqual(cmp_result(content['objects'], unexpected), 0)
 
-    def test_my_friends(self):
-        """users I am connected to"""
-        (sessionid, csrftoken) = self.login()
-        res = self.c.get('/api/v1/link/?sender_status=ACC&receiver_status=ACC',
-                         sessionid=sessionid)
-        data = json.loads(res.content)
-        self.assertEqual(data['meta']['total_count'], 0)
-        # need more tests
+    def test_unauth_method(self):
+        (sessionid, csrftoken) = self.login('user1@fr.fr')
+        #list
+        res = self.c.get('/api/v1/link/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 200)
+        res = self.c.put('/api/v1/link/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.post('/api/v1/link/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.delete('/api/v1/link/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        #detail
+        res = self.c.get('/api/v1/link/1/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 200)
+        res = self.c.put('/api/v1/link/1/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.post('/api/v1/link/1/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.delete('/api/v1/link/1/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        #connect
+        res = self.c.get('/api/v1/link/1/connect/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.put('/api/v1/link/1/connect/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.post('/api/v1/link/1/connect/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 200)
+        res = self.c.delete('/api/v1/link/1/connect/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        #accept
+        res = self.c.get('/api/v1/link/4/accept/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.put('/api/v1/link/4/accept/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.post('/api/v1/link/4/accept/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 200)
+        res = self.c.delete('/api/v1/link/4/accept/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        #reject
+        res = self.c.get('/api/v1/link/5/reject/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.put('/api/v1/link/5/reject/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
+        res = self.c.post('/api/v1/link/5/reject/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 200)
+        res = self.c.delete('/api/v1/link/5/reject/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 405)
 
-    def test_user_to_connect_to(self):
-        """user I can connect to"""
-        pass
+    def test_unauth_user(self):
+        res = self.c.get('/api/v1/link/')
+        self.assertEqual(res.status_code, 401)
+        res = self.c.get('/api/v1/link/1/')
+        self.assertEqual(res.status_code, 401)
 
     def test_link_detail(self):
         """test access to links that belong to me or not"""
         # can access my link detail
+        (sessionid, csrftoken) = self.login('user1@fr.fr')
+        res = self.c.get('/api/v1/link/1/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 200)
+        res = self.c.get('/api/v1/link/4/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 200)
         # cannot access others link detail
-        pass
+        res = self.c.get('/api/v1/link/7/', sessionid=sessionid)
+        self.assertEqual(res.status_code, 404)
+        #make sure link exists, in case of...
+        Link.objects.get(id=7) #will raise an exception if doesnotexist
 
-    def test_not_auth(self):
-        """trying as non-authorized user"""
-        pass
-
-    def test_forbidden_method(self):
-        pass
-    
-    def test_accept_link(self):
-        pass
-        
-
-    def login(self):
-        data = {'username':'user1@fr.fr', 'password':'pwd'}
+    def login(self, username):
+        data = {'username':username, 'password':'pwd'}
         res = self.c.post('/api/v1/auth/login/',
                           data = json.dumps(data),
                           content_type='application/json')

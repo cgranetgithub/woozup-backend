@@ -1,14 +1,11 @@
-import os
 from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User, Group
 
+from service.utils import image_path
+
 MALE   = 'MA'
 FEMALE = 'FE'
-
-def image_path(instance, filename):
-    filename_base, filename_ext = os.path.splitext(filename)
-    return 'user/%d%s'%(instance.id, filename_ext.lower())
 
 class UserProfile(models.Model):
     GENDER = ( (MALE  , 'male'  ),

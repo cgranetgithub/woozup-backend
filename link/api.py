@@ -18,8 +18,7 @@ class InviteResource(ModelResource):
     class Meta:
         resource_name = 'invite'
         queryset = Invite.objects.all()
-        list_allowed_methods = ['get']
-        detail_allowed_methods = ['get']
+        allowed_methods = ['get']
         filtering = {
                     'sender': ALL_WITH_RELATIONS,
                     'receiver': ALL,
@@ -31,13 +30,6 @@ class InviteResource(ModelResource):
     def get_object_list(self, request):
         return Invite.objects.filter( sender=request.user )
 
-    #def apply_filters(self, request, applicable_filters):
-        #semi_filtered = super(InviteResource, self
-                              #).apply_filters(request, applicable_filters)
-        #res = semi_filtered.filter(sender=request.user)
-        #return res
-        
-
 class LinkResource(ModelResource):
     sender   = fields.ToOneField(UserResource, 
                                 attribute='sender', full=True)
@@ -46,10 +38,9 @@ class LinkResource(ModelResource):
     class Meta:
         resource_name = 'link'
         queryset = Link.objects.all()
-        list_allowed_methods   = ['get']
-                               #no POST: links are created by the backend
-        detail_allowed_methods = ['get']
-                               #no PUT: links are modified via custom commands
+        allowed_methods = ['get']
+        #no POST: links are created by the backend
+        #no PUT : links are modified via custom commands
         filtering = {
                     'sender': ALL_WITH_RELATIONS,
                     'receiver': ALL_WITH_RELATIONS,
@@ -185,9 +176,7 @@ class LinkResource(ModelResource):
 class ContactResource(Resource):
     class Meta:
         resource_name = 'contact'
-        #queryset = User.objects.all()
         allowed_methods = []
-        #excludes = ['password', 'is_superuser', 'is_staff']
         authorization  = DjangoAuthorization()
         authentication = SessionAuthentication()
 

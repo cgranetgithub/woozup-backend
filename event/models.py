@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from service.utils import image_path
+
 class EventCategory(models.Model):
     title       = models.CharField(max_length=50)
     short_name  = models.CharField(max_length=20)
@@ -24,10 +26,6 @@ class EventType(models.Model):
     updated_at  = models.DateTimeField(auto_now=True)
     def __unicode__(self):
         return self.title
-
-def image_path(instance, filename):
-    filename_base, filename_ext = os.path.splitext(filename)
-    return 'event/%d%s'%(instance.id, filename_ext.lower())
 
 class Event(models.Model):
     title        = models.CharField(max_length=50, blank=True)

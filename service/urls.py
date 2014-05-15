@@ -19,6 +19,7 @@ v1_api.register(AuthResource())
 #v1_api.register(UserToConnectResource())
 #v1_api.register(PeopleToInviteResource())
 v1_api.register(LinkResource())
+v1_api.register(InviteResource())
 v1_api.register(ContactResource())
 
 urlpatterns = patterns('',

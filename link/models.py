@@ -1,8 +1,10 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-    
-# state is independent from the notification sending #
+ 
+from service.utils import image_path
+
+# state is independent of the notification sending
 NEW      = 'NEW' # default state after automatic creation
 PENDING  = 'PEN' # waiting for action
 ACCEPTED = 'ACC' # accepted by sender or receiver
@@ -90,6 +92,8 @@ class Invite(models.Model):
     sender = models.ForeignKey(User)
     email  = models.EmailField()
     name   = models.CharField(max_length=255, blank=True)
+    avatar = models.ImageField(upload_to=image_path,
+                               blank=True, null=True)
     status = models.CharField(max_length=3, choices=INVITE_STATUS)
     sent_at = models.DateTimeField(blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True)

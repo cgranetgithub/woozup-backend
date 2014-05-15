@@ -17,7 +17,7 @@ DATABASES = {
 
 INSTALLED_APPS = list(INSTALLED_APPS)
 INSTALLED_APPS.remove('storages')
-INSTALLED_APPS.append('django_extensions')
+#INSTALLED_APPS.append('django_extensions')
 INSTALLED_APPS = tuple(INSTALLED_APPS)
 del STATICFILES_STORAGE
 del DEFAULT_FILE_STORAGE

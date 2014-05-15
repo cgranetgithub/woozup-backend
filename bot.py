@@ -10,24 +10,24 @@ api_url = 'http://%s/api/v1/'%hostname
 def random_string():
     return ''.join([random.choice(string.ascii_lowercase) for n in xrange(3)])
 
-types = json.loads(requests.get(api_url + 'type/').content)['objects']
+types = json.loads(requests.get(api_url + 'event_type/').content)['objects']
 
 file = open('nbuser.txt', 'r')
 nb_user = int(file.read())
 
-
-for i in range(7*nb_user/10):
-    # login
-    email = 'user%d@fr.fr'%(random.randint(1, nb_user))
-    data = {'username':email, 'password':'pwd'}
-    r = requests.post(api_url + 'auth/login/',
-                        data = json.dumps(data),
-                        headers = {'content-type': 'application/json'})
-    # get sessionid + csrftoken for POST)
-    cookies = r.cookies
-    sessionid = cookies['sessionid']
-    csrftoken = cookies['csrftoken']
-    # accept pending links
+if nb_user != 0:
+    for i in range(7*nb_user/10):
+        # login
+        email = 'user%d@fr.fr'%(random.randint(1, nb_user))
+        data = {'username':email, 'password':'pwd'}
+        r = requests.post(api_url + 'auth/login/',
+                            data = json.dumps(data),
+                            headers = {'content-type': 'application/json'})
+        # get sessionid + csrftoken for POST)
+        cookies = r.cookies
+        sessionid = cookies['sessionid']
+        csrftoken = cookies['csrftoken']
+        # accept pending links
 
 
 nb = 2
@@ -45,13 +45,14 @@ for i in range(nb):
     sessionid = cookies['sessionid']
     csrftoken = cookies['csrftoken']
     # connect to nb friends
-    for i in range(nb):
-        data = {'receiver' : random.randint(1, nb_user)}
-        r = requests.post(api_url + 'link/connect/',
-                        data = json.dumps(data),
-                        headers = {'content-type': 'application/json',
-                                    'X-CSRFToken' : csrftoken},
-                        cookies=cookies)
+    if nb_user > nb:
+        for i in range(nb):
+            data = {'receiver' : random.randint(1, nb_user)}
+            r = requests.post(api_url + 'link/connect/',
+                            data = json.dumps(data),
+                            headers = {'content-type': 'application/json',
+                                        'X-CSRFToken' : csrftoken},
+                            cookies=cookies)
     # create events
     for i in range(3):
         dt = datetime.datetime.now(pytz.UTC) + datetime.timedelta(i+1)

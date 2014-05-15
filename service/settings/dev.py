@@ -15,14 +15,14 @@ DATABASES = {
     }
 }
 
-#INSTALLED_APPS = list(INSTALLED_APPS)
-#INSTALLED_APPS.remove('storages')
-#INSTALLED_APPS.append('django_extensions')
-#INSTALLED_APPS = tuple(INSTALLED_APPS)
-#del STATICFILES_STORAGE
-#del DEFAULT_FILE_STORAGE
-#STATIC_ROOT = 'staticfiles'
-#STATIC_URL = '/static/'
+INSTALLED_APPS = list(INSTALLED_APPS)
+INSTALLED_APPS.remove('storages')
+INSTALLED_APPS.append('django_extensions')
+INSTALLED_APPS = tuple(INSTALLED_APPS)
+del STATICFILES_STORAGE
+del DEFAULT_FILE_STORAGE
+STATIC_ROOT = 'staticfiles'
+STATIC_URL = '/static/'
 
 EMAIL_HOST = 'auth.smtp.1and1.fr'
 EMAIL_HOST_USER = 'contact@linbees.com'

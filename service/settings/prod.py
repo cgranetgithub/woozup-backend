@@ -85,7 +85,7 @@ EMAIL_USE_TLS = False
 # Notification to mobiles
 PUSH_NOTIFICATIONS_SETTINGS = {
         "GCM_API_KEY": os.environ.get("GCM_API_KEY", ""),
-        "APNS_CERTIFICATE": "/path/to/your/certificate.pem",
+        #"APNS_CERTIFICATE": "/path/to/your/certificate.pem",
         }
 
 # Cache settings.

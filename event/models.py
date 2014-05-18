@@ -31,6 +31,7 @@ class Event(models.Model):
     title        = models.CharField(max_length=50, blank=True)
     comment      = models.CharField(max_length=255, blank=True)
     special      = models.BooleanField(default=False)
+    public       = models.BooleanField(default=False)
     start        = models.DateTimeField()
     end          = models.DateTimeField(blank=True, null=True)
     event_type   = models.ForeignKey(EventType)

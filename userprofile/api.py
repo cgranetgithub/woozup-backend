@@ -15,6 +15,7 @@ from userprofile.models import UserProfile
 
 class ProfileResource(ModelResource):
     name = fields.CharField(attribute='name', readonly=True)
+    allowed_methods = []
     class Meta:
         resource_name = 'profile'
         queryset = UserProfile.objects.all()

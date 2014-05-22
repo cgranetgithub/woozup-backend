@@ -198,10 +198,8 @@ class ContactResource(Resource):
             create_link_list = []
             create_invite_list = []
             for i in data:
-                print "=>", i['email']
                 # skip duplicates
                 if i['email'] in email_list:
-                    print "duplicate, skip", i['email']
                     continue
                 else:
                     email_list.append(i['email'])
@@ -209,18 +207,15 @@ class ContactResource(Resource):
                 try:
                     #user = User.objects.select_related().get(username=i['email'])
                     user = User.objects.get(username=i['email'])
-                    print user, 'exists'
                     # YES => existing Link?
                     try:
                         Link.objects.get(
                             ( Q(sender=request.user) & Q(receiver=user) )
                           | ( Q(sender=user) & Q(receiver=request.user) )
                                         )
-                        print "existing link"
                         # YES => nothing to do
                     except Link.DoesNotExist:
                         # NO => create a new Link
-                        print 'must create link'
                         link = Link(sender=request.user, receiver=user)
                         create_link_list.append(link)
                 except User.DoesNotExist:
@@ -228,11 +223,9 @@ class ContactResource(Resource):
                     try:
                         Invite.objects.get(sender=request.user,
                                            email=i['email'])
-                        print "existing invite"
                         # YES => nothing to do
                     except Invite.DoesNotExist:
                         # NO => create a new Invite
-                        print 'must create invite', request.user, i['email']
                         invite = Invite(sender=request.user, email=i['email'])
                         create_invite_list.append(invite)
             # 2) create the missing connections (bulk for better performance)

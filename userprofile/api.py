@@ -62,6 +62,10 @@ class UserResource(ModelResource):
 
     def check_auth(self, request, **kwargs):
         self.method_check(request, allowed=['get'])
+        #
+        from service.notification import send_notification
+        send_notification([request.user.id], {'geoevent message':'checking geoevent auth'})
+        #
         if request.user and request.user.is_authenticated():
             return self.create_response(request, { 'success': True })
         else:
@@ -134,129 +138,3 @@ class AuthResource(ModelResource):
             return self.create_response(request, {'success': False,
                                                   'reason': 'incorrect'},
                                                  HttpUnauthorized )
-
-#class FriendResource(ModelResource):
-    #"""
-    #An API to get friends list, authentication required
-    #"""
-    #profile = fields.ToOneField(ProfileResource, 
-                                #attribute='userprofile', full=True)
-    #class Meta:
-        #resource_name = 'friends'
-        #queryset = User.objects.all()
-        #list_allowed_methods = ['get']
-        #detail_allowed_methods = []
-        #excludes = ['password', 'is_superuser', 'is_staff']
-        #filtering = {
-                    #'username': ALL,
-                    #}
-        #authorization  = DjangoAuthorization()
-        #authentication = SessionAuthentication()
-
-    ##def build_filters(self, filters=None):
-        ##if filters is None:
-            ##filters = {}
-        ##orm_filters = super(FriendResource, self).build_filters(filters)
-        ##if('query' in filters):
-            ##query = filters['query']
-            ##qset = (
-                    ##Q(name__icontains=query) |
-                    ##Q(description__icontains=query) |
-                    ##Q(email__icontains=query)
-                    ##)
-            ##orm_filters.update({'custom': qset})
-        ##return orm_filters
-
-    #def apply_filters(self, request, applicable_filters):
-        ##if 'custom' in applicable_filters:
-            ##custom = applicable_filters.pop('custom')
-        ##else:
-            ##custom = None
-        #semi_filtered = super(FriendResource, self).apply_filters(
-                                                            #request,
-                                                            #applicable_filters)
-        #res = semi_filtered.filter(
-            #( Q(link_as_sender__sender    =request.user) | 
-              #Q(link_as_sender__receiver  =request.user) | 
-              #Q(link_as_receiver__sender  =request.user) | 
-              #Q(link_as_receiver__receiver=request.user) ),
-            #( Q(link_as_sender__sender_status='ACC') & 
-              #Q(link_as_sender__receiver_status='ACC') ) | 
-            #( Q(link_as_receiver__sender_status='ACC') & 
-              #Q(link_as_receiver__receiver_status='ACC') ) ).exclude(
-                  #username=request.user.username)
-        #return res
-        ##return semi_filtered.filter(custom) if custom else semi_filtered
-
-    ##def myfriends(self, request, **kwargs):
-        ##""" Get my friends list, that users which have an ACC/ACC link with me
-        ##Arguments: """
-        ###self.method_check(request, allowed=['get'])
-        ###data = self.deserialize(request, request.body, 
-                                ###format=request.META.get('CONTENT_TYPE', 
-                                                        ###'application/json'))
-        ###try:
-        ##friends = User.objects.filter(
-            ##( Q(link_as_sender__sender    =request.user) | 
-              ##Q(link_as_sender__receiver  =request.user) | 
-              ##Q(link_as_receiver__sender  =request.user) | 
-              ##Q(link_as_receiver__receiver=request.user) ),
-            ##link_as_sender__sender_status='ACC',
-            ##link_as_receiver__sender_status='ACC',
-        ###| Q(link__receiver=request.user), Q(link__receiver_status='ACC')
-            ##)
-        ##print friends
-        ##from django.core import serializers
-        ##data = serializers.serialize("json", friends)
-        ##print data
-        ###import json
-        ###print json.dumps(friends)
-        ##return self.create_response(request, {'objects': data}, 
-                                    ##HttpCreated)
-        ###except:
-            ###return self.create_response(request, {'success': False}, 
-                                        ###HttpUnauthorized) # to be improved
-
-#class UserToConnectResource(FriendResource):
-    #"""
-    #An API to get list of User I can connect to, authentication required
-    #"""
-    #class Meta(FriendResource.Meta):
-        #resource_name = 'userstoconnect'
-
-    #def apply_filters(self, request, applicable_filters):
-        #semi_filtered = super(FriendResource, self).apply_filters(
-                                                            #request,
-                                                            #applicable_filters)
-        #res = semi_filtered.filter(
-                  #(  Q(link_as_sender__sender=request.user)
-                   #& Q(link_as_sender__sender_status='NEW')
-                  #)
-                #| (  Q(link_as_receiver__sender=request.user)
-                   #& Q(link_as_receiver__sender_status='NEW') 
-                  #)
-                #| (  Q(link_as_sender__receiver=request.user)
-                   #& Q(link_as_sender__receiver_status__in=['NEW', 'PEN'])
-                  #)
-                #| (  Q(link_as_receiver__receiver=request.user)
-                   #& Q(link_as_receiver__receiver_status__in=['NEW', 'PEN']) 
-                  #)
-                #).exclude(username=request.user.username)
-        #return res
-
-#class PeopleToInviteResource(FriendResource):
-    #"""
-    #An API to get list of non-User I can invite, authentication required
-    #"""
-    #class Meta(FriendResource.Meta):
-        #resource_name = 'peopletoinvite'
-
-    #def apply_filters(self, request, applicable_filters):
-        #semi_filtered = super(FriendResource, self).apply_filters(
-                                                            #request,
-                                                            #applicable_filters)
-        #res = semi_filtered.filter(
-                  #(  Q(invite__sender=request.user)
-                   #& Q(invite__status='NEW')
-                  #) )
-        #return res

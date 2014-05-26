@@ -15,19 +15,26 @@ types = json.loads(requests.get(api_url + 'event_type/').content)['objects']
 file = open('nbuser.txt', 'r')
 nb_user = int(file.read())
 
+headers = {'content-type': 'application/json'}
+
 if nb_user != 0:
     for i in range(7*nb_user/10):
         # login
         email = 'user%d@fr.fr'%(random.randint(1, nb_user))
         data = {'username':email, 'password':'pwd'}
         r = requests.post(api_url + 'auth/login/',
-                            data = json.dumps(data),
-                            headers = {'content-type': 'application/json'})
-        # get sessionid + csrftoken for POST)
-        cookies = r.cookies
-        sessionid = cookies['sessionid']
-        csrftoken = cookies['csrftoken']
+                          data = json.dumps(data),
+                          headers = {'content-type': 'application/json'})
+        # get api_key
+        content = json.loads(r.content)
+        api_key = content['api_key']
+        username = email
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         # accept pending links
+        r = requests.get(api_url + 'link/%s&receiver_status=PEN'%auth)
+        content = json.loads(r.content)
+        for i in content['objects']:
+            r = requests.post(api_url + 'link/%s/accept/%s'%(i['id'], auth))
 
 
 nb = 2
@@ -39,32 +46,35 @@ for i in range(nb):
     r = requests.post(api_url + 'auth/register/', 
                       data=json.dumps({'username':email, 'password':'pwd',
                                        'first_name':name}),
-                      headers = {'content-type': 'application/json'})
-    # get sessionid + csrftoken for POST)
-    cookies = r.cookies
-    sessionid = cookies['sessionid']
-    csrftoken = cookies['csrftoken']
-    # connect to nb friends
+                      headers = headers)
+    # get api_key
+    content = json.loads(r.content)
+    api_key = content['api_key']
+    username = email
+    auth = '?username=%s&api_key=%s'%(username, api_key)
+    # declare contacts
     if nb_user > nb:
-        for i in range(nb):
-            data = {'receiver' : random.randint(1, nb_user)}
-            r = requests.post(api_url + 'link/connect/',
-                            data = json.dumps(data),
-                            headers = {'content-type': 'application/json',
-                                        'X-CSRFToken' : csrftoken},
-                            cookies=cookies)
+        email_list = []
+        for i in random.sample(range(1, nb_user, 1), nb_user/3):
+            email_list.append({'email':'user%d@fr.fr'%i})
+        r = requests.post(api_url + 'contact/sort/%s'%auth,
+                        data = json.dumps(email_list),
+                        headers = headers)
+    # connect to contacts
+    r = requests.get(api_url + 'link/%s&sender_status=NEW&receiver_status=NEW'%auth)
+    content = json.loads(r.content)
+    for i in content['objects']:
+        r = requests.post(api_url + 'link/%s/connect/%s'%(i['id'], auth))
     # create events
     for i in range(3):
         dt = datetime.datetime.now(pytz.UTC) + datetime.timedelta(i+1)
         dt = dt.strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         t = random.choice(types)
         p = "%f, %f"%(random.random() * 100, random.random() * 100)
-        data = {'start' : dt, 'type' : t['resource_uri'], 'position' : p}
-        r = requests.post(api_url + 'event/',
-                        data = json.dumps(data),
-                        headers = {'content-type': 'application/json',
-                                    'X-CSRFToken' : csrftoken},
-                        cookies=cookies)
+        data = {'start' : dt, 'event_type' : t['resource_uri'], 'position' : p}
+        r = requests.post(api_url + 'event/%s'%auth,
+                          data = json.dumps(data),
+                          headers = headers)
 
 file = open("nbuser.txt", "w")
 file.write("%d"%(nb_user+nb))

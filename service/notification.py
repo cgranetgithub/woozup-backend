@@ -1,27 +1,33 @@
 from push_notifications.models import APNSDevice, GCMDevice
+#from push_notifications.api import GCMDeviceAuthenticatedResource
+#from django.contrib.auth.models import User
 
-from tastypie import fields
-from tastypie.resources import ModelResource
-from tastypie.authorization import DjangoAuthorization
-from tastypie.authentication import SessionAuthentication
+#from tastypie import fields
+#from tastypie.resources import ModelResource
+#from tastypie.authorization import DjangoAuthorization
+#from tastypie.authentication import ApiKeyAuthentication
 
-from userprofile.api import UserResource
-
-class GCMDeviceAuthenticatedResource(ModelResource):
-    user = fields.ToOneField(UserResource, "user")
-
-    class Meta:
-        resource_name = "device/gcm"
-        queryset = GCMDevice.objects.all()
-        list_allowed_methods = ['post']
-        detail_allowed_methods = []
-        authorization  = DjangoAuthorization()
-        authentication = SessionAuthentication()
+#class GCMDeviceAuthenticatedResource(ModelResource):
+    #class Meta:
+        #resource_name = "device/gcm"
+        #queryset = GCMDevice.objects.all()
+        #list_allowed_methods = ['post']
+        #detail_allowed_methods = []
+        ##authorization  = DjangoAuthorization()
+        ##authentication = ApiKeyAuthentication()
                 
-    def obj_create(self, bundle, **kwargs):
-            # See https://github.com/toastdriven/django-tastypie/issues/854
-            return super(GCMDeviceAuthenticatedResource, self).obj_create(
-                                bundle, user=bundle.request.user, **kwargs)
+    ##def obj_create(self, bundle, **kwargs):
+        ##print kwargs
+        ##user = User.objects.get(username=bundle.request.user.username)
+        ###kwargs['user'] = user #force owner to the authorized user
+        ##print kwargs, bundle
+        ##return super(GCMDeviceAuthenticatedResource, self).obj_create(
+                                                        ##bundle, user=user, **kwargs)
+
+#class Gcm(GCMDeviceAuthenticatedResource):
+    #class Meta(GCMDeviceAuthenticatedResource.Meta):
+        #authorization  = DjangoAuthorization()
+        #authentication = ApiKeyAuthentication()
 
 def send_notification(userlist, message):
     try:

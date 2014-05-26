@@ -3,7 +3,7 @@ from tastypie.http import HttpUnauthorized, HttpForbidden
 from tastypie.utils import trailing_slash
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authorization import DjangoAuthorization
-from tastypie.authentication import SessionAuthentication
+from tastypie.authentication import ApiKeyAuthentication
 
 from django.db.models import Q
 from django.conf.urls import url
@@ -25,7 +25,7 @@ class InviteResource(ModelResource):
                     'status': ALL,
                     }
         authorization  = DjangoAuthorization()
-        authentication = SessionAuthentication()
+        authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
         return Invite.objects.filter( sender=request.user )
@@ -48,7 +48,7 @@ class LinkResource(ModelResource):
                     'receiver_status': ALL,
                     }
         authorization  = DjangoAuthorization()
-        authentication = SessionAuthentication()
+        authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
         return Link.objects.filter(  Q(sender=request.user)
@@ -75,6 +75,8 @@ class LinkResource(ModelResource):
         links directly with a PUT        
         """
         self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
         if request.user and request.user.is_authenticated():
             try:
                 link = Link.objects.get(id=kwargs['link_id'])
@@ -110,6 +112,8 @@ class LinkResource(ModelResource):
         links directly with a PUT        
         """
         self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
         if request.user and request.user.is_authenticated():
             try:
                 link = Link.objects.get(id=kwargs['link_id'])
@@ -120,7 +124,7 @@ class LinkResource(ModelResource):
                 else:
                     return self.create_response(
                                     request, 
-                                    {'reason': 'Link does not below to you'},
+                                    {'reason': 'Link does not belong to you'},
                                     HttpForbidden)
             except Link.DoesNotExist:
                 return self.create_response(request, 
@@ -144,6 +148,8 @@ class LinkResource(ModelResource):
         links directly with a PUT        
         """
         self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
         if request.user and request.user.is_authenticated():
             #data = self.deserialize(request, request.body, 
                                     #format=request.META.get('CONTENT_TYPE', 
@@ -178,7 +184,7 @@ class ContactResource(Resource):
         resource_name = 'contact'
         allowed_methods = []
         authorization  = DjangoAuthorization()
-        authentication = SessionAuthentication()
+        authentication = ApiKeyAuthentication()
 
     def prepend_urls(self):
         return [
@@ -189,6 +195,8 @@ class ContactResource(Resource):
 
     def sort(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
         if request.user and request.user.is_authenticated():
             data = self.deserialize(request, request.body,
                                     format=request.META.get('CONTENT_TYPE',

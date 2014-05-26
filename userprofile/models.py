@@ -4,6 +4,8 @@ from django.contrib.auth.models import User, Group
 
 from service.utils import image_path
 
+from tastypie.models import create_api_key
+
 MALE   = 'MA'
 FEMALE = 'FE'
 
@@ -34,4 +36,4 @@ def user_post_save(sender, instance, created, **kwargs):
         instance.groups.add(Group.objects.get(name='std'))
 
 post_save.connect(user_post_save, sender=User)
-
+post_save.connect(create_api_key, sender=User)

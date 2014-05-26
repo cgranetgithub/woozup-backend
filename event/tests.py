@@ -19,25 +19,25 @@ class EventTestCase(TestCase):
 
     def test_journey(self):
         """do typical sequence of calls an app would do"""
-        (sessionid, csrftoken) = self.login('user1@fr.fr')
+        username = 'user1@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         #user1 creates an event
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/1/', 'start':start,
                 'position':'1, 1'}
-        res = self.c.post('/api/v1/event/',
+        res = self.c.post('/api/v1/event/%s'%auth,
                           data = json.dumps(data),
-                          content_type='application/json',
-                          sessionid=sessionid)
+                          content_type='application/json')
         e = Event.objects.get(id=1)
         self.assertEqual(e.owner.id, 1)
         self.assertEqual(e.event_type.id, 1)
         self.assertEqual(e.position, '1, 1')
         #user1 updates the event
         data = {'position':'2, 2'}
-        res = self.c.patch('/api/v1/event/1/',
+        res = self.c.patch('/api/v1/event/1/%s'%auth,
                          data = json.dumps(data),
-                         content_type='application/json',
-                         sessionid=sessionid)
+                         content_type='application/json')
         e = Event.objects.get(id=1)
         self.assertEqual(e.owner.id, 1)
         self.assertEqual(e.event_type.id, 1)
@@ -45,8 +45,8 @@ class EventTestCase(TestCase):
         #user2 participates
         #user2 cancels participation
         #user1 deletes the event
-        res = self.c.delete('/api/v1/event/1/', sessionid=sessionid)
-        res = self.c.get('/api/v1/event/1/', sessionid=sessionid)
+        res = self.c.delete('/api/v1/event/1/%s'%auth)
+        res = self.c.get('/api/v1/event/1/%s'%auth)
         self.assertEqual(res.status_code, 404)
         exists = True
         try:
@@ -58,56 +58,56 @@ class EventTestCase(TestCase):
 
     def test_my_events(self):
         """events I can see"""
-        (sessionid, csrftoken) = self.login('user1@fr.fr')
+        username = 'user1@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/1/', 'start':start,
                 'position':'1, 1'}
-        res = self.c.post('/api/v1/event/',
+        res = self.c.post('/api/v1/event/%s'%auth,
                           data = json.dumps(data),
-                          content_type='application/json',
-                          sessionid=sessionid)
-        res = self.c.get('/api/v1/event/', sessionid=sessionid)
+                          content_type='application/json')
+        res = self.c.get('/api/v1/event/%s'%auth)
         content = json.loads(res.content)
         self.assertEqual(content['meta']['total_count'], 1)
         #self.assertEqual(cmp_result(content['objects'], expected), 5)
         #self.assertEqual(cmp_result(content['objects'], unexpected), 0)
 
     def test_unauth_method(self):
-        (sessionid, csrftoken) = self.login('user1@fr.fr')
+        username = 'user1@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         #list
-        res = self.c.get('/api/v1/event/', sessionid=sessionid)
+        res = self.c.get('/api/v1/event/%s'%auth)
         self.assertEqual(res.status_code, 200)
-        res = self.c.put('/api/v1/event/', sessionid=sessionid)
+        res = self.c.put('/api/v1/event/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.patch('/api/v1/event/', sessionid=sessionid)
+        res = self.c.patch('/api/v1/event/%s'%auth)
         self.assertEqual(res.status_code, 405)
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/1/', 'start':start,
                 'position':'1, 1'}
-        res = self.c.post('/api/v1/event/',
+        res = self.c.post('/api/v1/event/%s'%auth,
                           data = json.dumps(data),
-                          content_type='application/json',
-                          sessionid=sessionid)
+                          content_type='application/json')
         self.assertEqual(res.status_code, 201)
-        res = self.c.delete('/api/v1/event/', sessionid=sessionid)
+        res = self.c.delete('/api/v1/event/%s'%auth)
         self.assertEqual(res.status_code, 405)
         #detail
-        res = self.c.get('/api/v1/event/1/', sessionid=sessionid)
+        res = self.c.get('/api/v1/event/1/%s'%auth)
         self.assertEqual(res.status_code, 200)
         data = {'position':'2, 2'}
-        res = self.c.patch('/api/v1/event/1/',
+        res = self.c.patch('/api/v1/event/1/%s'%auth,
                          data = json.dumps(data),
-                         content_type='application/json',
-                         sessionid=sessionid)
+                         content_type='application/json')
         self.assertEqual(res.status_code, 202)
-        res = self.c.put('/api/v1/event/1/',
+        res = self.c.put('/api/v1/event/1/%s'%auth,
                          data = json.dumps(data),
-                         content_type='application/json',
-                         sessionid=sessionid)
+                         content_type='application/json')
         self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/event/1/', sessionid=sessionid)
+        res = self.c.post('/api/v1/event/1/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.delete('/api/v1/event/1/', sessionid=sessionid)
+        res = self.c.delete('/api/v1/event/1/%s'%auth)
         self.assertEqual(res.status_code, 204)
 
     def test_unauth_user(self):
@@ -139,7 +139,5 @@ class EventTestCase(TestCase):
         res = self.c.post('/api/v1/auth/login/',
                           data = json.dumps(data),
                           content_type='application/json')
-        cookies = res.cookies
-        sessionid = cookies['sessionid']
-        csrftoken = cookies['csrftoken']
-        return (sessionid, csrftoken)
+        content = json.loads(res.content)
+        return content['api_key']

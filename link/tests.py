@@ -21,7 +21,7 @@ def cmp_result(content, searchfor):
     return found
 
 class LinkTestCase(TestCase):
-    c = Client()
+    c = Client(enforce_csrf_checks=True)
     
     def setUp(self):
         """set up users with new links"""
@@ -57,10 +57,12 @@ class LinkTestCase(TestCase):
         self.assertEqual(l.receiver.username, 'user3@fr.fr')
         self.assertEqual(l.sender_status, 'NEW')
         self.assertEqual(l.receiver_status, 'NEW')
-        (sessionid, csrftoken) = self.login('user1@fr.fr')
+        username = 'user1@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         #user1 wants to connect to some users
-        res = self.c.post('/api/v1/link/1/connect/', sessionid=sessionid)
-        res = self.c.post('/api/v1/link/2/connect/', sessionid=sessionid)
+        res = self.c.post('/api/v1/link/1/connect/%s'%auth)
+        res = self.c.post('/api/v1/link/2/connect/%s'%auth)
         l = Link.objects.get(id=1)
         self.assertEqual(l.sender_status, 'ACC')
         self.assertEqual(l.receiver_status, 'PEN')
@@ -68,14 +70,18 @@ class LinkTestCase(TestCase):
         self.assertEqual(l.sender_status, 'ACC')
         self.assertEqual(l.receiver_status, 'PEN')
         #user2 accepts connection
-        (sessionid, csrftoken) = self.login('user2@fr.fr')
-        res = self.c.post('/api/v1/link/1/accept/', sessionid=sessionid)
+        username = 'user2@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.post('/api/v1/link/1/accept/%s'%auth)
         l = Link.objects.get(id=1)
         self.assertEqual(l.sender_status, 'ACC')
         self.assertEqual(l.receiver_status, 'ACC')
         #user3 rejects connection
-        (sessionid, csrftoken) = self.login('user3@fr.fr')
-        res = self.c.post('/api/v1/link/2/reject/', sessionid=sessionid)
+        username = 'user3@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.post('/api/v1/link/2/reject/%s'%auth)
         l = Link.objects.get(id=2)
         self.assertEqual(l.sender_status, 'ACC')
         self.assertEqual(l.receiver_status, 'REJ')
@@ -83,8 +89,10 @@ class LinkTestCase(TestCase):
 
     def test_my_links(self):
         """links that belong to me"""
-        (sessionid, csrftoken) = self.login('user1@fr.fr')
-        res = self.c.get('/api/v1/link/', sessionid=sessionid)
+        username = 'user1@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.get('/api/v1/link/%s'%auth)
         content = json.loads(res.content)
         self.assertEqual(content['meta']['total_count'], 5)
         expected = ( ('user1@fr.fr', 'user2@fr.fr'),
@@ -101,51 +109,53 @@ class LinkTestCase(TestCase):
         self.assertEqual(cmp_result(content['objects'], unexpected), 0)
 
     def test_unauth_method(self):
-        (sessionid, csrftoken) = self.login('user1@fr.fr')
+        username = 'user1@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         #list
-        res = self.c.get('/api/v1/link/', sessionid=sessionid)
+        res = self.c.get('/api/v1/link/%s'%auth)
         self.assertEqual(res.status_code, 200)
-        res = self.c.put('/api/v1/link/', sessionid=sessionid)
+        res = self.c.put('/api/v1/link/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/', sessionid=sessionid)
+        res = self.c.post('/api/v1/link/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.delete('/api/v1/link/', sessionid=sessionid)
+        res = self.c.delete('/api/v1/link/%s'%auth)
         self.assertEqual(res.status_code, 405)
         #detail
-        res = self.c.get('/api/v1/link/1/', sessionid=sessionid)
+        res = self.c.get('/api/v1/link/1/%s'%auth)
         self.assertEqual(res.status_code, 200)
-        res = self.c.put('/api/v1/link/1/', sessionid=sessionid)
+        res = self.c.put('/api/v1/link/1/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/1/', sessionid=sessionid)
+        res = self.c.post('/api/v1/link/1/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.delete('/api/v1/link/1/', sessionid=sessionid)
+        res = self.c.delete('/api/v1/link/1/%s'%auth)
         self.assertEqual(res.status_code, 405)
         #connect
-        res = self.c.get('/api/v1/link/1/connect/', sessionid=sessionid)
+        res = self.c.get('/api/v1/link/1/connect/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.put('/api/v1/link/1/connect/', sessionid=sessionid)
+        res = self.c.put('/api/v1/link/1/connect/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/1/connect/', sessionid=sessionid)
+        res = self.c.post('/api/v1/link/1/connect/%s'%auth)
         self.assertEqual(res.status_code, 200)
-        res = self.c.delete('/api/v1/link/1/connect/', sessionid=sessionid)
+        res = self.c.delete('/api/v1/link/1/connect/%s'%auth)
         self.assertEqual(res.status_code, 405)
         #accept
-        res = self.c.get('/api/v1/link/4/accept/', sessionid=sessionid)
+        res = self.c.get('/api/v1/link/4/accept/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.put('/api/v1/link/4/accept/', sessionid=sessionid)
+        res = self.c.put('/api/v1/link/4/accept/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/4/accept/', sessionid=sessionid)
+        res = self.c.post('/api/v1/link/4/accept/%s'%auth)
         self.assertEqual(res.status_code, 200)
-        res = self.c.delete('/api/v1/link/4/accept/', sessionid=sessionid)
+        res = self.c.delete('/api/v1/link/4/accept/%s'%auth)
         self.assertEqual(res.status_code, 405)
         #reject
-        res = self.c.get('/api/v1/link/5/reject/', sessionid=sessionid)
+        res = self.c.get('/api/v1/link/5/reject/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.put('/api/v1/link/5/reject/', sessionid=sessionid)
+        res = self.c.put('/api/v1/link/5/reject/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/5/reject/', sessionid=sessionid)
+        res = self.c.post('/api/v1/link/5/reject/%s'%auth)
         self.assertEqual(res.status_code, 200)
-        res = self.c.delete('/api/v1/link/5/reject/', sessionid=sessionid)
+        res = self.c.delete('/api/v1/link/5/reject/%s'%auth)
         self.assertEqual(res.status_code, 405)
 
     def test_unauth_user(self):
@@ -157,13 +167,15 @@ class LinkTestCase(TestCase):
     def test_link_detail(self):
         """test access to links that belong to me or not"""
         # can access my link detail
-        (sessionid, csrftoken) = self.login('user1@fr.fr')
-        res = self.c.get('/api/v1/link/1/', sessionid=sessionid)
+        username = 'user1@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.get('/api/v1/link/1/%s'%auth)
         self.assertEqual(res.status_code, 200)
-        res = self.c.get('/api/v1/link/4/', sessionid=sessionid)
+        res = self.c.get('/api/v1/link/4/%s'%auth)
         self.assertEqual(res.status_code, 200)
         # cannot access others link detail
-        res = self.c.get('/api/v1/link/7/', sessionid=sessionid)
+        res = self.c.get('/api/v1/link/7/%s'%auth)
         self.assertEqual(res.status_code, 404)
         #make sure link exists, in case of...
         Link.objects.get(id=7) #will raise an exception if doesnotexist
@@ -173,7 +185,5 @@ class LinkTestCase(TestCase):
         res = self.c.post('/api/v1/auth/login/',
                           data = json.dumps(data),
                           content_type='application/json')
-        cookies = res.cookies
-        sessionid = cookies['sessionid']
-        csrftoken = cookies['csrftoken']
-        return (sessionid, csrftoken)
+        content = json.loads(res.content)
+        return content['api_key']

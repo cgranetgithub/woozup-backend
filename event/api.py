@@ -1,7 +1,7 @@
 from tastypie import fields
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authorization import DjangoAuthorization
-from tastypie.authentication import SessionAuthentication
+from tastypie.authentication import ApiKeyAuthentication
 
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -39,7 +39,7 @@ class EventResource(ModelResource):
                     'position'  : ALL,
                     }
         authorization  = DjangoAuthorization()
-        authentication = SessionAuthentication()
+        authentication = ApiKeyAuthentication()
 
     def obj_create(self, bundle, **kwargs):
         user = User.objects.get(username=bundle.request.user.username)

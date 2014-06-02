@@ -38,6 +38,7 @@ class EventResource(ModelResource):
                     'start'     : ALL,
                     'position'  : ALL,
                     }
+        ordering = ['start']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
@@ -56,8 +57,7 @@ class EventResource(ModelResource):
                           Q(link_as_sender__receiver_status='ACC') ) | 
                         ( Q(link_as_receiver__sender_status='ACC') & 
                           Q(link_as_receiver__receiver_status='ACC') ) )
-        if not myfriends:
-            myfriends = [request.user]
         return Event.objects.filter(
                                 Q( owner__in=myfriends )
+                              | Q( owner=request.user )
                               | Q( participants__id__exact=request.user.id ) )

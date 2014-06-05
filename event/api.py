@@ -1,13 +1,26 @@
 from tastypie import fields
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
+from tastypie.serializers import Serializer
 from tastypie.authorization import DjangoAuthorization
 from tastypie.authentication import ApiKeyAuthentication
 
 from django.db.models import Q
+from django.utils.timezone import is_naive 
 from django.contrib.auth.models import User
 
 from event.models import EventCategory, EventType, Event
-
+ 
+class MyDateSerializer(Serializer):
+    """
+    Our own serializer to format datetimes in ISO 8601 but with timezone
+    offset.
+    """
+    def format_datetime(self, data):
+        # If naive or rfc-2822, default behavior...
+        if is_naive(data) or self.datetime_formatting == 'rfc-2822':
+            return super(MyDateSerializer, self).format_datetime(data)
+        return data.isoformat()
+ 
 class EventCategoryResource(ModelResource):
     class Meta:
         resource_name = 'category'
@@ -29,6 +42,7 @@ class EventResource(ModelResource):
     event_type = fields.ToOneField(EventTypeResource,
                                    attribute='event_type', full=True)
     class Meta:
+        serializer = MyDateSerializer()
         resource_name = 'event'
         queryset = Event.objects.all()
         list_allowed_methods = ['get', 'post']
@@ -41,7 +55,7 @@ class EventResource(ModelResource):
         ordering = ['start']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
-
+    
     def obj_create(self, bundle, **kwargs):
         user = User.objects.get(username=bundle.request.user.username)
         kwargs['owner'] = user #force owner to the authorized user

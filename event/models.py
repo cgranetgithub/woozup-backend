@@ -46,3 +46,5 @@ class Event(models.Model):
     updated_at  = models.DateTimeField(auto_now=True)
     def __unicode__(self):
         return self.title + ' (' + unicode(self.event_type) + ')'
+    class Meta:
+        unique_together = ("start", "event_type", "owner")

@@ -12,8 +12,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from push_notifications.models import APNSDevice, GCMDevice
 
+from doc import authdoc
 from link.models import Link
-from userprofile.models import UserProfile
+from userprofile.models import UserProfile, UserPosition
 
 class ProfileResource(ModelResource):
     name = fields.CharField(attribute='name', readonly=True)
@@ -24,12 +25,23 @@ class ProfileResource(ModelResource):
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
     
+class PositionResource(ModelResource):
+    current = fields.CharField(attribute='current')
+    allowed_methods = []
+    class Meta:
+        resource_name = 'position'
+        queryset = UserPosition.objects.all()
+        authorization  = DjangoAuthorization()
+        authentication = ApiKeyAuthentication()
+    
 class UserResource(ModelResource):
     """
     An API for getting a user, requires authentication
     """
     profile = fields.ToOneField(ProfileResource, 
                                 attribute='userprofile', full=True)
+    position = fields.ToOneField(PositionResource, 
+                                attribute='userposition', full=True)
     class Meta:
         resource_name = 'user'
         queryset = User.objects.all()
@@ -46,56 +58,37 @@ class UserResource(ModelResource):
             {   "name": "logout",
                 "http_method": "GET",
                 "resource_type": "list",
-                "summary": """Logout the user. 
+                "summary": """[Custom] Logout the user. 
 This API requires the api_key user authentication.""",
-                "fields": { "username": {
-                                "type": "string",
-                                "required": True,
-                                "description": "username" },
-                            "api_key": {
-                                "type": "string",
-                                "required": True,
-                                "description": "api_key" }, }
+                "fields": authdoc
             } ,
             {   "name": "check_auth",
                 "http_method": "GET",
                 "resource_type": "list",
-                "summary": """Check the user authentication status.
+                "summary": """[Custom] Check the user authentication status.
 This API requires the api_key user authentication.""",
-                "fields": { "username": {
-                                "type": "string",
-                                "required": True,
-                                "description": "username" },
-                            "api_key": {
-                                "type": "string",
-                                "required": True,
-                                "description": "api_key" }, }
+                "fields": authdoc
             } ,
             {   "name": "gcm",
                 "http_method": "POST",
                 "resource_type": "list",
-                "summary": """Update the registration_id of the current 
-user's device for the Google Cloud Messaging for Android.""",
-                "fields": { "name": {
-                                "type": "string",
-                                "required": True,
-                                "description": "Device name" },
-                            "device_id": {
-                                "type": "string",
-                                "required": True,
-                                "description": "Device unique ID" },
-                            "registration_id": {
-                                "type": "string",
-                                "required": True,
-                                "description": "Registration ID" },
-                            "username": {
-                                "type": "string",
-                                "required": True,
-                                "description": "username" },
-                            "api_key": {
-                                "type": "string",
-                                "required": True,
-                                "description": "api_key" }, }
+                "summary": """[Custom] Update the registration_id of the 
+current user's device for the Google Cloud Messaging for Android.
+This API requires the api_key user authentication.""",
+                "fields": dict( authdoc.items() + 
+                               { "name": {
+                                    "type": "string",
+                                    "required": True,
+                                    "description": "Device name" },
+                                "device_id": {
+                                    "type": "string",
+                                    "required": True,
+                                    "description": "Device unique ID" },
+                                "registration_id": {
+                                    "type": "string",
+                                    "required": True,
+                                    "description": "Registration ID" },
+                               }.items() )
             } ,
         ]
 
@@ -183,30 +176,30 @@ class AuthResource(ModelResource):
             {   "name": "register",
                 "http_method": "POST",
                 "resource_type": "list",
-                "summary": """Create a new user in the backend, 
+                "summary": """[Custom] Create a new user in the backend, 
 authenticate and login the user automatically. Return its api_key.""",
                 "fields": { "username": {
                                 "type": "string",
                                 "required": True,
-                                "description": "username" },
+                                "description": "username passed as a data" },
                             "password": {
                                 "type": "string",
                                 "required": True,
-                                "description": "password" }, }
+                                "description": "password passed as a data" }, }
             } ,
             {   "name": "login",
                 "http_method": "POST",
                 "resource_type": "list",
-                "summary": """Authenticate and login the user automatically. 
+                "summary": """[Custom] Authenticate and login the user automatically. 
 Return its api_key.""",
                 "fields": { "username": {
                                 "type": "string",
                                 "required": True,
-                                "description": "username" },
+                                "description": "username passed as a data" },
                             "password": {
                                 "type": "string",
                                 "required": True,
-                                "description": "password" }, }
+                                "description": "password passed as a data" }, }
             } ,
         ]
 

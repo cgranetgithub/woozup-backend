@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.conf.urls import url
 from django.contrib.auth.models import User
 
+from doc import authdoc
 from link.models import Link, Invite
 from userprofile.api import UserResource
 
@@ -49,6 +50,33 @@ class LinkResource(ModelResource):
                     }
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
+        # for the doc:
+        extra_actions = [ 
+            {   "name": "connect",
+                "http_method": "POST",
+                #"resource_type": "list",
+                "summary": """[Custom] Sender requests the receiver to 
+connect. This will change the link status from NEW/NEW to ACC/PEN.
+This API requires the api_key user authentication.""",
+                "fields": authdoc
+            } ,
+            {   "name": "accept",
+                "http_method": "POST",
+                #"resource_type": "list",
+                "summary": """[Custom] Receiver accepts to connect. 
+This will change the link status from ACC/PEN to ACC/ACC.
+This API requires the api_key user authentication.""",
+                "fields": authdoc
+            } ,
+            {   "name": "reject",
+                "http_method": "POST",
+                #"resource_type": "list",
+                "summary": """[Custom] Receiver refuse to connect. 
+This will change the link status from ACC/PEN to ACC/REJ.
+This API requires the api_key user authentication.""",
+                "fields": authdoc
+            } ,
+        ]
 
     def get_object_list(self, request):
         return Link.objects.filter(  Q(sender=request.user)

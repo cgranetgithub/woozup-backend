@@ -1,3 +1,4 @@
+# if you want to use geodjango
 createdb geoevent
 psql geoevent
 CREATE EXTENSION postgis;

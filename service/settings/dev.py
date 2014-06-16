@@ -10,20 +10,21 @@ SECRET_KEY = '(jut!-c_9j^a==v$+6(-w4x8v#%*ljd7y3h0w-=*d5r@f5hy-z'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 DATABASES = {
     'default': {
-        #'ENGINE': 'django.db.backends.sqlite3',
-        #'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'geoevent',
-        'USER': 'dbuser',
-        'PASSWORD': 'pwd',
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        #'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        #'NAME': 'geoevent',
+        #'USER': 'dbuser',
+        #'PASSWORD': 'pwd',
+        #'HOST': 'localhost',
+        #'PORT': '',
     }
 }
 
 INSTALLED_APPS = list(INSTALLED_APPS)
 INSTALLED_APPS.remove('storages')
 #INSTALLED_APPS.append('django_extensions')
+INSTALLED_APPS.append('tastypie_swagger') # for API doc
 INSTALLED_APPS = tuple(INSTALLED_APPS)
 del STATICFILES_STORAGE
 del DEFAULT_FILE_STORAGE
@@ -35,3 +36,5 @@ EMAIL_HOST_USER = 'contact@linbees.com'
 EMAIL_HOST_PASSWORD = 'pwd'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+TASTYPIE_SWAGGER_API_MODULE = 'service.urls.v1_api'

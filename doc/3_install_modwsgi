@@ -1,1 +1,2 @@
+# if you want to run django with apache (otherwise just use 'runserver')
 sudo apt-get install libapache2-mod-wsgi

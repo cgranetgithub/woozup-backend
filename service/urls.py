@@ -22,6 +22,8 @@ v1_api.register(InviteResource())
 v1_api.register(ContactResource())
 
 urlpatterns = patterns('',
+    url(r'api/doc/', include('tastypie_swagger.urls', 
+                             namespace='tastypie_swagger')),
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
 )

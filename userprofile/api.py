@@ -41,6 +41,63 @@ class UserResource(ModelResource):
                     }
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
+        # for the doc:
+        extra_actions = [ 
+            {   "name": "logout",
+                "http_method": "GET",
+                "resource_type": "list",
+                "summary": """Logout the user. 
+This API requires the api_key user authentication.""",
+                "fields": { "username": {
+                                "type": "string",
+                                "required": True,
+                                "description": "username" },
+                            "api_key": {
+                                "type": "string",
+                                "required": True,
+                                "description": "api_key" }, }
+            } ,
+            {   "name": "check_auth",
+                "http_method": "GET",
+                "resource_type": "list",
+                "summary": """Check the user authentication status.
+This API requires the api_key user authentication.""",
+                "fields": { "username": {
+                                "type": "string",
+                                "required": True,
+                                "description": "username" },
+                            "api_key": {
+                                "type": "string",
+                                "required": True,
+                                "description": "api_key" }, }
+            } ,
+            {   "name": "gcm",
+                "http_method": "POST",
+                "resource_type": "list",
+                "summary": """Update the registration_id of the current 
+user's device for the Google Cloud Messaging for Android.""",
+                "fields": { "name": {
+                                "type": "string",
+                                "required": True,
+                                "description": "Device name" },
+                            "device_id": {
+                                "type": "string",
+                                "required": True,
+                                "description": "Device unique ID" },
+                            "registration_id": {
+                                "type": "string",
+                                "required": True,
+                                "description": "Registration ID" },
+                            "username": {
+                                "type": "string",
+                                "required": True,
+                                "description": "username" },
+                            "api_key": {
+                                "type": "string",
+                                "required": True,
+                                "description": "api_key" }, }
+            } ,
+        ]
 
     def prepend_urls(self):
         return [
@@ -98,10 +155,11 @@ class UserResource(ModelResource):
             device_id = data.get('device_id', '')
             registration_id = data.get('registration_id', '')
             try:
-                GCMDevice.objects.create(user=request.user,
-                                         name=name, 
-                                         device_id=device_id, 
-                                         registration_id=registration_id)
+                gcmd = GCMDevice.objects.get_or_create(user=request.user,
+                                                       name=name, 
+                                                       device_id=device_id)
+                gcmd.registration_id = registration_id
+                gcmd.save()
                 return self.create_response(request, { 'success': True })
             except:
                 return self.create_response(request,
@@ -120,6 +178,37 @@ class AuthResource(ModelResource):
         fields = ['first_name', 'last_name', 'email']
         allowed_methods = []
         resource_name = 'auth'
+        # for the doc:
+        extra_actions = [ 
+            {   "name": "register",
+                "http_method": "POST",
+                "resource_type": "list",
+                "summary": """Create a new user in the backend, 
+authenticate and login the user automatically. Return its api_key.""",
+                "fields": { "username": {
+                                "type": "string",
+                                "required": True,
+                                "description": "username" },
+                            "password": {
+                                "type": "string",
+                                "required": True,
+                                "description": "password" }, }
+            } ,
+            {   "name": "login",
+                "http_method": "POST",
+                "resource_type": "list",
+                "summary": """Authenticate and login the user automatically. 
+Return its api_key.""",
+                "fields": { "username": {
+                                "type": "string",
+                                "required": True,
+                                "description": "username" },
+                            "password": {
+                                "type": "string",
+                                "required": True,
+                                "description": "password" }, }
+            } ,
+        ]
 
     def prepend_urls(self):
         return [

@@ -115,7 +115,6 @@ This API requires the api_key user authentication.""",
         else:
             return self.create_response(request, { 'success': False }, 
                                                  HttpUnauthorized)
-     #WARNING must restrict to the use himself
 
     def check_auth(self, request, **kwargs):
         self.method_check(request, allowed=['get'])
@@ -123,7 +122,8 @@ This API requires the api_key user authentication.""",
         self.throttle_check(request)
         #
         from service.notification import send_notification
-        send_notification([request.user.id], {'geoevent message':'checking geoevent auth'})
+        send_notification([request.user.id], 
+                          {'geoevent':'checking geoevent auth'})
         #
         if request.user and request.user.is_authenticated():
             return self.create_response(request, { 'success': True })
@@ -137,27 +137,33 @@ This API requires the api_key user authentication.""",
         self.throttle_check(request)
         if request.user and request.user.is_authenticated():
             try:
-                data = self.deserialize(request, request.body, 
-                                        format=request.META.get(
-                                            'CONTENT_TYPE', 'application/json'))
+                data = self.deserialize(
+                            request, request.body, 
+                            format=request.META.get(
+                            'CONTENT_TYPE', 'application/json'))
             except:
-                return self.create_response(request,
-                                            {'reason': 'cannot deserialize data'},
-                                            HttpBadRequest )
+                return self.create_response(
+                            request,
+                            {'reason': 'cannot deserialize data'},
+                            HttpBadRequest )
             name = data.get('name', '')
             device_id = data.get('device_id', '')
             registration_id = data.get('registration_id', '')
             try:
-                gcmd = GCMDevice.objects.get_or_create(user=request.user,
-                                                       name=name, 
-                                                       device_id=device_id)
+                (gcmd, created) = GCMDevice.objects.get_or_create(
+                                                        user=request.user,
+                                                        #name=name, 
+                                                        device_id=device_id)
                 gcmd.registration_id = registration_id
+                gcmd.device_id = device_id
+                gcmd.name = name
                 gcmd.save()
                 return self.create_response(request, { 'success': True })
             except:
-                return self.create_response(request,
-                                            {'reason': 'cannot create this gcm'},
-                                            HttpBadRequest )
+                return self.create_response(
+                            request,
+                            {'reason': 'cannot create this gcm'},
+                            HttpBadRequest )
         else:
             return self.create_response(request, { 'success': False }, 
                                                  HttpUnauthorized)
@@ -218,7 +224,7 @@ Return its api_key.""",
         try:
             data = self.deserialize(request, request.body, 
                                     format=request.META.get(
-                                        'CONTENT_TYPE', 'application/json'))
+                                    'CONTENT_TYPE', 'application/json'))
         except:
             return self.create_response(request,
                                         {'reason': 'cannot deserialize data'},
@@ -236,7 +242,6 @@ Return its api_key.""",
         user = authenticate(username=username, password=password)
         if user:
             if user.is_active:
-                #user = authenticate(username=username, password=password)
                 login(request, user)
                 return self.create_response(request,
                                             {'api_key': user.api_key.key}, 
@@ -252,9 +257,14 @@ Return its api_key.""",
 
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
-        data = self.deserialize(request, request.body, 
-                                format=request.META.get('CONTENT_TYPE', 
-                                                        'application/json'))
+        try:
+            data = self.deserialize(request, request.body, 
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                        {'reason': 'cannot deserialize data'},
+                                        HttpBadRequest )
         username = data.get('username', '')
         password = data.get('password', '')
         user = authenticate(username=username, password=password)

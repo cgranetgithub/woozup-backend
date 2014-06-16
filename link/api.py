@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from doc import authdoc
 from link.models import Link, Invite
 from userprofile.api import UserResource
+from service.bg_tasks import create_link_invite
 
 class InviteResource(ModelResource):
     sender   = fields.ToOneField(UserResource, 
@@ -179,9 +180,6 @@ This API requires the api_key user authentication.""",
         self.is_authenticated(request)
         self.throttle_check(request)
         if request.user and request.user.is_authenticated():
-            #data = self.deserialize(request, request.body, 
-                                    #format=request.META.get('CONTENT_TYPE', 
-                                                           #'application/json'))
             try:
                 link = Link.objects.get(id=kwargs['link_id'])
                 if link.receiver == request.user:
@@ -226,47 +224,17 @@ class ContactResource(Resource):
         self.is_authenticated(request)
         self.throttle_check(request)
         if request.user and request.user.is_authenticated():
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get('CONTENT_TYPE',
-                                                        'application/json'))
-            # 1) determine the existing connections
-            email_list=[]
-            create_link_list = []
-            create_invite_list = []
-            for i in data:
-                # skip duplicates
-                if i['email'] in email_list:
-                    continue
-                else:
-                    email_list.append(i['email'])
-                # Existing User?
-                try:
-                    #user = User.objects.select_related().get(username=i['email'])
-                    user = User.objects.get(username=i['email'])
-                    # YES => existing Link?
-                    try:
-                        Link.objects.get(
-                            ( Q(sender=request.user) & Q(receiver=user) )
-                          | ( Q(sender=user) & Q(receiver=request.user) )
-                                        )
-                        # YES => nothing to do
-                    except Link.DoesNotExist:
-                        # NO => create a new Link
-                        link = Link(sender=request.user, receiver=user)
-                        create_link_list.append(link)
-                except User.DoesNotExist:
-                    # NO => existing Invite?
-                    try:
-                        Invite.objects.get(sender=request.user,
-                                           email=i['email'])
-                        # YES => nothing to do
-                    except Invite.DoesNotExist:
-                        # NO => create a new Invite
-                        invite = Invite(sender=request.user, email=i['email'])
-                        create_invite_list.append(invite)
-            # 2) create the missing connections (bulk for better performance)
-            Link.objects.bulk_create(create_link_list)
-            Invite.objects.bulk_create(create_invite_list)
+            try:
+                data = self.deserialize(
+                            request, request.body, 
+                            format=request.META.get(
+                            'CONTENT_TYPE', 'application/json'))
+            except:
+                return self.create_response(
+                            request,
+                            {'reason': 'cannot deserialize data'},
+                            HttpBadRequest )
+            create_link_invite(request, data)
             return self.create_response(request, {'received': True})
         else:
             return self.create_response(request, { 'success': False }, 

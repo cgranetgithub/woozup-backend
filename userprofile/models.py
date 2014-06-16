@@ -25,8 +25,8 @@ class UserProfile(models.Model):
 
 class UserPosition(models.Model):
     user    = models.OneToOneField(User)
-    current = models.CharField(max_length=255,
-                               blank=True, null=True) # !!! WARNING to be changed
+    current = models.CharField(max_length=255,  # !!! WARNING to be changed
+                               default="48.853, 2.35")
 
 def user_post_save(sender, instance, created, **kwargs):
     """Create a user profile when a new user account is created"""

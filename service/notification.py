@@ -32,7 +32,7 @@ from push_notifications.models import APNSDevice, GCMDevice
 def send_notification(userlist, message):
     try:
         devices = GCMDevice.objects.filter(user__in=userlist)
-        print devices
+        #print devices
         devices.send_message(message)
     except:
         print "!!!exception!!!"

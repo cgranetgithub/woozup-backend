@@ -1,5 +1,4 @@
-descr = """(can be passed in the header or as a parameter in the url 
-request)"""
+descr = """(can be passed in the header or as a url parameter)"""
 
 fields = {  "type": "string",
             "required": True,

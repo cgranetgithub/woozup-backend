@@ -125,8 +125,7 @@ This API requires the api_key user authentication.""",
         self.throttle_check(request)
         #
         from service.notification import send_notification
-        send_notification([request.user.id], 
-                          {'geoevent':'checking geoevent auth'})
+        send_notification([request.user.id], 'checking geoevent auth')
         #
         if request.user and request.user.is_authenticated():
             return self.create_response(request, { 'success': True })
@@ -151,6 +150,8 @@ This API requires the api_key user authentication.""",
                             HttpBadRequest )
             name = data.get('name', '')
             device_id = data.get('device_id', '')
+            if isinstance(device_id, unicode):
+                device_id = str(device_id)
             registration_id = data.get('registration_id', '')
             try:
                 (gcmd, created) = GCMDevice.objects.get_or_create(

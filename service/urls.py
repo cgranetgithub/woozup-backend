@@ -8,6 +8,14 @@ from event.api import *
 from userprofile.api import *
 #from service.notification import GCMDeviceAuthenticatedResource
 
+def module_exists(module_name):
+    try:
+        __import__(module_name)
+    except ImportError:
+        return False
+    else:
+        return True
+
 admin.autodiscover()
 
 v1_api = Api(api_name='v1')
@@ -22,8 +30,11 @@ v1_api.register(InviteResource())
 v1_api.register(ContactResource())
 
 urlpatterns = patterns('',
-    url(r'api/doc/', include('tastypie_swagger.urls', 
-                             namespace='tastypie_swagger')),
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
 )
+
+if module_exists('tastypie_swagger'):
+    urlpatterns += patterns('',
+                            url(r'api/doc/', include('tastypie_swagger.urls', 
+                                                namespace='tastypie_swagger')))

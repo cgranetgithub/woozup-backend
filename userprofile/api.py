@@ -26,7 +26,7 @@ class ProfileResource(ModelResource):
         authentication = ApiKeyAuthentication()
     
 class PositionResource(ModelResource):
-    current = fields.CharField(attribute='current')
+    last = fields.CharField(attribute='last')
     allowed_methods = []
     class Meta:
         resource_name = 'position'
@@ -45,7 +45,7 @@ class UserResource(ModelResource):
     class Meta:
         resource_name = 'user'
         queryset = User.objects.all()
-        list_allowed_methods = []
+        list_allowed_methods = ['get']
         detail_allowed_methods = ['get', 'patch', 'delete']
         excludes = ['password', 'is_superuser', 'is_staff']
         filtering = {
@@ -91,6 +91,9 @@ This API requires the api_key user authentication.""",
                                }.items() )
             } ,
         ]
+
+    def get_object_list(self, request):
+        return User.objects.filter(id=request.user.id)
 
     def prepend_urls(self):
         return [

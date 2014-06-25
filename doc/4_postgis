@@ -1,4 +1,5 @@
 # if you want to use geodjango
-createdb geoevent
-psql geoevent
-CREATE EXTENSION postgis;
+user@XX $ sudo -i -u postgres
+postgres@XX $ createdb geoevent
+postgres@XX $ psql geoevent
+postgres=# CREATE EXTENSION postgis;

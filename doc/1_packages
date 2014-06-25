@@ -7,8 +7,14 @@ sudo apt-get install postgresql phppgadmin postgresql-server-dev-9.3
 #for geodjango
 sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.1-postgis python-psycopg2 libgdal1 python-gdal libgeos-3.3.3 proj-bin proj-data libxml2 libjson0 
 
+#for geodjango (Ubuntu 14.04)
+sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.3-postgis-2.1 python-psycopg2 libgdal1h python-gdal libgeos-3.4.2 proj-bin proj-data libxml2 libjson0
+
 #for django (a venv is highly recommended)
 sudo pip virtualenv
 virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
+# for DEV
+pip install -r dev-reqs.txt

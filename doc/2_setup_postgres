@@ -7,7 +7,8 @@ postgres@s17101495:~$ psql
 - create user and table
 postgres=# CREATE USER testdjango;
 CREATE ROLE
-postgres=# ALTER ROLE charles WITH CREATEDB ;
+
+postgres=# ALTER ROLE testdjango WITH CREATEDB ;
 ALTER ROLE
 postgres=# CREATE DATABASE geoevent OWNER testdjango ;
 CREATE DATABASE

@@ -101,3 +101,6 @@ class Invite(models.Model):
     class Meta:
         unique_together = ("sender", "email")
 
+    def __unicode__(self):
+        return '%s (%s)'%(self.email, self.sender)
+

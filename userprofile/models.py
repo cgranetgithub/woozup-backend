@@ -35,6 +35,9 @@ class UserPosition(models.Model):
                                default="48.853, 2.35")
     updated_at  = models.DateTimeField(auto_now=True)
 
+    def __unicode__(self):
+        return unicode(self.user) + " " + unicode(self.last)
+
 def user_post_save(sender, instance, created, **kwargs):
     """Create a user profile when a new user account is created"""
     if created and not instance.is_superuser:

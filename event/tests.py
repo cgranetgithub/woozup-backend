@@ -35,7 +35,7 @@ class EventTestCase(TestCase):
         self.assertEqual(e.position, '1, 1')
         #user1 updates the event
         data = {'position':'2, 2'}
-        res = self.c.patch('/api/v1/event/1/%s'%auth,
+        res = self.c.put('/api/v1/event/1/%s'%auth,
                          data = json.dumps(data),
                          content_type='application/json')
         e = Event.objects.get(id=1)
@@ -101,11 +101,11 @@ class EventTestCase(TestCase):
         res = self.c.get('/api/v1/event/%s/%s'%(event_id, auth))
         self.assertEqual(res.status_code, 200)
         data = {'position':'2, 2'}
-        res = self.c.patch('/api/v1/event/%s/%s'%(event_id, auth),
+        res = self.c.put('/api/v1/event/%s/%s'%(event_id, auth),
                          data = json.dumps(data),
                          content_type='application/json')
-        self.assertEqual(res.status_code, 202)
-        res = self.c.put('/api/v1/event/%s/%s'%(event_id, auth),
+        self.assertEqual(res.status_code, 204)
+        res = self.c.patch('/api/v1/event/%s/%s'%(event_id, auth),
                          data = json.dumps(data),
                          content_type='application/json')
         self.assertEqual(res.status_code, 405)

@@ -30,16 +30,16 @@ class EventTestCase(TestCase):
                           data = json.dumps(data),
                           content_type='application/json')
         e = Event.objects.get(id=1)
-        self.assertEqual(e.owner.id, 1)
+        self.assertEqual(e.owner.username, 'user1@fr.fr')
         self.assertEqual(e.event_type.id, 1)
         self.assertEqual(e.position, '1, 1')
         #user1 updates the event
         data = {'position':'2, 2'}
-        res = self.c.patch('/api/v1/event/1/%s'%auth,
+        res = self.c.put('/api/v1/event/1/%s'%auth,
                          data = json.dumps(data),
                          content_type='application/json')
         e = Event.objects.get(id=1)
-        self.assertEqual(e.owner.id, 1)
+        self.assertEqual(e.owner.username, 'user1@fr.fr')
         self.assertEqual(e.event_type.id, 1)
         self.assertEqual(e.position, '2, 2')
         #user2 participates
@@ -84,6 +84,8 @@ class EventTestCase(TestCase):
         self.assertEqual(res.status_code, 405)
         res = self.c.patch('/api/v1/event/%s'%auth)
         self.assertEqual(res.status_code, 405)
+        res = self.c.delete('/api/v1/event/%s'%auth)
+        self.assertEqual(res.status_code, 405)
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/1/', 'start':start,
                 'position':'1, 1'}
@@ -91,23 +93,25 @@ class EventTestCase(TestCase):
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 201)
-        res = self.c.delete('/api/v1/event/%s'%auth)
-        self.assertEqual(res.status_code, 405)
+        res = self.c.get('/api/v1/event/%s'%auth)
+        content = json.loads(res.content)
+        self.assertEqual(content['meta']['total_count'], 1)
+        event_id = content['objects'][0]['id']
         #detail
-        res = self.c.get('/api/v1/event/1/%s'%auth)
+        res = self.c.get('/api/v1/event/%s/%s'%(event_id, auth))
         self.assertEqual(res.status_code, 200)
         data = {'position':'2, 2'}
-        res = self.c.patch('/api/v1/event/1/%s'%auth,
+        res = self.c.put('/api/v1/event/%s/%s'%(event_id, auth),
                          data = json.dumps(data),
                          content_type='application/json')
-        self.assertEqual(res.status_code, 202)
-        res = self.c.put('/api/v1/event/1/%s'%auth,
+        self.assertEqual(res.status_code, 204)
+        res = self.c.patch('/api/v1/event/%s/%s'%(event_id, auth),
                          data = json.dumps(data),
                          content_type='application/json')
         self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/event/1/%s'%auth)
+        res = self.c.post('/api/v1/event/%s/%s'%(event_id, auth))
         self.assertEqual(res.status_code, 405)
-        res = self.c.delete('/api/v1/event/1/%s'%auth)
+        res = self.c.delete('/api/v1/event/%s/%s'%(event_id, auth))
         self.assertEqual(res.status_code, 204)
 
     def test_unauth_user(self):

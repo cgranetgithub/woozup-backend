@@ -46,8 +46,9 @@ class EventResource(ModelResource):
         resource_name = 'event'
         queryset = Event.objects.all()
         list_allowed_methods = ['get', 'post']
-        detail_allowed_methods = ['get', 'patch', 'delete']
+        detail_allowed_methods = ['get', 'put', 'delete']
         filtering = {
+                    'owner'     : ALL_WITH_RELATIONS,
                     'event_type': ALL_WITH_RELATIONS,
                     'start'     : ALL,
                     'position'  : ALL,

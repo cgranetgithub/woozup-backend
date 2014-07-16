@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def createStdGroup(self):
         p = []
         for i in ['add_event', 'change_event', 'delete_event',
-                  'change_link'] :
+                  'change_user', 'change_userprofile', 'change_userposition']:
             p.append(Permission.objects.get(codename=i))
         grp = Group.objects.create(name='std')
         grp.permissions = p

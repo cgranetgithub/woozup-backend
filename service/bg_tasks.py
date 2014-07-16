@@ -1,5 +1,7 @@
-from link.models import Link, Invite
+from django.db.models import Q
 from django.contrib.auth.models import User
+
+from link.models import Link, Invite
 
 def create_link_invite(request, data):
     # 1) determine the existing connections

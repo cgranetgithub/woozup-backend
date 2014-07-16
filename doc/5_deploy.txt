@@ -1,10 +1,13 @@
 # reminder for deployment
-          local                                         |    heroku
---------------------------------------------------------|------------------------------------------------
-pip install -r requirements.txt                         | automatic
-export s3 env var                                       | set s3 config
-python manage.py syncdb --settings service.settings.dev | heroku run python manage.py syncdb
-python manage.py create_initial_data --setting...       | heroku run python manage.py create_initial_data
-make sure DEBUG=False                                   | make sure DEBUG=False
-python manage.py runserver --setting...                 | 
 
+          local (dev)                                   |    heroku
+--------------------------------------------------------|------------------------------------------------
+pip install -r requirements.txt                         | set s3 config vars (heroku config VAR=...)
+pip install -r dev-reqs.txt                             | make sure DEBUG=False in prod settings
+python manage.py syncdb --settings service.settings.dev | push code (git push heroku-branch local-branch)
+python manage.py create_initial_data --setting...       | heroku run python manage.py syncdb --app ...
+python manage.py runserver --setting...                 | heroku run python manage.py create_initial_data --app ...
+                                                        | 
+if you want to use the admin, you need to run           |
+ python manage.py colectstatic --setting...             |
+in order to export static files                         |

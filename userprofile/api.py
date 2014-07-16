@@ -17,6 +17,9 @@ from link.models import Link
 from userprofile.models import UserProfile, UserPosition
 
 class ProfileResource(ModelResource):
+    #user = fields.ToOneField('userprofile.api.UserResource', attribute='user',
+                             #related_name='userprofile')
+    #allowed_methods = ['get', 'put']
     name = fields.CharField(attribute='name', readonly=True)
     allowed_methods = []
     class Meta:
@@ -40,13 +43,15 @@ class UserResource(ModelResource):
     """
     profile = fields.ToOneField(ProfileResource, 
                                 attribute='userprofile', full=True)
+                               #'userprofile', related_name='user', full=True)
     position = fields.ToOneField(PositionResource, 
                                 attribute='userposition', full=True)
+                                #'userposition', related_name='user', full=True)
     class Meta:
         resource_name = 'user'
         queryset = User.objects.all()
         list_allowed_methods = ['get']
-        detail_allowed_methods = ['get', 'patch', 'delete']
+        detail_allowed_methods = ['get', 'put']
         excludes = ['password', 'is_superuser', 'is_staff']
         filtering = {
                     'username': ALL,

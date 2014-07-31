@@ -238,7 +238,7 @@ class ContactResource(Resource):
                             HttpBadRequest )
             # launch background processing
             result = bg_tasks.queue.enqueue(bg_tasks.create_link_invite,
-                                            (request, data))
+                                            request, data)
             #
             return self.create_response(request, {'received': True})
         else:

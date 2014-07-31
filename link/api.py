@@ -15,9 +15,48 @@ from link.models import Link, Invite
 from userprofile.api import UserResource
 
 from rq.decorators import job
-#from redis import Redis
-#redis_conn = Redis()
 from worker import conn
+
+@job('default', connection=conn)
+def create_link_invite(user, data):
+    # 1) determine the existing connections
+    email_list=[]
+    create_link_list = []
+    create_invite_list = []
+    for i in data:
+        # skip duplicates
+        if i['email'] in email_list:
+            continue
+        else:
+            email_list.append(i['email'])
+        # Existing User?
+        try:
+            #contact = User.objects.select_related().get(username=i['email'])
+            contact = User.objects.get(username=i['email'])
+            # YES => existing Link?
+            try:
+                Link.objects.get(
+                    ( Q(sender=user) & Q(receiver=contact) )
+                    | ( Q(sender=contact) & Q(receiver=user) )
+                                )
+                # YES => nothing to do
+            except Link.DoesNotExist:
+                # NO => create a new Link
+                link = Link(sender=user, receiver=contact)
+                create_link_list.append(link)
+        except User.DoesNotExist:
+            # NO => existing Invite?
+            try:
+                Invite.objects.get(sender=user,
+                                    email=i['email'])
+                # YES => nothing to do
+            except Invite.DoesNotExist:
+                # NO => create a new Invite
+                invite = Invite(sender=user, email=i['email'])
+                create_invite_list.append(invite)
+    # 2) create the missing connections (bulk for better performance)
+    Link.objects.bulk_create(create_link_list)
+    Invite.objects.bulk_create(create_invite_list)
 
 class InviteResource(ModelResource):
     sender   = fields.ToOneField(UserResource, 
@@ -213,8 +252,6 @@ This API requires the api_key user authentication.""",
                                     HttpUnauthorized )
     
 class ContactResource(Resource):
-    user = None
-    data = None
     class Meta:
         resource_name = 'contact'
         allowed_methods = []
@@ -232,63 +269,21 @@ class ContactResource(Resource):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        self.user = request.user
-        if self.user and self.user.is_authenticated():
+        user = request.user
+        if user and user.is_authenticated():
             try:
-                self.data = self.deserialize(
-                            request, request.body, 
-                            format=request.META.get(
-                            'CONTENT_TYPE', 'application/json'))
+                data = self.deserialize(request, request.body, 
+                                        format=request.META.get(
+                                        'CONTENT_TYPE', 'application/json'))
             except:
                 return self.create_response(
-                            request,
-                            {u'reason': u'cannot deserialize data'},
-                            HttpBadRequest )
+                                    request,
+                                    {u'reason': u'cannot deserialize data'},
+                                    HttpBadRequest )
             # launch background processing
-            result = self.create_link_invite.delay()
+            result = create_link_invite.delay(user, data)
             #
             return self.create_response(request, {'received': True})
         else:
             return self.create_response(request, { 'success': False }, 
                                                  HttpUnauthorized)
-
-    @job('default', connection=conn)
-    def create_link_invite(self):
-        # 1) determine the existing connections
-        email_list=[]
-        create_link_list = []
-        create_invite_list = []
-        for i in self.data:
-            # skip duplicates
-            if i['email'] in email_list:
-                continue
-            else:
-                email_list.append(i['email'])
-            # Existing User?
-            try:
-                #user = User.objects.select_related().get(username=i['email'])
-                user = User.objects.get(username=i['email'])
-                # YES => existing Link?
-                try:
-                    Link.objects.get(
-                        ( Q(sender=self.user) & Q(receiver=user) )
-                        | ( Q(sender=user) & Q(receiver=self.user) )
-                                    )
-                    # YES => nothing to do
-                except Link.DoesNotExist:
-                    # NO => create a new Link
-                    link = Link(sender=self.user, receiver=user)
-                    create_link_list.append(link)
-            except User.DoesNotExist:
-                # NO => existing Invite?
-                try:
-                    Invite.objects.get(sender=self.user,
-                                        email=i['email'])
-                    # YES => nothing to do
-                except Invite.DoesNotExist:
-                    # NO => create a new Invite
-                    invite = Invite(sender=self.user, email=i['email'])
-                    create_invite_list.append(invite)
-        # 2) create the missing connections (bulk for better performance)
-        Link.objects.bulk_create(create_link_list)
-        Invite.objects.bulk_create(create_invite_list)

@@ -237,10 +237,7 @@ class ContactResource(Resource):
                             {u'reason': u'cannot deserialize data'},
                             HttpBadRequest )
             # launch background processing
-            result = bg_tasks.queue.enqueue_call(
-                                            func=bg_tasks.create_link_invite,
-                                            args=(request, data)
-                                            )
+            result = bg_tasks.create_link_invite.delay(request, data)
             #
             return self.create_response(request, {'received': True})
         else:

@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 
 from link.models import Link, Invite
 
-q = Queue(connection=conn)
+queue = Queue(connection=conn)
 
 def create_link_invite(request, data):
     # 1) determine the existing connections

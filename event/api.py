@@ -49,7 +49,7 @@ class EventResource(ModelResource):
         list_allowed_methods = ['get', 'post']
         detail_allowed_methods = ['get', 'put', 'delete']
         filtering = {
-                    'owner'     : ALL_WITH_RELATIONS,
+                    #'owner'     : ALL_WITH_RELATIONS,
                     'event_type': ALL_WITH_RELATIONS,
                     'start'     : ALL,
                     'position'  : ALL,

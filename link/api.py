@@ -9,11 +9,10 @@ from django.db.models import Q
 from django.conf.urls import url
 from django.contrib.auth.models import User
 
-import link.push
+from link import bg_tasks, push
 from doc import authdoc
 from link.models import Link, Invite
 from userprofile.api import UserResource
-from service.bg_tasks import create_link_invite
 
 class InviteResource(ModelResource):
     sender   = fields.ToOneField(UserResource, 
@@ -237,7 +236,10 @@ class ContactResource(Resource):
                             request,
                             {u'reason': u'cannot deserialize data'},
                             HttpBadRequest )
-            create_link_invite(request, data)
+            # launch background processing
+            result = bg_tasks.enqueue(bg_tasks.create_link_invite,
+                                      (request, data))
+            #
             return self.create_response(request, {'received': True})
         else:
             return self.create_response(request, { 'success': False }, 

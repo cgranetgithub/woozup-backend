@@ -1,7 +1,12 @@
+from rq import Queue
+from worker import conn
+
 from django.db.models import Q
 from django.contrib.auth.models import User
 
 from link.models import Link, Invite
+
+q = Queue(connection=conn)
 
 def create_link_invite(request, data):
     # 1) determine the existing connections

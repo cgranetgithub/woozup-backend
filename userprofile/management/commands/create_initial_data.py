@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 class Command(BaseCommand):
     args = ''
-    help = 'Create the mandatory initial objects'
+    help = u'Create the mandatory initial objects'
 
     def handle(self, *args, **options):
         self.createStdGroup()

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User, Group
 
@@ -8,6 +9,17 @@ from tastypie.models import create_api_key
 
 MALE   = 'MA'
 FEMALE = 'FE'
+
+def get_user_friends(user):
+    return User.objects.filter(
+                        ( Q(link_as_sender__sender    =user) | 
+                          Q(link_as_sender__receiver  =user) | 
+                          Q(link_as_receiver__sender  =user) | 
+                          Q(link_as_receiver__receiver=user) ),
+                        ( Q(link_as_sender__sender_status='ACC') & 
+                          Q(link_as_sender__receiver_status='ACC') ) | 
+                        ( Q(link_as_receiver__sender_status='ACC') & 
+                          Q(link_as_receiver__receiver_status='ACC') ) )
 
 class UserProfile(models.Model):
     GENDER = ( (MALE  , 'male'  ),
@@ -23,7 +35,7 @@ class UserProfile(models.Model):
     def name(self):
         return self.user.get_full_name()
     def __unicode__(self):
-        return unicode(self.user) + ' profile'
+        return u'%s profile'%self.user
 
 class UserPosition(models.Model):
     user    = models.OneToOneField(User)
@@ -36,7 +48,7 @@ class UserPosition(models.Model):
     updated_at  = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
-        return unicode(self.user) + " " + unicode(self.last)
+        return u'%s %s'%(self.user, self.last)
 
 def user_post_save(sender, instance, created, **kwargs):
     """Create a user profile when a new user account is created"""

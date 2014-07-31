@@ -60,24 +60,24 @@ class UserResource(ModelResource):
         authentication = ApiKeyAuthentication()
         # for the doc:
         extra_actions = [ 
-            {   "name": "logout",
-                "http_method": "GET",
-                "resource_type": "list",
-                "summary": """[Custom] Logout the user. 
+            {   "name": u"logout",
+                "http_method": u"GET",
+                "resource_type": u"list",
+                "summary": u"""[Custom] Logout the user. 
 This API requires the api_key user authentication.""",
                 "fields": authdoc
             } ,
-            {   "name": "check_auth",
-                "http_method": "GET",
-                "resource_type": "list",
-                "summary": """[Custom] Check the user authentication status.
+            {   "name": u"check_auth",
+                "http_method": u"GET",
+                "resource_type": u"list",
+                "summary": u"""[Custom] Check the user authentication status.
 This API requires the api_key user authentication.""",
                 "fields": authdoc
             } ,
-            {   "name": "gcm",
-                "http_method": "POST",
+            {   "name": u"gcm",
+                "http_method": u"POST",
                 "resource_type": "list",
-                "summary": """[Custom] Update the registration_id of the 
+                "summary": u"""[Custom] Update the registration_id of the 
 current user's device for the Google Cloud Messaging for Android.
 This API requires the api_key user authentication.""",
                 "fields": dict( authdoc.items() + 
@@ -151,7 +151,7 @@ This API requires the api_key user authentication.""",
             except:
                 return self.create_response(
                             request,
-                            {'reason': 'cannot deserialize data'},
+                            {u'reason': u'cannot deserialize data'},
                             HttpBadRequest )
             name = data.get('name', '')
             device_id = data.get('device_id', '')
@@ -171,7 +171,7 @@ This API requires the api_key user authentication.""",
             except:
                 return self.create_response(
                             request,
-                            {'reason': 'cannot create this gcm'},
+                            {u'reason': u'cannot create this gcm'},
                             HttpBadRequest )
         else:
             return self.create_response(request, { 'success': False }, 
@@ -188,33 +188,33 @@ class AuthResource(ModelResource):
         resource_name = 'auth'
         # for the doc:
         extra_actions = [ 
-            {   "name": "register",
-                "http_method": "POST",
-                "resource_type": "list",
-                "summary": """[Custom] Create a new user in the backend, 
+            {   "name": u"register",
+                "http_method": u"POST",
+                "resource_type": u"list",
+                "summary": u"""[Custom] Create a new user in the backend, 
 authenticate and login the user automatically. Return its api_key.""",
                 "fields": { "username": {
                                 "type": "string",
                                 "required": True,
-                                "description": "username passed as a data" },
+                                "description": u"username passed as a data" },
                             "password": {
                                 "type": "string",
                                 "required": True,
-                                "description": "password passed as a data" }, }
+                                "description": u"password passed as a data" }, }
             } ,
             {   "name": "login",
                 "http_method": "POST",
                 "resource_type": "list",
-                "summary": """[Custom] Authenticate and login the user automatically. 
+                "summary": u"""[Custom] Authenticate and login the user automatically. 
 Return its api_key.""",
                 "fields": { "username": {
                                 "type": "string",
                                 "required": True,
-                                "description": "username passed as a data" },
+                                "description": u"username passed as a data" },
                             "password": {
                                 "type": "string",
                                 "required": True,
-                                "description": "password passed as a data" }, }
+                                "description": u"password passed as a data" }, }
             } ,
         ]
 
@@ -236,7 +236,7 @@ Return its api_key.""",
                                     'CONTENT_TYPE', 'application/json'))
         except:
             return self.create_response(request,
-                                        {'reason': 'cannot deserialize data'},
+                                        {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
         username = data.get('username', '')
         password = data.get('password', '')
@@ -246,7 +246,7 @@ Return its api_key.""",
                                             password=password)
         except:
             return self.create_response(request,
-                                        {'reason': 'cannot create this user'},
+                                        {u'reason': u'cannot create this user'},
                                         HttpBadRequest )
         user = authenticate(username=username, password=password)
         if user:
@@ -257,11 +257,11 @@ Return its api_key.""",
                                             HttpCreated )
             else:
                 return self.create_response(request,
-                                            {'reason': 'disabled'},
+                                            {u'reason': u'disabled'},
                                             HttpForbidden )
         else:
             return self.create_response(request,
-                                        {'reason': 'incorrect'},
+                                        {u'reason': u'incorrect'},
                                         HttpUnauthorized )
 
     def login(self, request, **kwargs):
@@ -272,7 +272,7 @@ Return its api_key.""",
                                     'CONTENT_TYPE', 'application/json'))
         except:
             return self.create_response(request,
-                                        {'reason': 'cannot deserialize data'},
+                                        {'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
         username = data.get('username', '')
         password = data.get('password', '')
@@ -284,9 +284,9 @@ Return its api_key.""",
                                             {'api_key': user.api_key.key} )
             else:
                 return self.create_response(request,
-                                            {'reason': 'disabled'},
+                                            {u'reason': u'disabled'},
                                             HttpForbidden )
         else:
             return self.create_response(request,
-                                        {'reason': 'incorrect'},
+                                        {u'reason': u'incorrect'},
                                         HttpUnauthorized )

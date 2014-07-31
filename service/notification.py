@@ -30,8 +30,12 @@ from push_notifications.models import APNSDevice, GCMDevice
         #authentication = ApiKeyAuthentication()
 
 def send_notification(userlist, message):
-    try:
-        devices = GCMDevice.objects.filter(user__in=userlist)
-        devices.send_message(message)
-    except:
-        print "!!!exception!!!"
+    #if isinstance(message, unicode):
+        #message = message.encode('utf-8')
+    print type(message), message, userlist
+    #try:
+    devices = GCMDevice.objects.filter(user__in=userlist)
+    print devices
+    devices.send_message({'message':message})
+    #except:
+        #print u"!!!exception (normal on PC)!!!"

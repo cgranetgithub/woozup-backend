@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.conf.urls import url
 from django.contrib.auth.models import User
 
+import link.push
 from doc import authdoc
 from link.models import Link, Invite
 from userprofile.api import UserResource
@@ -53,29 +54,29 @@ class LinkResource(ModelResource):
         authentication = ApiKeyAuthentication()
         # for the doc:
         extra_actions = [ 
-            {   "name": "connect",
-                "http_method": "POST",
+            {   u"name": u"connect",
+                u"http_method": u"POST",
                 #"resource_type": "list",
-                "summary": """[Custom] Sender requests the receiver to 
+                u"summary": u"""[Custom] Sender requests the receiver to 
 connect. This will change the link status from NEW/NEW to ACC/PEN.
 This API requires the api_key user authentication.""",
                 "fields": authdoc
             } ,
-            {   "name": "accept",
-                "http_method": "POST",
+            {   u"name": u"accept",
+                u"http_method": u"POST",
                 #"resource_type": "list",
-                "summary": """[Custom] Receiver accepts to connect. 
+                u"summary": u"""[Custom] Receiver accepts to connect. 
 This will change the link status from ACC/PEN to ACC/ACC.
 This API requires the api_key user authentication.""",
                 "fields": authdoc
             } ,
-            {   "name": "reject",
-                "http_method": "POST",
+            {   u"name": u"reject",
+                u"http_method": u"POST",
                 #"resource_type": "list",
-                "summary": """[Custom] Receiver refuse to connect. 
+                u"summary": u"""[Custom] Receiver refuse to connect. 
 This will change the link status from ACC/PEN to ACC/REJ.
 This API requires the api_key user authentication.""",
-                "fields": authdoc
+                u"fields": authdoc
             } ,
         ]
 
@@ -113,24 +114,25 @@ This API requires the api_key user authentication.""",
                     link.sender_status='ACC'
                     link.receiver_status='PEN'
                     link.save()
+                    push.link_requested(link)
                     return self.create_response(request, {'success': True})
                 else:
                     return self.create_response(
                                     request, 
-                                    {'reason': 'Link does not below to you'},
+                                    {u'reason': u'Link does not below to you'},
                                     HttpForbidden)
             except Link.DoesNotExist:
                 return self.create_response(request, 
-                                            {'reason': 'Link not found'},
+                                            {u'reason': u'Link not found'},
                                             HttpForbidden)
             else:
                 return self.create_response(request, 
-                                            {'reason': 'Unexpected'},
+                                            {u'reason': u'Unexpected'},
                                             HttpForbidden)
         else:
             return self.create_response(
                                     request,
-                                    {'reason': "You are not authenticated"},
+                                    {u'reason': u"You are not authenticated"},
                                     HttpUnauthorized )
 
     def accept(self, request, **kwargs):
@@ -149,24 +151,25 @@ This API requires the api_key user authentication.""",
                 if link.receiver == request.user:
                     link.receiver_status='ACC'
                     link.save()
-                    return self.create_response(request, {'success': True})
+                    push.link_accepted(link)
+                    return self.create_response(request, {u'success': True})
                 else:
                     return self.create_response(
                                     request, 
-                                    {'reason': 'Link does not belong to you'},
+                                    {u'reason': u'Link does not belong to you'},
                                     HttpForbidden)
             except Link.DoesNotExist:
                 return self.create_response(request, 
-                                            {'reason': 'Link not found'},
+                                            {u'reason': u'Link not found'},
                                             HttpForbidden)
             else:
                 return self.create_response(request, 
-                                            {'reason': 'Unexpected'},
+                                            {u'reason': u'Unexpected'},
                                             HttpForbidden)
         else:
             return self.create_response(
                                     request,
-                                    {'reason': "You are not authenticated"},
+                                    {u'reason': u"You are not authenticated"},
                                     HttpUnauthorized )
     
     def reject(self, request, **kwargs):
@@ -189,20 +192,20 @@ This API requires the api_key user authentication.""",
                 else:
                     return self.create_response(
                                     request, 
-                                    {'reason': 'Link does not below to you'},
+                                    {u'reason': u'Link does not below to you'},
                                     HttpForbidden)
             except Link.DoesNotExist:
                 return self.create_response(request, 
-                                            {'reason': 'Link not found'},
+                                            {u'reason': u'Link not found'},
                                             HttpForbidden)
             else:
                 return self.create_response(request, 
-                                            {'reason': 'Unexpected'},
+                                            {u'reason': u'Unexpected'},
                                             HttpForbidden)
         else:
             return self.create_response(
                                     request,
-                                    {'reason': "You are not authenticated"},
+                                    {u'reason': u"You are not authenticated"},
                                     HttpUnauthorized )
     
 class ContactResource(Resource):
@@ -232,7 +235,7 @@ class ContactResource(Resource):
             except:
                 return self.create_response(
                             request,
-                            {'reason': 'cannot deserialize data'},
+                            {u'reason': u'cannot deserialize data'},
                             HttpBadRequest )
             create_link_invite(request, data)
             return self.create_response(request, {'received': True})

@@ -1,6 +1,8 @@
 from django.db import models
+from django.db.models.signals import pre_save, post_save, pre_delete
 from django.contrib.auth.models import User
 
+from event.push import event_to_be_changed, event_saved, event_canceled
 from service.utils import image_path
 
 class EventCategory(models.Model):
@@ -45,6 +47,10 @@ class Event(models.Model):
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
     def __unicode__(self):
-        return self.title + ' (' + unicode(self.event_type) + ')'
+        return u"%s (%s)"%(self.title, self.event_type)
     class Meta:
-        unique_together = ("start", "event_type", "owner")
+        unique_together = ('start', 'event_type', 'owner')
+
+pre_save.connect(event_to_be_changed, sender=Event)
+post_save.connect(event_saved, sender=Event)
+pre_delete.connect(event_canceled, sender=Event)

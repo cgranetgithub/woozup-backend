@@ -38,8 +38,8 @@ class Link(models.Model):
                     (REJECTED, 'rejected'),
                     (IGNORED , 'ignored'),
                     (BLOCKED , 'blocked' ) )
-    sender   = models.ForeignKey(User, related_name="link_as_sender")
-    receiver = models.ForeignKey(User, related_name="link_as_receiver")
+    sender   = models.ForeignKey(User, related_name='link_as_sender')
+    receiver = models.ForeignKey(User, related_name='link_as_receiver')
     sender_status   = models.CharField(max_length=3, choices=LINK_STATUS,
                                                      default=NEW)
     receiver_status = models.CharField(max_length=3, choices=LINK_STATUS,
@@ -58,15 +58,15 @@ class Link(models.Model):
         except:
             pass
         if l:
-            msg = """Link with same Sender/Receiver
+            msg = u"""Link with same Sender/Receiver
 (or vice-versa) couple exists."""
-            raise ValidationError({'sender'  :(msg,), 'receiver':(msg,)})
+            raise ValidationError({u'sender'  :(msg,), u'receiver':(msg,)})
         super(Link, self).validate_unique(**kwargs)
         
     def __unicode__(self):
-        return '[%d] %s(%s) -> %s(%s)'%(self.id, unicode(self.sender),
+        return u'[%d] %s(%s) -> %s(%s)'%(self.id, self.sender,
                                                  self.sender_status,
-                                                 unicode(self.receiver),
+                                                 self.receiver,
                                                  self.receiver_status)
 
 class Invite(models.Model):
@@ -99,8 +99,8 @@ class Invite(models.Model):
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
     class Meta:
-        unique_together = ("sender", "email")
+        unique_together = ('sender', 'email')
 
     def __unicode__(self):
-        return '%s (%s)'%(self.email, self.sender)
+        return u'%s (%s)'%(self.email, self.sender)
 

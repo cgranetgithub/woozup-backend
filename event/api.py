@@ -9,6 +9,7 @@ from django.utils.timezone import is_naive
 from django.contrib.auth.models import User
 
 from event.models import EventCategory, EventType, Event
+from userprofile.models import get_user_friends
  
 class MyDateSerializer(Serializer):
     """
@@ -63,15 +64,16 @@ class EventResource(ModelResource):
         return super(EventResource, self).obj_create(bundle, **kwargs)
 
     def get_object_list(self, request):
-        myfriends = User.objects.filter(
-                        ( Q(link_as_sender__sender    =request.user) | 
-                          Q(link_as_sender__receiver  =request.user) | 
-                          Q(link_as_receiver__sender  =request.user) | 
-                          Q(link_as_receiver__receiver=request.user) ),
-                        ( Q(link_as_sender__sender_status='ACC') & 
-                          Q(link_as_sender__receiver_status='ACC') ) | 
-                        ( Q(link_as_receiver__sender_status='ACC') & 
-                          Q(link_as_receiver__receiver_status='ACC') ) )
+        myfriends = get_user_friends(request.user)
+        #myfriends = User.objects.filter(
+                        #( Q(link_as_sender__sender    =request.user) | 
+                          #Q(link_as_sender__receiver  =request.user) | 
+                          #Q(link_as_receiver__sender  =request.user) | 
+                          #Q(link_as_receiver__receiver=request.user) ),
+                        #( Q(link_as_sender__sender_status='ACC') & 
+                          #Q(link_as_sender__receiver_status='ACC') ) | 
+                        #( Q(link_as_receiver__sender_status='ACC') & 
+                          #Q(link_as_receiver__receiver_status='ACC') ) )
         return Event.objects.filter(
                                 Q( owner__in=myfriends )
                               | Q( owner=request.user )

@@ -15,8 +15,9 @@ from link.models import Link, Invite
 from userprofile.api import UserResource
 
 from rq.decorators import job
-from redis import Redis
-redis_conn = Redis()
+#from redis import Redis
+#redis_conn = Redis()
+from worker import conn
 
 class InviteResource(ModelResource):
     sender   = fields.ToOneField(UserResource, 
@@ -251,7 +252,7 @@ class ContactResource(Resource):
             return self.create_response(request, { 'success': False }, 
                                                  HttpUnauthorized)
 
-    @job('default', connection=redis_conn)
+    @job('default', connection=conn)
     def create_link_invite(self):
         # 1) determine the existing connections
         email_list=[]

@@ -17,8 +17,21 @@ from userprofile.api import UserResource
 from rq.decorators import job
 from worker import conn
 
+TMP_REQUEST_STORE=None
+
 @job('default', connection=conn)
-def create_link_invite(user, data):
+def create_link_invite():
+    request = TMP_REQUEST_STORE
+    print request
+    if not request:
+        return 'No request error'
+    try:
+        data = self.deserialize(request, request.body, 
+                                format=request.META.get(
+                                'CONTENT_TYPE', 'application/json'))
+    except:
+        return 'Deserialization error'
+    user = request.user
     # 1) determine the existing connections
     email_list=[]
     create_link_list = []
@@ -271,17 +284,10 @@ class ContactResource(Resource):
         self.throttle_check(request)
         user = request.user
         if user and user.is_authenticated():
-            try:
-                data = self.deserialize(request, request.body, 
-                                        format=request.META.get(
-                                        'CONTENT_TYPE', 'application/json'))
-            except:
-                return self.create_response(
-                                    request,
-                                    {u'reason': u'cannot deserialize data'},
-                                    HttpBadRequest )
+            global TMP_REQUEST_STORE
+            TMP_REQUEST_STORE = request
             # launch background processing
-            create_link_invite.delay(user, data)
+            create_link_invite.delay()
             #
             return self.create_response(request, {'received': True})
         else:

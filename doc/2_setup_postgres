@@ -1,23 +1,40 @@
-- log as postgres
-charles@s17101495:~$ sudo -i -u postgres
+log as postgres
+---------------
+> charles@s17101495:~$ sudo -i -u postgres
 
-- launch psql
-postgres@s17101495:~$ psql
+launch psql
+-----------
+> postgres@s17101495:~$ psql
 
-- create user and table
-postgres=# CREATE USER testdjango;
-CREATE ROLE
+create user and table
+---------------------
+> postgres=# CREATE USER --superuser testdjango;
+ CREATE ROLE ;
 
-postgres=# ALTER ROLE testdjango WITH CREATEDB ;
-ALTER ROLE
-postgres=# CREATE DATABASE geoevent OWNER testdjango ;
-CREATE DATABASE
-postgres=# ALTER USER testdjango WITH ENCRYPTED PASSWORD 'test' ;
-ALTER ROLE
-postgres=# \q
-postgres@s17101495:~$ exit
+> postgres=# ALTER ROLE testdjango WITH CREATEDB ;
+ ALTER ROLE
+ 
+> postgres=# CREATE DATABASE geoevent OWNER testdjango ;
+ CREATE DATABASE
+
+> postgres=# ALTER USER testdjango WITH ENCRYPTED PASSWORD 'test' ;
+ ALTER ROLE
+
+> postgres=# \q
+
+setup GeoDjango (postgis)
+-------------------------
+> postgres@s17101495:~$ psql geoevent
+
+> postgres=# CREATE EXTENSION postgis;
+
+> postgres=# \q
+
+> postgres@s17101495:~$ exit
 
 
 configure phppgadmin (see https://help.ubuntu.com/community/phpPgAdmin)
 - edit /etc/phppgadmin/apache.conf to allow all (and comment 127.0.0.1)
 - reload and restart apache
+
+

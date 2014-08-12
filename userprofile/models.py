@@ -1,5 +1,5 @@
-from django.db import models
 from django.db.models import Q
+from django.contrib.gis.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User, Group
 
@@ -30,7 +30,8 @@ class UserProfile(models.Model):
     birth_date = models.DateField(blank=True, null=True)
     avatar = models.ImageField(upload_to=image_path,
                                blank=True, null=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
+autofield, not modifiable""")
     @property
     def name(self):
         return self.user.get_full_name()
@@ -38,14 +39,20 @@ class UserProfile(models.Model):
         return u'%s profile'%self.user
 
 class UserPosition(models.Model):
-    user    = models.OneToOneField(User)
-    last = models.CharField(max_length=255,  # !!! WARNING to be changed
-                               default="48.853, 2.35")
-    home = models.CharField(max_length=255,  # !!! WARNING to be changed
-                               default="48.853, 2.35")
-    office = models.CharField(max_length=255,  # !!! WARNING to be changed
-                               default="48.853, 2.35")
-    updated_at  = models.DateTimeField(auto_now=True)
+    user   = models.OneToOneField(User)
+    last   = models.GeometryField(null=True, blank=True, help_text=u"""
+Type: Geometry, Entry format: GeoJson (example: "{ 'type' : 'Point',
+'coordinates' : [125.6, 10.1] }")<br>""")
+    home   = models.GeometryField(null=True, blank=True, help_text=u"""
+Type: Geometry, Entry format: GeoJson (example: "{ 'type' : 'Point',
+'coordinates' : [125.6, 10.1] }")<br>""")
+    office = models.GeometryField(null=True, blank=True, help_text=u"""
+Type: Geometry, Entry format: GeoJson (example: "{ 'type' : 'Point',
+'coordinates' : [125.6, 10.1] }")<br>""")
+    updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
+autofield, not modifiable""")
+    # overriding the default manager with a GeoManager instance.
+    objects = models.GeoManager()
 
     def __unicode__(self):
         return u'%s %s'%(self.user, self.last)

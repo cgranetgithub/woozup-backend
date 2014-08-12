@@ -4,18 +4,8 @@ sudo apt-get install python-pip git python-dev
 #for postgresql database
 sudo apt-get install postgresql phppgadmin postgresql-server-dev-9.3
 
-#for geodjango
-sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.1-postgis python-psycopg2 libgdal1 python-gdal libgeos-3.3.3 proj-bin proj-data libxml2 libjson0 
-
 #for geodjango (Ubuntu 14.04)
-sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.3-postgis-2.1 python-psycopg2 libgdal1h python-gdal libgeos-3.4.2 proj-bin proj-data libxml2 libjson0
-
-# on ubuntu 12.04LTS, 
-# enable postgres repository:
-echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" | sudo tee /etc/apt/sources.list.d/postgis.list
-wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo apt-key add -
-sudo apt-get update
-apt-get install postgresql-9.3 postgresql-9.3-postgis-2.1 postgresql-client-9.3 python-psycopg2 libgdal1-1.7.0 python-gdal  proj-data libxml2 libjson0 proj-bin libgeos-3.3.3
+sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.3-postgis-2.1 python-psycopg2 libgdal1h python-gdal libgeos-3.4.2 proj-bin proj-data libproj0 python-pyproj libxml2 libjson0
 
 
 #for django (a venv is highly recommended)
@@ -26,3 +16,18 @@ pip install -r requirements.txt
 
 # for DEV
 pip install -r dev-reqs.txt
+
+
+
+ARCHIVE
+-------
+#for geodjango
+sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.1-postgis python-psycopg2 libgdal1 python-gdal libgeos-3.3.3 proj-bin proj-data libxml2 libjson0 
+
+# on ubuntu 12.04LTS, 
+# enable postgres repository:
+echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" | sudo tee /etc/apt/sources.list.d/postgis.list
+wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo apt-key add -
+sudo apt-get update
+apt-get install postgresql-9.3 postgresql-9.3-postgis-2.1 postgresql-client-9.3 python-psycopg2 libgdal1-1.7.0 python-gdal  proj-data libxml2 libjson0 proj-bin libgeos-3.3.3
+

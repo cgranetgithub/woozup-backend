@@ -27,10 +27,10 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-#    'django.contrib.gis',
-    'tastypie',           # for the API
-    'storages',           # for static files on S3
-    'push_notifications', # for notif to Android/iOS
+    'django.contrib.gis',
+    'tastypie',           # REST API
+    'storages',           # S3 storage
+    'push_notifications', # push to mobile
     'event',
     'link',
     'userprofile',

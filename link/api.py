@@ -97,28 +97,60 @@ class LinkResource(ModelResource):
         authentication = ApiKeyAuthentication()
         # for the doc:
         extra_actions = [ 
+            { u'name' : u'  ***  DESCRIPTION OF THE LINK BEHAVIOR  ***  ',
+              u'http_method':u'',
+              u'resource_type':'',
+              u'summary': u""" 
+When a user registers, its contact list is sent to the backend 
+(API contact/sort/).<br>A Link is created between the user and each contact 
+already registered as a user.<br>In parallel, the backend will look for all 
+Invites where the receiver is the new user and transform it into a link.<br>
+<ul>
+<li>sender_status = NEW</li>
+<li>receiver_status = NEW</li>
+</ul> <br> <br>
+If the sender clicks on "connect" button in the app (API link/id/connect/)
+<ul>
+<li>sender_status => ACCEPTED</li>
+<li>receiver_status => PENDING</li>
+</ul> <br> <br>
+If the receiver accepts the request for connection (API link/id/accept/)
+<ul>
+<li>sender_status = ACCEPTED</li>
+<li>receiver_status => ACCEPTED</li>
+</ul> <br> <br>
+If the receiver rejects the request for connection (API link/id/reject/)
+<ul>
+<li>sender_status = ACCEPTED</li>
+<li>receiver_status => REJECTED</li>
+</ul> <br> <br>
+If the sender or the receiver blacklist someone (API link/id/?/)
+<ul>
+<li>x_status => BLOCKED</li>
+</ul>""",
+              "fields": authdoc},
             {   u"name": u"connect",
                 u"http_method": u"POST",
                 #"resource_type": "list",
-                u"summary": u"""[Custom] Sender requests the receiver to 
-connect. This will change the link status from NEW/NEW to ACC/PEN.
-This API requires the api_key user authentication.""",
+                u"summary": u"""[Custom API] - Requires authentication<br><br>
+Sender requests the receiver to connect.<br>This will change the Link status 
+from NEW/NEW to ACC/PEN.""",
                 "fields": authdoc
             } ,
             {   u"name": u"accept",
                 u"http_method": u"POST",
                 #"resource_type": "list",
-                u"summary": u"""[Custom] Receiver accepts to connect. 
-This will change the link status from ACC/PEN to ACC/ACC.
-This API requires the api_key user authentication.""",
+                u"summary": u"""[Custom API] - Requires authentication<br><br>
+Receiver accepts to connect.<br>
+This will change the Link status from ACC/PEN to ACC/ACC.""",
                 "fields": authdoc
             } ,
             {   u"name": u"reject",
                 u"http_method": u"POST",
                 #"resource_type": "list",
-                u"summary": u"""[Custom] Receiver refuse to connect. 
-This will change the link status from ACC/PEN to ACC/REJ.
-This API requires the api_key user authentication.""",
+                u"summary": u"""[Custom API] - Requires authentication<br><br>
+Receiver refuse to connect.<br>
+This will change the Link status from ACC/PEN to ACC/REJ.""",
                 u"fields": authdoc
             } ,
         ]
@@ -162,7 +194,7 @@ This API requires the api_key user authentication.""",
                 else:
                     return self.create_response(
                                     request, 
-                                    {u'reason': u'Link does not below to you'},
+                                    {u'reason': u'Link does not belong to you'},
                                     HttpForbidden)
             except Link.DoesNotExist:
                 return self.create_response(request, 
@@ -257,7 +289,20 @@ class ContactResource(Resource):
         allowed_methods = []
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
-
+        # for the doc:
+        extra_actions = [ 
+            {   u"name": u"sort",
+                u"http_method": u"POST",
+                "resource_type": "list",
+                u"summary": u"""[Custom API] - Requires authentication<br><br>
+Takes a list of usernames and triggers a background job that will create the 
+appropriate INVITE and LINK between the user and each person in the list""",
+                u"fields": dict( authdoc.items() + { u"username list": {
+                                u"type": "json list",
+                                u"required": True,
+                                u"description": u"""The list of username that 
+will be passed to the BG job.""" } }.items() )
+            } ]
     def prepend_urls(self):
         return [
             url(r'^(?P<resource_name>%s)/sort%s$' %

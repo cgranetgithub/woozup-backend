@@ -19,7 +19,7 @@ def event_saved(sender, instance, created, **kwargs):
         send_notification(friends, msg)
 
 def event_to_be_changed(sender, instance, update_fields, **kwargs):
-    print update_fields
+    #print update_fields ###TOBE FINISHED
     if update_fields:
         # notify only participants
         msg = EVENT_MODIFIED%(instance.owner.userprofile.name, 

@@ -22,42 +22,65 @@ class EventTestCase(TestCase):
         self.assertEqual(res.status_code, 201)
         content = json.loads(res.content)
         api_key = content['api_key']
-        res = self.c.get('/api/v1/user/?username=%s&api_key=%s'%('toto', api_key))
-        self.assertEqual(res.status_code, 200)
+        user_id = content['userid']
+        #res = self.c.get('/api/v1/user/?username=%s&api_key=%s'%('toto', api_key))
+        auth = '?username=%s&api_key=%s'%('toto', api_key)
+        res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
-        self.assertEqual(content['meta']['total_count'], 1)
-        self.assertEqual(content['objects'][0]['username'], 'toto')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['username'], 'toto')
         
     def test_update_user(self):
         username = 'user1@fr.fr'
-        api_key = self.login(username)
+        api_key = self.login(username)['api_key']
+        user_id = self.login(username)['userid']
+        profile_id = self.login(username)['profileid']
+        position_id = self.login(username)['positionid']
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.get('/api/v1/user/%s'%auth)
+        res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['objects'][0]['first_name'], '')
-        self.assertEqual(content['objects'][0]['profile']['gender'], None)
-        self.assertEqual(content['objects'][0]['position']['last'], u'48.853, 2.35')
-        user_id = content['objects'][0]['id']
-        data = { 'first_name' : 'john', 
-                #'profile' : {'gender' : 'MA'} 
-                #'position' : {'last' : '1, 1'} 
-                }
-        res = self.c.put('/api/v1/user/%d/%s'%(user_id, auth),
+        self.assertEqual(content['first_name'], '')
+        res = self.c.get('/api/v1/userprofile/%s/%s'%(profile_id, auth))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['gender'], None)
+        res = self.c.get('/api/v1/userposition/%s/%s'%(position_id, auth))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['last'], None)
+        data = { 'first_name' : 'john' }
+        res = self.c.put('/api/v1/user/%s/%s'%(user_id, auth),
                            data = json.dumps(data),
                            content_type='application/json')
         self.assertEqual(res.status_code, 204)
-        res = self.c.get('/api/v1/user/%s'%auth)
+        res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['objects'][0]['first_name'], 'john')
-        #self.assertEqual(content['objects'][0]['profile']['gender'], 'MA')
-        #self.assertEqual(content['objects'][0]['position']['last'], '1, 1')
+        self.assertEqual(content['first_name'], 'john')
+        data = {'gender' : 'MA'}
+        res = self.c.put('/api/v1/userprofile/%s/%s'%(profile_id, auth),
+                           data = json.dumps(data),
+                           content_type='application/json')
+        self.assertEqual(res.status_code, 204)
+        res = self.c.get('/api/v1/userprofile/%s/%s'%(profile_id, auth))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['gender'], 'MA')
+        data = {'last' : '{ "type": "Point", "coordinates": [42.0, 2.0] }'}
+        res = self.c.put('/api/v1/userposition/%s/%s'%(position_id, auth),
+                           data = json.dumps(data),
+                           content_type='application/json')
+        self.assertEqual(res.status_code, 204)
+        res = self.c.get('/api/v1/userposition/%s/%s'%(position_id, auth))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['last'], 'POINT (42.0000000000000000 2.0000000000000000)')
 
     def login(self, username):
         data = {'username':username, 'password':'pwd'}
         res = self.c.post('/api/v1/auth/login/',
                           data = json.dumps(data),
                           content_type='application/json')
-        content = json.loads(res.content)
-        return content['api_key']
+        return json.loads(res.content)
+

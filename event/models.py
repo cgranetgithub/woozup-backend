@@ -1,4 +1,4 @@
-from django.db import models
+from django.contrib.gis.db import models
 from django.db.models.signals import pre_save, post_save, pre_delete
 from django.contrib.auth.models import User
 
@@ -11,8 +11,10 @@ class EventCategory(models.Model):
     description = models.CharField(max_length=255)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
     icon        = models.ImageField(upload_to='glyph')
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
+autofield, not modifiable""")
+    updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
+autofield, not modifiable""")
     def __unicode__(self):
         return self.title
  
@@ -24,8 +26,10 @@ class EventType(models.Model):
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
     icon        = models.ImageField(upload_to='glyph',
                                     blank=True, null=True)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
+autofield, not modifiable""")
+    updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
+autofield, not modifiable""")
     def __unicode__(self):
         return self.title
 
@@ -41,11 +45,18 @@ class Event(models.Model):
     participants = models.ManyToManyField(User, 
                                           related_name='events_as_participant', 
                                           blank=True, null=True)
-    position     = models.CharField(max_length=255) # !!! WARNING to be changed
+    position     = models.GeometryField(null=True, blank=True, help_text=u"""
+Type: Geometry, Entry format: GeoJson (example: "{ 'type' : 'Point',
+'coordinates' : [125.6, 10.1] }")<br>""")
     image        = models.ImageField(upload_to=image_path,
                                      blank=True, null=True)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
+autofield, not modifiable""")
+    updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
+autofield, not modifiable""")
+    # overriding the default manager with a GeoManager instance.
+    objects = models.GeoManager()
+
     def __unicode__(self):
         return u"%s (%s)"%(self.title, self.event_type)
     class Meta:

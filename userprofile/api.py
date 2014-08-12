@@ -17,45 +17,101 @@ from link.models import Link
 from userprofile.models import UserProfile, UserPosition
 
 class ProfileResource(ModelResource):
+    ###WARNING to be finshed, must restrict to the auth user
     #user = fields.ToOneField('userprofile.api.UserResource', attribute='user',
                              #related_name='userprofile')
-    #allowed_methods = ['get', 'put']
-    name = fields.CharField(attribute='name', readonly=True)
-    allowed_methods = []
+    #name = fields.CharField(attribute='name', readonly=True)
     class Meta:
-        resource_name = 'profile'
+        resource_name = 'userprofile'
         queryset = UserProfile.objects.all()
+        #allowed_methods = []
+        list_allowed_methods = []
+        detail_allowed_methods = ['get', 'put']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
+        
+        
+        
+        ## for the doc:
+        #extra_actions = [ 
+            #{   u"name": u"get",
+                #u"http_method": u"GET",
+                ##"resource_type": "list",
+                #u"summary": u"""[Custom] Return the user profile of the 
+#authenticated user.""",
+                #"fields": authdoc
+            #} ,
+            #{   u"name": u"set",
+                #u"http_method": u"PUT",
+                ##"resource_type": "list",
+                #u"summary": u"""[Custom] Update the user profile of the 
+#authenticated user with the data passed.""",
+                #"fields": authdoc
+            #} ]
+
+    #def prepend_urls(self):
+        #return [
+            #url(r"^(?P<resource_name>%s)/get%s$" %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('get'), name="api_get"),
+            #url(r"^(?P<resource_name>%s)/set%s$" %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('set'), name="api_set"),
+        #]
+
+    #def get(self, request, **kwargs):
+        #""" Return the user profile of the authenticated user
+        #Arguments:
+
+        #Note: we do this for security reason, to avoid someone to get
+        #profile of another user
+        #"""
+        #self.method_check(request, allowed=['get'])
+        #self.is_authenticated(request)
+        #self.throttle_check(request)
+        #if request.user and request.user.is_authenticated():
+            #return self.create_response(request,
+                          #{ 'gender': request.user.userprofile.gender,
+                            #'birth_date': request.user.userprofile.birth_date,
+                          #} )
+        #else:
+            #return self.create_response(
+                                    #request,
+                                    #{u'reason': u"You are not authenticated"},
+                                    #HttpUnauthorized )
+    
+    
     
 class PositionResource(ModelResource):
-    last = fields.CharField(attribute='last')
-    allowed_methods = []
+    #last = fields.CharField(attribute='last', null=True)
     class Meta:
-        resource_name = 'position'
+        resource_name = 'userposition'
         queryset = UserPosition.objects.all()
+        list_allowed_methods = ['get']
+        detail_allowed_methods = ['get', 'put']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
     
 class UserResource(ModelResource):
     """
-    An API for getting a user, requires authentication
+    An API for accessing a User, requires authentication
     """
-    profile = fields.ToOneField(ProfileResource, 
-                                attribute='userprofile', full=True)
-                               #'userprofile', related_name='user', full=True)
-    position = fields.ToOneField(PositionResource, 
-                                attribute='userposition', full=True)
-                                #'userposition', related_name='user', full=True)
+    #profile = fields.ToOneField(ProfileResource, 
+                                #attribute='userprofile', full=True)
+                               ##'userprofile', related_name='user', full=True)
+    #position = fields.ToOneField(PositionResource, 
+                                #attribute='userposition', full=True)
+                                ##'userposition', related_name='user', full=True)
     class Meta:
         resource_name = 'user'
         queryset = User.objects.all()
-        list_allowed_methods = ['get']
+        #list_allowed_methods = ['get']
+        list_allowed_methods = []
         detail_allowed_methods = ['get', 'put']
         excludes = ['password', 'is_superuser', 'is_staff']
-        filtering = {
-                    'username': ALL,
-                    }
+        #filtering = {
+                    #'username': ALL,
+                    #}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
         # for the doc:
@@ -63,23 +119,26 @@ class UserResource(ModelResource):
             {   "name": u"logout",
                 "http_method": u"GET",
                 "resource_type": u"list",
-                "summary": u"""[Custom] Logout the user. 
-This API requires the api_key user authentication.""",
+                "summary": u"""[Custom API] - Requires authentication<br><br>
+Logout the user. <br><br>""",
                 "fields": authdoc
             } ,
             {   "name": u"check_auth",
                 "http_method": u"GET",
                 "resource_type": u"list",
-                "summary": u"""[Custom] Check the user authentication status.
-This API requires the api_key user authentication.""",
+                "summary": u"""[Custom API] - Requires authentication<br><br>
+Check the user authentication status.<br><br>
+Return a dict with { 'api_key' : API key, 'userid' : User ID, 
+'profileid' : UserProfile ID, 'positionid' : UserPosition ID }.""",
                 "fields": authdoc
             } ,
             {   "name": u"gcm",
                 "http_method": u"POST",
                 "resource_type": "list",
-                "summary": u"""[Custom] Update the registration_id of the 
-current user's device for the Google Cloud Messaging for Android.
-This API requires the api_key user authentication.""",
+                "summary": u"""[Custom API] - Requires authentication - 
+Android only<br><br>
+Update the "Google Cloud Messaging" registration_id of the device.<br>This ID is
+used to send push notification to the device, via the GCM service.""",
                 "fields": dict( authdoc.items() + 
                                { "name": {
                                     "type": "string",
@@ -133,7 +192,11 @@ This API requires the api_key user authentication.""",
         send_notification([request.user.id], 'checking geoevent auth')
         #
         if request.user and request.user.is_authenticated():
-            return self.create_response(request, { 'success': True })
+            return self.create_response( request,
+                              { 'success'   : True,
+                                'userid'    : request.user.id,
+                                'profileid' : request.user.userprofile.id,
+                                'positionid': request.user.userposition.id } )
         else:
             return self.create_response(request, { 'success': False }, 
                                                  HttpUnauthorized)
@@ -188,25 +251,30 @@ class AuthResource(ModelResource):
         resource_name = 'auth'
         # for the doc:
         extra_actions = [ 
-            {   "name": u"register",
-                "http_method": u"POST",
-                "resource_type": u"list",
-                "summary": u"""[Custom] Create a new user in the backend, 
-authenticate and login the user automatically. Return its api_key.""",
-                "fields": { "username": {
+            {"name": u"register",
+             "http_method": u"POST",
+             "resource_type": u"list",
+             "summary": u"""[Custom API] - Does not require authentication<br><br>
+Create a new User in the backend, as well as its UserProfile and UserPosition
+(location profile).<br>Then authenticate and login the user.<br><br>
+Return a dict with { 'api_key' : API key, 'userid' : User ID, 
+'profileid' : UserProfile ID, 'positionid' : UserPosition ID }.""",
+             "fields": { "username": {
                                 "type": "string",
                                 "required": True,
                                 "description": u"username passed as a data" },
-                            "password": {
+                         "password": {
                                 "type": "string",
                                 "required": True,
                                 "description": u"password passed as a data" }, }
             } ,
-            {   "name": "login",
-                "http_method": "POST",
-                "resource_type": "list",
-                "summary": u"""[Custom] Authenticate and login the user automatically. 
-Return its api_key.""",
+            {"name": "login",
+             "http_method": "POST",
+             "resource_type": "list",
+             "summary": u"""[Custom API] - Does not require authentication<br><br>
+Authenticate and login the user.<br><br>
+Return a dict with { 'api_key' : API key, 'userid' : User ID, 
+'profileid' : UserProfile ID, 'positionid' : UserPosition ID }.""",
                 "fields": { "username": {
                                 "type": "string",
                                 "required": True,
@@ -240,10 +308,12 @@ Return its api_key.""",
                                         HttpBadRequest )
         username = data.get('username', '')
         password = data.get('password', '')
+        first_name = data.get('first_name', '')
         try:
             user = User.objects.create_user(username=username, 
                                             email=username, 
-                                            password=password)
+                                            password=password,
+                                            first_name=first_name)
         except:
             return self.create_response(request,
                                         {u'reason': u'cannot create this user'},
@@ -253,8 +323,11 @@ Return its api_key.""",
             if user.is_active:
                 login(request, user)
                 return self.create_response(request,
-                                            {'api_key': user.api_key.key}, 
-                                            HttpCreated )
+                               {'api_key'   : user.api_key.key,
+                                'userid'    : request.user.id,
+                                'profileid' : request.user.userprofile.id,
+                                'positionid': request.user.userposition.id },
+                                HttpCreated )
             else:
                 return self.create_response(request,
                                             {u'reason': u'disabled'},
@@ -281,7 +354,10 @@ Return its api_key.""",
             if user.is_active:
                 login(request, user)
                 return self.create_response(request,
-                                            {'api_key': user.api_key.key} )
+                               {'api_key'   : user.api_key.key,
+                                'userid'    : request.user.id,
+                                'profileid' : request.user.userprofile.id,
+                                'positionid': request.user.userposition.id })
             else:
                 return self.create_response(request,
                                             {u'reason': u'disabled'},

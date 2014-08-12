@@ -1,4 +1,4 @@
-from django.db import models
+from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
  
@@ -14,24 +14,7 @@ BLOCKED  = 'BLO' # blocked by sender or receiver
 CLOSED   = 'CLO'
 
 class Link(models.Model):
-    """ LINK behavior
-    when a user is discovered on the device,
-    a link is automatically created by the backend
-        - Link created
-        - sender_status=NEW
-        - receiver_status=NEW
-    sender clicks on "connect" button
-        - sender_status=ACCEPTED
-        - receiver_status=PENDING
-    sender clicks on "ignore" button
-        - sender_status=IGNORED
-    receiver accepts connection
-        - receiver_status=ACCEPTED
-    receiver reject connection
-        - receiver_status=REJECTED
-    sender/receiver blacklist someone
-        - x_status=BLOCKED
-    """
+    """ LINK behavior see API doc """
     LINK_STATUS = ( (NEW     , 'new' ),
                     (PENDING , 'pending'), #only for receiver_status
                     (ACCEPTED, 'accepted'),
@@ -45,8 +28,10 @@ class Link(models.Model):
     receiver_status = models.CharField(max_length=3, choices=LINK_STATUS,
                                                      default=NEW)
     sent_at     = models.DateTimeField(blank=True, null=True)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
+autofield, not modifiable""")
+    updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
+autofield, not modifiable""")
     class Meta:
         unique_together = ("sender", "receiver")
         
@@ -96,8 +81,10 @@ class Invite(models.Model):
                                blank=True, null=True)
     status = models.CharField(max_length=3, choices=INVITE_STATUS)
     sent_at = models.DateTimeField(blank=True, null=True)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
+autofield, not modifiable""")
+    updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
+autofield, not modifiable""")
     class Meta:
         unique_together = ('sender', 'email')
 

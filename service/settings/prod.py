@@ -82,6 +82,10 @@ EMAIL_HOST_PASSWORD = os.environ.get("SENDGRID_PASSWORD", "")
 EMAIL_PORT = 25
 EMAIL_USE_TLS = False
 
+# GeoDjango
+GEOS_LIBRARY_PATH = environ.get('GEOS_LIBRARY_PATH')
+GDAL_LIBRARY_PATH = environ.get('GDAL_LIBRARY_PATH')
+
 # Notification to mobiles
 PUSH_NOTIFICATIONS_SETTINGS = {
         "GCM_API_KEY": os.environ.get("GCM_API_KEY", ""),

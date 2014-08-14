@@ -3,3 +3,15 @@ user@XX $ sudo -i -u postgres
 postgres@XX $ createdb geoevent
 postgres@XX $ psql geoevent
 postgres=# CREATE EXTENSION postgis;
+
+
+heroku
+-------------
+heroku addons:add heroku-postgresql:standard-0  (move to standart tier)
+heroku pg:wait  (wait until it's done)
+heroku pg:psql  (connect to the DB)
+=> CREATE EXTENSION POSTGIS ;
+
+# add buildpack:
+heroku config:add BUILDPACK_URL=http://github.com/dulaccc/heroku-buildpack-geodjango/
+

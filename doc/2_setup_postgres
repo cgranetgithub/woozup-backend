@@ -22,16 +22,6 @@ create user and table
 
 > postgres=# \q
 
-setup GeoDjango (postgis)
--------------------------
-> postgres@s17101495:~$ psql geoevent
-
-> postgres=# CREATE EXTENSION postgis;
-
-> postgres=# \q
-
-> postgres@s17101495:~$ exit
-
 
 configure phppgadmin (see https://help.ubuntu.com/community/phpPgAdmin)
 - edit /etc/phppgadmin/apache.conf to allow all (and comment 127.0.0.1)

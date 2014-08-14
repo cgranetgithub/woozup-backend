@@ -1,16 +1,24 @@
-# if you want to use geodjango
-user@XX $ sudo -i -u postgres
-postgres@XX $ createdb geoevent
-postgres@XX $ psql geoevent
-postgres=# CREATE EXTENSION postgis;
+setup GeoDjango (postgis)
+-------------------------
+> charles@s17101495:~$ sudo -i -u postgres
+
+> postgres@s17101495:~$ psql geoevent
+
+> postgres=# CREATE EXTENSION postgis;
+
+> postgres=# \q
+
+> postgres@s17101495:~$ exit
 
 
 heroku
 -------------
 heroku addons:add heroku-postgresql:standard-0  (move to standart tier)
 heroku pg:wait  (wait until it's done)
+heroku pg:promote HEROKU_POSTGRESQL_TEAL  (use the new DB by default)
 heroku pg:psql  (connect to the DB)
-=> CREATE EXTENSION POSTGIS ;
+=> CREATE EXTENSION POSTGIS ;  (add extension)
+
 
 # add buildpack:
 heroku config:add BUILDPACK_URL=http://github.com/dulaccc/heroku-buildpack-geodjango/

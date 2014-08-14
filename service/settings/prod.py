@@ -83,8 +83,8 @@ EMAIL_PORT = 25
 EMAIL_USE_TLS = False
 
 # GeoDjango
-GEOS_LIBRARY_PATH = environ.get('GEOS_LIBRARY_PATH')
-GDAL_LIBRARY_PATH = environ.get('GDAL_LIBRARY_PATH')
+GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
+GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
 
 # Notification to mobiles
 PUSH_NOTIFICATIONS_SETTINGS = {

@@ -74,8 +74,8 @@ class Invite(models.Model):
                       (ACCEPTED, 'accepted'),
                       (IGNORED , 'ignored'),
                       (CLOSED  , 'closed' ) )
-    sender = models.ForeignKey(User)
-    email  = models.EmailField()
+    sender    = models.ForeignKey(User)
+    receiver  = models.CharField(max_length=50)  #username
     name   = models.CharField(max_length=255, blank=True)
     avatar = models.ImageField(upload_to=image_path,
                                blank=True, null=True)
@@ -86,7 +86,7 @@ autofield, not modifiable""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     class Meta:
-        unique_together = ('sender', 'email')
+        unique_together = ('sender', 'receiver')
 
     def __unicode__(self):
         return u'%s (%s)'%(self.email, self.sender)

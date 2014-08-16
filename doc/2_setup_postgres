@@ -11,6 +11,9 @@ create user and table
 > postgres=# CREATE USER --superuser testdjango;
  CREATE ROLE ;
 
+# Note, it doesn't work on my 14.04, use commandline tool
+$ createuser --superuser testdjango
+
 > postgres=# ALTER ROLE testdjango WITH CREATEDB ;
  ALTER ROLE
  

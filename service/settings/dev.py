@@ -36,3 +36,9 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 TASTYPIE_SWAGGER_API_MODULE = 'service.urls.v1_api'
+
+
+TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
+TEST_OUTPUT_VERBOSE = True
+TEST_OUTPUT_DESCRIPTIONS = True
+TEST_OUTPUT_DIR = 'xmlrunner'

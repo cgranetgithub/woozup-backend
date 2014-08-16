@@ -36,11 +36,11 @@ def create_connections(user, data):
             # NO => existing Invite?
             try:
                 Invite.objects.get(sender=user,
-                                    email=i['email'])
+                                    receiver=i['email'])
                 # YES => nothing to do
             except Invite.DoesNotExist:
                 # NO => create a new Invite
-                invite = Invite(sender=user, email=i['email'])
+                invite = Invite(sender=user, receiver=i['email'])
                 create_invite_list.append(invite)
     # 2) create the missing connections (bulk for better performance)
     Link.objects.bulk_create(create_link_list)

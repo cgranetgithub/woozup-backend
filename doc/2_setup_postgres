@@ -31,3 +31,10 @@ configure phppgadmin (see https://help.ubuntu.com/community/phpPgAdmin)
 - reload and restart apache
 
 
+Clean up database 
+-----------------
+# drop current database, required if table has new fields
+PGPASSWORD=test psql -hlocalhost geoevent testdjango
+> DROP SCHEMA PUBLIC CASCADE
+> CREATE SCHEMA PUBLIC
+> CREATE EXTENSION POSTGIS

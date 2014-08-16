@@ -1,17 +1,29 @@
 # reminder for deployment
 
-          local (dev)                                   |    
---------------------------------------------------------|
-pip install -r requirements.txt                         | 
-pip install -r dev-reqs.txt                             | 
-python manage.py syncdb --settings service.settings.dev | 
-python manage.py create_initial_data --setting...       | 
-python manage.py runserver --setting...                 | 
-                                                        | 
-if you want to use the admin, you need to run           |
- python manage.py colectstatic --setting...             |
-in order to export static files                         |
+          local (dev)
+----------------------------------------------------------
+$ pip install -r requirements.txt
+$ pip install -r dev-reqs.txt
 
+$ python manage.py syncdb --settings service.settings.dev
+$ python manage.py create_initial_data --setting...
+$ python manage.py runserver --setting...
+
+if you want to use the admin, you need to run
+ python manage.py colectstatic --setting...
+in order to export static files
+
+to enable background task in redis:
+$ export DJANGO_SETTINGS_MODULE=service.settings.dev
+$ rqworker
+
+Using a SSL server with manage runserver (requires stunnel4)
+Run run_ssl.sh from ssl, by default it will use 8001 and redirect to 8000
+Launch kivy process with
+export GEOEVENT_BACKEND=localhost:8001
+export GEOEVENT_BACKEND_SCHEME=https
+export GEOEVENT_SSL_VERIFY=False
+export GEOEVENT_CLIENT_CERTIFICATE=path/to/client.pem
 
 heroku
 ------------------------------------------------

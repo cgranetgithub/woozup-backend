@@ -7,56 +7,13 @@ from tastypie.authentication import ApiKeyAuthentication
 
 from django.db.models import Q
 from django.conf.urls import url
-from django.contrib.auth.models import User
+#from django.contrib.auth.models import User
 
-from link import push
 from doc import authdoc
+from link import push
+from link.tasks import create_connections
 from link.models import Link, Invite
 from userprofile.api import UserResource
-
-from rq.decorators import job
-from worker import conn
-
-@job('default', connection=conn)
-def create_link_invite(user, data):
-    # 1) determine the existing connections
-    email_list=[]
-    create_link_list = []
-    create_invite_list = []
-    for i in data:
-        # skip duplicates
-        if i['email'] in email_list:
-            continue
-        else:
-            email_list.append(i['email'])
-        # Existing User?
-        try:
-            #contact = User.objects.select_related().get(username=i['email'])
-            contact = User.objects.get(username=i['email'])
-            # YES => existing Link?
-            try:
-                Link.objects.get(
-                    ( Q(sender=user) & Q(receiver=contact) )
-                    | ( Q(sender=contact) & Q(receiver=user) )
-                                )
-                # YES => nothing to do
-            except Link.DoesNotExist:
-                # NO => create a new Link
-                link = Link(sender=user, receiver=contact)
-                create_link_list.append(link)
-        except User.DoesNotExist:
-            # NO => existing Invite?
-            try:
-                Invite.objects.get(sender=user,
-                                    email=i['email'])
-                # YES => nothing to do
-            except Invite.DoesNotExist:
-                # NO => create a new Invite
-                invite = Invite(sender=user, email=i['email'])
-                create_invite_list.append(invite)
-    # 2) create the missing connections (bulk for better performance)
-    Link.objects.bulk_create(create_link_list)
-    Invite.objects.bulk_create(create_invite_list)
 
 class InviteResource(ModelResource):
     sender   = fields.ToOneField(UserResource, 
@@ -326,7 +283,7 @@ will be passed to the BG job.""" } }.items() )
                                     {u'reason': u'cannot deserialize data'},
                                     HttpBadRequest )
             # launch background processing
-            create_link_invite.delay(user, data)
+            create_connections.delay(user, data)
             #
             return self.create_response(request, {'received': True})
         else:

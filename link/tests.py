@@ -177,6 +177,35 @@ class LinkTestCase(TestCase):
         #make sure link exists, in case of...
         Link.objects.get(id=self.l7.id) #will raise an exception if doesnotexist
 
+    def test_contact_and_connection(self):
+        # first, post contacts of an existing user
+        # and check what was created
+        user11_contacts = ['newuser1@fr.fr', 'newuser2@fr.fr',
+                          'user11@fr.fr', 'user12@fr.fr']
+        u11 = User.objects.create_user(username='user11@fr.fr', password='pwd')
+        u12 = User.objects.create_user(username='user12@fr.fr', password='pwd')
+        username = 'user11@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.post('/api/v1/contact/sort/%s'%auth,
+                          data = json.dumps(user11_contacts),
+                          content_type='application/json')
+        import time
+        time.sleep(1)
+        #the following should NOT raise a DoesNotExist exception
+        Invite.objects.get(sender=u11, receiver='newuser1@fr.fr')
+        Invite.objects.get(sender=u11, receiver='newuser2@fr.fr')
+        Link.objects.get(sender=u11, receiver=u12)
+        # then register a new user and check invites conversion
+        data = {'username' : 'newuser1@fr.fr', 'password' : 'totopwd'}
+        res = self.c.post('/api/v1/auth/register/',
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        nu1 = User.objects.get(username='newuser1@fr.fr')
+        #the following should NOT raise a DoesNotExist exception
+        Link.objects.get(sender=u11, receiver=nu1)
+
     def login(self, username):
         data = {'username':username, 'password':'pwd'}
         res = self.c.post('/api/v1/auth/login/',

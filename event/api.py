@@ -1,14 +1,21 @@
+from doc import authdoc
+
 from tastypie import fields
+from tastypie.http import HttpUnauthorized, HttpForbidden, HttpBadRequest
+from tastypie.utils import trailing_slash
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.serializers import Serializer
 from tastypie.authorization import DjangoAuthorization
 from tastypie.authentication import ApiKeyAuthentication
 
 from django.db.models import Q
+from django.conf.urls import url
 from django.utils.timezone import is_naive 
 from django.contrib.auth.models import User
 
+from event import push
 from event.models import EventCategory, EventType, Event
+from userprofile.api import UserResource
 from userprofile.models import get_user_friends
  
 class MyDateSerializer(Serializer):
@@ -29,8 +36,8 @@ class EventCategoryResource(ModelResource):
         allowed_methods = ['get']
 
 class EventTypeResource(ModelResource):
-    category = fields.ToManyField(EventCategoryResource,
-                                  attribute='category', full=True)
+    category = fields.ToManyField(EventCategoryResource, 'category',
+                                  full=True)
     class Meta:
         resource_name = 'event_type'
         queryset = EventType.objects.all()
@@ -40,8 +47,10 @@ class EventTypeResource(ModelResource):
                     }
 
 class EventResource(ModelResource):
-    event_type = fields.ToOneField(EventTypeResource,
-                                   attribute='event_type', full=True)
+    event_type = fields.ToOneField(EventTypeResource, 'event_type',
+                                   full=True)
+    participants = fields.ToManyField(UserResource, 'participants',
+                                      full=True, null=True)
     class Meta:
         serializer = MyDateSerializer()
         resource_name = 'event'
@@ -50,13 +59,31 @@ class EventResource(ModelResource):
         detail_allowed_methods = ['get', 'put', 'delete']
         filtering = {
                     #'owner'     : ALL_WITH_RELATIONS,
-                    'event_type': ALL_WITH_RELATIONS,
-                    'start'     : ALL,
-                    'position'  : ALL,
+                    'event_type'  : ALL_WITH_RELATIONS,
+                    'start'       : ALL,
+                    'position'    : ALL,
+                    'participants': ALL_WITH_RELATIONS,
                     }
         ordering = ['start']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
+        # for the doc:
+        extra_actions = [ 
+            {   u"name": u"join",
+                u"http_method": u"POST",
+                #"resource_type": "list",
+                u"summary": u"""[Custom API] - Requires authentication<br><br>
+User joins an event, that is, is added to the participant list.""",
+                "fields": authdoc
+            } ,
+            {   u"name": u"leave",
+                u"http_method": u"POST",
+                #"resource_type": "list",
+                u"summary": u"""[Custom API] - Requires authentication<br><br>
+User leaves an event, that is, is removed from the participant list.""",
+                "fields": authdoc
+            } ,
+        ]
     
     def obj_create(self, bundle, **kwargs):
         user = User.objects.get(username=bundle.request.user.username)
@@ -65,16 +92,105 @@ class EventResource(ModelResource):
 
     def get_object_list(self, request):
         myfriends = get_user_friends(request.user)
-        #myfriends = User.objects.filter(
-                        #( Q(link_as_sender__sender    =request.user) | 
-                          #Q(link_as_sender__receiver  =request.user) | 
-                          #Q(link_as_receiver__sender  =request.user) | 
-                          #Q(link_as_receiver__receiver=request.user) ),
-                        #( Q(link_as_sender__sender_status='ACC') & 
-                          #Q(link_as_sender__receiver_status='ACC') ) | 
-                        #( Q(link_as_receiver__sender_status='ACC') & 
-                          #Q(link_as_receiver__receiver_status='ACC') ) )
-        return Event.objects.filter(
+        events = Event.objects.filter(
                                 Q( owner__in=myfriends )
                               | Q( owner=request.user )
-                              | Q( participants__id__exact=request.user.id ) )
+                              | Q( participants__id__exact=request.user.id )
+                              ).distinct()
+        return events
+
+    def prepend_urls(self):
+        return [
+            url(r"^(?P<resource_name>%s)/(?P<event_id>\w[\w/-]*)/join%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('join'), name="api_join"),
+            url(r"^(?P<resource_name>%s)/(?P<event_id>\w[\w/-]*)/leave%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('leave'), name="api_leave"),
+        ]
+
+    def join(self, request, **kwargs):
+        """ Join an event.
+        Note: we need this API for security reason (instead of doing a PUT),
+        to avoid someone to manipulate events directly with a PUT        
+        """
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        if request.user and request.user.is_authenticated():
+            try:
+                event = Event.objects.get(id=kwargs['event_id'])
+                if request.user is not event.owner:
+                    participants = [ i['id'] for i in event.participants.values() ]
+                    if request.user.id not in participants:
+                        event.participants.add(request.user)
+                        event.save()
+                        push.participant_joined(request.user, event)
+                        return self.create_response(request,
+                                                    {u'success': True})
+                    else:
+                        return self.create_response(
+                                request, 
+                                {u'reason': u'You are already a participant'},
+                                HttpForbidden)
+                else:
+                    return self.create_response(
+                                request, 
+                                {u'reason': u'You cannot join your own event'},
+                                HttpForbidden)
+            except Event.DoesNotExist:
+                return self.create_response(request, 
+                                            {u'reason': u'Event not found'},
+                                            HttpForbidden)
+            else:
+                return self.create_response(request, 
+                                            {u'reason': u'Unexpected'},
+                                            HttpForbidden)
+        else:
+            return self.create_response(
+                                    request,
+                                    {u'reason': u"You are not authenticated"},
+                                    HttpUnauthorized )
+    
+    def leave(self, request, **kwargs):
+        """ Leave an event.
+        Note: we need this API for security reason (instead of doing a PUT),
+        to avoid someone to manipulate events directly with a PUT        
+        """
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        if request.user and request.user.is_authenticated():
+            try:
+                event = Event.objects.get(id=kwargs['event_id'])
+                if request.user is not event.owner:
+                    participants = [ i['id'] for i in event.participants.values() ]
+                    if request.user.id in participants:
+                        event.participants.remove(request.user)
+                        event.save()
+                        push.participant_left(request.user, event)
+                        return self.create_response(request,
+                                                    {u'success': True})
+                    else:
+                        return self.create_response(
+                                request, 
+                                {u'reason': u'You are not a participant'},
+                                HttpForbidden)
+                else:
+                    return self.create_response(
+                            request, 
+                            {u'reason': u'You cannot leave your own event'},
+                            HttpForbidden)
+            except Event.DoesNotExist:
+                return self.create_response(request, 
+                                            {u'reason': u'Event not found'},
+                                            HttpForbidden)
+            else:
+                return self.create_response(request, 
+                                            {u'reason': u'Unexpected'},
+                                            HttpForbidden)
+        else:
+            return self.create_response(
+                                    request,
+                                    {u'reason': u"You are not authenticated"},
+                                    HttpUnauthorized )

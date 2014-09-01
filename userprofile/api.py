@@ -18,9 +18,9 @@ from userprofile.models import UserProfile, UserPosition
 
 class ProfileResource(ModelResource):
     ###WARNING to be finshed, must restrict to the auth user
-    #user = fields.ToOneField('userprofile.api.UserResource', attribute='user',
+    #user = fields.ToOneField('userprofile.api.UserResource', 'user',
                              #related_name='userprofile')
-    #name = fields.CharField(attribute='name', readonly=True)
+    #name = fields.CharField('name', readonly=True)
     class Meta:
         resource_name = 'userprofile'
         queryset = UserProfile.objects.all()
@@ -83,7 +83,7 @@ class ProfileResource(ModelResource):
     
     
 class PositionResource(ModelResource):
-    #last = fields.CharField(attribute='last', null=True)
+    #last = fields.CharField('last', null=True)
     class Meta:
         resource_name = 'userposition'
         queryset = UserPosition.objects.all()
@@ -97,10 +97,10 @@ class UserResource(ModelResource):
     An API for accessing a User, requires authentication
     """
     #profile = fields.ToOneField(ProfileResource, 
-                                #attribute='userprofile', full=True)
+                                #'userprofile', full=True)
                                ##'userprofile', related_name='user', full=True)
     #position = fields.ToOneField(PositionResource, 
-                                #attribute='userposition', full=True)
+                                #'userposition', full=True)
                                 ##'userposition', related_name='user', full=True)
     class Meta:
         resource_name = 'user'

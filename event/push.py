@@ -6,6 +6,8 @@ from service.notification import send_notification
 EVENT_CREATED = u"%s vous invite à %s le %s à %s"
 EVENT_MODIFIED = u"%s a modifié '%s' (le %s à %s)"
 EVENT_CANCELED = u"%s a annulé le rendez-vous '%s' (le %s à %s)"
+PARTICIPANT_JOINED = u"%s est partant pour '%s'"
+PARTICIPANT_LEFT = u"%s a annulé pour '%s'"
 
 def event_saved(sender, instance, created, **kwargs):
     if created:
@@ -35,3 +37,16 @@ def event_canceled(sender, instance, **kwargs):
                           instance.start.date().isoformat(),
                           instance.start.time().isoformat())
     send_notification(instance.participants.all(), msg)
+
+def participant_joined(user, event):
+    msg = PARTICIPANT_JOINED%(user.userprofile.name, event.event_type.title)
+    recepients = [ i['id'] for i in event.participants.values() ]
+    recepients.append(event.owner.id)
+    recepients.remove(user.id)
+    send_notification(recepients, msg)
+
+def participant_left(user, event):
+    msg = PARTICIPANT_LEFT%(user.userprofile.name, event.event_type.title)
+    recepients = [ i['id'] for i in event.participants.values() ]
+    recepients.append(event.owner.id)
+    send_notification(recepients, msg)

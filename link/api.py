@@ -16,8 +16,7 @@ from link.models import Link, Invite
 from userprofile.api import UserResource
 
 class InviteResource(ModelResource):
-    sender   = fields.ToOneField(UserResource, 
-                                attribute='sender', full=True)
+    sender   = fields.ToOneField(UserResource, 'sender', full=True)
     class Meta:
         resource_name = 'invite'
         queryset = Invite.objects.all()
@@ -34,10 +33,8 @@ class InviteResource(ModelResource):
         return Invite.objects.filter( sender=request.user )
 
 class LinkResource(ModelResource):
-    sender   = fields.ToOneField(UserResource, 
-                                attribute='sender', full=True)
-    receiver = fields.ToOneField(UserResource, 
-                                attribute='receiver', full=True)
+    sender   = fields.ToOneField(UserResource, 'sender', full=True)
+    receiver = fields.ToOneField(UserResource, 'receiver', full=True)
     class Meta:
         resource_name = 'link'
         queryset = Link.objects.all()

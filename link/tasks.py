@@ -8,19 +8,18 @@ from link.models import Link, Invite
 @job('default', connection=conn)
 def create_connections(user, data):
     # 1) determine the existing connections
-    email_list=[]
+    username_list=[]
     create_link_list = []
     create_invite_list = []
-    for i in data:
+    for i in data.iterkeys():
         # skip duplicates
-        if i['email'] in email_list:
+        if i in username_list:
             continue
         else:
-            email_list.append(i['email'])
+            username_list.append(i)
         # Existing User?
         try:
-            #contact = User.objects.select_related().get(username=i['email'])
-            contact = User.objects.get(username=i['email'])
+            contact = User.objects.get(username=i)
             # YES => existing Link?
             try:
                 Link.objects.get(
@@ -35,12 +34,13 @@ def create_connections(user, data):
         except User.DoesNotExist:
             # NO => existing Invite?
             try:
-                Invite.objects.get(sender=user,
-                                    receiver=i['email'])
+                Invite.objects.get(sender=user, receiver=i)
                 # YES => nothing to do
             except Invite.DoesNotExist:
                 # NO => create a new Invite
-                invite = Invite(sender=user, receiver=i['email'])
+                invite = Invite(sender=user, receiver=i,
+                                receiver_email=data[i]['email'],
+                                receiver_name=data[i]['name'])
                 create_invite_list.append(invite)
     # 2) create the missing connections (bulk for better performance)
     Link.objects.bulk_create(create_link_list)

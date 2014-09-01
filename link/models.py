@@ -74,11 +74,14 @@ class Invite(models.Model):
                       (ACCEPTED, 'accepted'),
                       (IGNORED , 'ignored'),
                       (CLOSED  , 'closed' ) )
-    sender    = models.ForeignKey(User)
-    receiver  = models.CharField(max_length=50)  #username
-    name   = models.CharField(max_length=255, blank=True)
+    sender = models.ForeignKey(User)
+    receiver       = models.CharField(max_length=50, help_text=u'username')
+    receiver_email = models.EmailField(blank=True)
+    receiver_name  = models.CharField(max_length=255, blank=True,
+                                help_text='name to be displayed in the app')
     avatar = models.ImageField(upload_to=image_path,
-                               blank=True, null=True)
+                               blank=True, null=True,
+                               help_text='not used for now')
     status = models.CharField(max_length=3, choices=INVITE_STATUS)
     sent_at = models.DateTimeField(blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
@@ -89,5 +92,6 @@ autofield, not modifiable""")
         unique_together = ('sender', 'receiver')
 
     def __unicode__(self):
-        return u'%s (%s)'%(self.email, self.sender)
-
+        return u'%s(%d) -> %s|%s|%s'%(self.sender, self.sender.id,
+                                      self.receiver, self.receiver_name,
+                                      self.receiver_email)

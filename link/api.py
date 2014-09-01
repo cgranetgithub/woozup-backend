@@ -1,5 +1,5 @@
 from tastypie import fields
-from tastypie.http import HttpUnauthorized, HttpForbidden
+from tastypie.http import HttpUnauthorized, HttpForbidden, HttpBadRequest
 from tastypie.utils import trailing_slash
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authorization import DjangoAuthorization
@@ -282,6 +282,16 @@ will be passed to the BG job.""" } }.items() )
                                     request,
                                     {u'reason': u'cannot deserialize data'},
                                     HttpBadRequest )
+            # check data form
+            msg = u"""data must have the following form: 
+{ u'username1' : { u'email' : ..., u'name' : ... }, u'username2' : ... }"""
+            if type(data) is not dict:
+                return self.create_response(request, {u'reason': msg},
+                                                     HttpBadRequest)
+            for i in data.itervalues():
+                if (u'email' not in i) or (u'name' not in i):
+                    return self.create_response(request, {u'reason': msg},
+                                                         HttpBadRequest)
             # launch background processing
             create_connections.delay(user, data)
             #

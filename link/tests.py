@@ -199,9 +199,9 @@ class LinkTestCase(TestCase):
         time.sleep(1)
         #the following should NOT raise a DoesNotExist exception
         Invite.objects.get(sender__username=username,
-                           receiver='newuser1@fr.fr')
+                           userid='newuser1@fr.fr')
         Invite.objects.get(sender__username=username,
-                           receiver='newuser2@fr.fr')
+                           userid='newuser2@fr.fr')
         Link.objects.get(sender__username=username,
                          receiver__username='user9@fr.fr')
         # then register a new user and check invites conversion

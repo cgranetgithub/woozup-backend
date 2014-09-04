@@ -109,9 +109,9 @@ class UserResource(ModelResource):
         list_allowed_methods = []
         detail_allowed_methods = ['get', 'put']
         excludes = ['password', 'is_superuser', 'is_staff']
-        #filtering = {
-                    #'username': ALL,
-                    #}
+        filtering = {
+                    'username': ALL,
+                    }
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
         # for the doc:

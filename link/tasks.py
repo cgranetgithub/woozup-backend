@@ -34,13 +34,15 @@ def create_connections(user, data):
         except User.DoesNotExist:
             # NO => existing Invite?
             try:
-                Invite.objects.get(sender=user, receiver=i)
+                Invite.objects.get(sender=user, userid=i)
                 # YES => nothing to do
             except Invite.DoesNotExist:
                 # NO => create a new Invite
-                invite = Invite(sender=user, receiver=i,
-                                receiver_email=data[i]['email'],
-                                receiver_name=data[i]['name'])
+                invite = Invite(sender=user, userid=i,
+                                email=data[i]['email'],
+                                display_name=data[i]['display_name'])
+                if 'local_picture_path' in data[i]:
+                    invite.local_picture_path = data[i]['local_picture_path']
                 create_invite_list.append(invite)
     # 2) create the missing connections (bulk for better performance)
     Link.objects.bulk_create(create_link_list)
@@ -49,7 +51,7 @@ def create_connections(user, data):
 def transform_invites(sender, instance, created, **kwargs):
     if created and not instance.is_superuser:
         create_link_list = []
-        invites = Invite.objects.filter(receiver=instance.username
+        invites = Invite.objects.filter(userid=instance.username
                             ).exclude(status='CLO')
         for i in invites:
             link = Link(sender=i.sender, receiver=instance)

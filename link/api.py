@@ -16,14 +16,14 @@ from link.models import Link, Invite
 from userprofile.api import UserResource
 
 class InviteResource(ModelResource):
-    sender   = fields.ToOneField(UserResource, 'sender', full=True)
+    #sender = fields.ToOneField(UserResource, 'sender', full=True)
     class Meta:
         resource_name = 'invite'
         queryset = Invite.objects.all()
         allowed_methods = ['get']
         filtering = {
-                    'sender': ALL_WITH_RELATIONS,
-                    'receiver': ALL,
+                    #'sender': ALL_WITH_RELATIONS,
+                    'userid': ALL,
                     'status': ALL,
                     }
         authorization  = DjangoAuthorization()
@@ -281,12 +281,15 @@ will be passed to the BG job.""" } }.items() )
                                     HttpBadRequest )
             # check data form
             msg = u"""data must have the following form: 
-{ u'username1' : { u'email' : ..., u'name' : ... }, u'username2' : ... }"""
+{ u'username1' : { u'email' : ..., u'display_name' : ... },
+  u'username2' : { ... }
+}
+the API will also recognize 'local_picture_path' field if given """
             if type(data) is not dict:
                 return self.create_response(request, {u'reason': msg},
                                                      HttpBadRequest)
             for i in data.itervalues():
-                if (u'email' not in i) or (u'name' not in i):
+                if (u'email' not in i) or (u'display_name' not in i):
                     return self.create_response(request, {u'reason': msg},
                                                          HttpBadRequest)
             # launch background processing

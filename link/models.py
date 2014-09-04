@@ -75,23 +75,25 @@ class Invite(models.Model):
                       (IGNORED , 'ignored'),
                       (CLOSED  , 'closed' ) )
     sender = models.ForeignKey(User)
-    receiver       = models.CharField(max_length=50, help_text=u'username')
-    receiver_email = models.EmailField(blank=True)
-    receiver_name  = models.CharField(max_length=255, blank=True,
+    userid = models.CharField(max_length=50, help_text=u'username')
+    email = models.EmailField(blank=True)
+    display_name  = models.CharField(max_length=255, blank=True,
                                 help_text='name to be displayed in the app')
+    local_picture_path = models.CharField(max_length=255, blank=True,
+                            help_text='local path in the device to a picture')
     avatar = models.ImageField(upload_to=image_path,
                                blank=True, null=True,
                                help_text='not used for now')
-    status = models.CharField(max_length=3, choices=INVITE_STATUS)
+    status = models.CharField(max_length=3, choices=INVITE_STATUS, default=NEW)
     sent_at = models.DateTimeField(blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     class Meta:
-        unique_together = ('sender', 'receiver')
+        unique_together = ('sender', 'userid')
 
     def __unicode__(self):
         return u'%s(%d) -> %s|%s|%s'%(self.sender, self.sender.id,
-                                      self.receiver, self.receiver_name,
-                                      self.receiver_email)
+                                      self.userid, self.display_name,
+                                      self.email)

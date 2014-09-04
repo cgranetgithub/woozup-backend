@@ -14,8 +14,8 @@ if you want to use the admin, you need to run
 in order to export static files
 
 to enable background task in redis:
-$ export DJANGO_SETTINGS_MODULE=service.settings.dev
-$ rqworker
+$ export DJANGO_SETTINGS_MODULE=service.settings.autotest rqworker high default low
+$ rqworker -v
 
 Using a SSL server with manage runserver (requires stunnel4)
 Run run_ssl.sh from ssl, by default it will use 8001 and redirect to 8000

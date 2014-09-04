@@ -35,6 +35,4 @@ Clean up database
 -----------------
 # drop current database, required if table has new fields
 PGPASSWORD=test psql -hlocalhost geoevent testdjango
-> DROP SCHEMA PUBLIC CASCADE
-> CREATE SCHEMA PUBLIC
-> CREATE EXTENSION POSTGIS
+> DROP SCHEMA PUBLIC CASCADE; CREATE SCHEMA PUBLIC; CREATE EXTENSION POSTGIS;

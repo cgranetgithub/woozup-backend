@@ -29,7 +29,7 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=2, choices=GENDER,
                               blank=True, null=True)
     birth_date = models.DateField(blank=True, null=True)
-    avatar = models.ImageField(upload_to=image_path,
+    image = models.ImageField(upload_to=image_path,
                                blank=True, null=True)
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")

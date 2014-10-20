@@ -34,6 +34,7 @@ class EventCategoryResource(ModelResource):
         resource_name = 'category'
         queryset = EventCategory.objects.all()
         allowed_methods = ['get']
+        ordering = ['order']
 
 class EventTypeResource(ModelResource):
     category = fields.ToManyField(EventCategoryResource, 'category',
@@ -45,6 +46,7 @@ class EventTypeResource(ModelResource):
         filtering = {
                     'category': ALL_WITH_RELATIONS,
                     }
+        ordering = ['order']
 
 class EventResource(ModelResource):
     event_type = fields.ToOneField(EventTypeResource, 'event_type',

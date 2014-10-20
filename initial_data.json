@@ -1,200 +1,125 @@
 [
-    {
-        "model": "event.eventcategory",
-        "pk": 1,
-        "fields": {
-            "title": "me cultiver",
-            "short_name": "culture",
-            "icon": "glyph/icon_6485.png",
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventcategory",
-        "pk": 2,
-        "fields": {
-            "title": "faire du sport",
-            "short_name": "sport",
-            "icon": "glyph/icon_503.png",
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventcategory",
-        "pk": 3,
-        "fields": {
-            "title": "faire la fête",
-            "short_name": "fête",
-            "icon": "glyph/icon_29735.png",
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventcategory",
-        "pk": 4,
-        "fields": {
-            "title": "plein air",
-            "short_name": "plein air",
-            "icon": "glyph/icon_30541.png",
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventcategory",
-        "pk": 5,
-        "fields": {
-            "title": "déjeuner, diner",
-            "short_name": "repas",
-            "icon": "glyph/icon_8907_2.png",
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventcategory",
-        "pk": 6,
-        "fields": {
-            "title": "boire un verre, un café",
-            "short_name": "verre",
-            "icon": "glyph/icon_16.png",
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 1,
-        "fields": {
-            "title": "boire une bière",
-            "short_name": "bière",
-            "category": [
-                3,
-                6
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 2,
-        "fields": {
-            "title": "prendre un café",
-            "short_name": "café",
-            "category": [
-                3,
-                6
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 3,
-        "fields": {
-            "title": "salon de thé",
-            "short_name": "thé",
-            "category": [
-                6
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 4,
-        "fields": {
-            "title": "en terrasse",
-            "short_name": "terrasse",
-            "category": [
-                6
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 5,
-        "fields": {
-            "title": "aller au cinéma",
-            "short_name": "cinéma",
-            "category": [
-                1
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 6,
-        "fields": {
-            "title": "aller au théâtre",
-            "short_name": "théâtre",
-            "category": [
-                1
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 7,
-        "fields": {
-            "title": "tennis",
-            "short_name": "tennis",
-            "category": [
-                2
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 8,
-        "fields": {
-            "title": "foot",
-            "short_name": "foot",
-            "category": [
-                2
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 9,
-        "fields": {
-            "title": "aller dans un parc",
-            "short_name": "parc",
-            "category": [
-                4
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    },
-    {
-        "model": "event.eventtype",
-        "pk": 10,
-        "fields": {
-            "title": "faire une balade en forêt",
-            "short_name": "forêt",
-            "category": [
-                4
-            ],
-            "created_at": "2014-05-13 10:01:27+0100",
-            "updated_at": "2014-05-13 10:01:27+0100"
-        }
-    }
+ {"fields": {"created_at": "2014-05-13T09:01:27Z",
+              "description": "culture",
+              "image": "glyph/museum_white_200.png",
+              "order": 1,
+              "short_name": "culture",
+              "name": "culture",
+              "updated_at": "2014-10-14T16:25:14.179Z"},
+  "model": "event.eventcategory",
+  "pk": 1},
+ {"fields": {"created_at": "2014-05-13T09:01:27Z",
+              "description": "sport",
+              "image": "glyph/sport_white_200.png",
+              "order": 4,
+              "short_name": "sport",
+              "name": "sport",
+              "updated_at": "2014-10-14T16:06:30.036Z"},
+  "model": "event.eventcategory",
+  "pk": 2},
+ {"fields": {"created_at": "2014-05-13T09:01:27Z",
+              "description": "sortir",
+              "image": "glyph/cocktail_white_200.png",
+              "order": 3,
+              "short_name": "sortir",
+              "name": "sortir",
+              "updated_at": "2014-10-14T19:33:48.764Z"},
+  "model": "event.eventcategory",
+  "pk": 3},
+ {"fields": {"created_at": "2014-05-13T09:01:27Z",
+              "description": "plein air",
+              "image": "glyph/outdoor_white_200.png",
+              "order": 1,
+              "short_name": "plein air",
+              "name": "plein air",
+              "updated_at": "2014-10-14T16:32:51.120Z"},
+  "model": "event.eventcategory",
+  "pk": 4},
+ {"fields": {"created_at": "2014-05-13T09:01:27Z",
+              "description": "repas",
+              "image": "glyph/fork_white_200.png",
+              "order": 2,
+              "short_name": "repas",
+              "name": "repas",
+              "updated_at": "2014-10-14T16:15:10.275Z"},
+  "model": "event.eventcategory",
+  "pk": 5},
+ {"fields": {"created_at": "2014-05-13T09:01:27Z",
+              "description": "un verre",
+              "image": "glyph/drink_white_200.png",
+              "order": 1,
+              "short_name": "un verre",
+              "name": "un verre",
+              "updated_at": "2014-10-14T16:28:10.461Z"},
+  "model": "event.eventcategory",
+  "pk": 6},
+ {"fields": {"created_at": "2014-10-13T19:42:46.236Z",
+              "description": "jeux",
+              "image": "glyph/cards_white_200.png",
+              "order": 1,
+              "short_name": "jeux",
+              "name": "jeux",
+              "updated_at": "2014-10-14T16:34:40.775Z"},
+  "model": "event.eventcategory",
+  "pk": 7},
+ {"fields": {"category": [6],
+              "created_at": "2014-05-13T09:01:27Z",
+              "description": "un verre",
+              "image": "glyph/drink_white_200_1.png",
+              "order": 1,
+              "short_name": "un verre",
+              "name": "un verre",
+              "updated_at": "2014-10-20T14:51:16.926Z"},
+  "model": "event.eventtype",
+  "pk": 2},
+ {"fields": {"category": [1],
+              "created_at": "2014-05-13T09:01:27Z",
+              "description": "culture",
+              "image": "glyph/museum_white_200_1.png",
+              "order": 1,
+              "short_name": "culture",
+              "name": "culture",
+              "updated_at": "2014-10-20T14:50:09.781Z"},
+  "model": "event.eventtype",
+  "pk": 6},
+ {"fields": {"category": [2],
+              "created_at": "2014-05-13T09:01:27Z",
+              "description": "sport",
+              "image": "glyph/sport_white_200_1.png",
+              "order": 1,
+              "short_name": "sport",
+              "name": "sport",
+              "updated_at": "2014-10-20T14:49:31.575Z"},
+  "model": "event.eventtype",
+  "pk": 8},
+ {"fields": {"category": [4],
+              "created_at": "2014-05-13T09:01:27Z",
+              "description": "plein air",
+              "image": "glyph/outdoor_white_200_1.png",
+              "order": 1,
+              "short_name": "plein air",
+              "name": "plein air",
+              "updated_at": "2014-10-20T14:48:45.023Z"},
+  "model": "event.eventtype",
+  "pk": 10},
+ {"fields": {"category": [3],
+              "created_at": "2014-10-13T19:06:15.021Z",
+              "description": "sortir",
+              "image": "glyph/cocktail_white_200_1.png",
+              "order": 1,
+              "short_name": "sortir",
+              "name": "sortir",
+              "updated_at": "2014-10-20T14:48:20.319Z"},
+  "model": "event.eventtype",
+  "pk": 11},
+ {"fields": {"category": [5],
+              "created_at": "2014-10-13T19:07:14.154Z",
+              "description": "repas",
+              "image": "glyph/fork_white_200_1.png",
+              "order": 1,
+              "short_name": "repas",
+              "name": "repas",
+              "updated_at": "2014-10-20T14:47:50.729Z"},
+  "model": "event.eventtype",
+  "pk": 14}
 ]

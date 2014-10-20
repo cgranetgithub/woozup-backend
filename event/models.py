@@ -6,35 +6,35 @@ from event.push import event_to_be_changed, event_saved, event_canceled
 from service.utils import image_path
 
 class EventCategory(models.Model):
-    title       = models.CharField(max_length=50)
+    name       = models.CharField(max_length=50)
     short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
-    icon        = models.ImageField(upload_to='glyph')
+    image        = models.ImageField(upload_to='glyph')
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     def __unicode__(self):
-        return self.title
+        return self.name
  
 class EventType(models.Model):
-    title       = models.CharField(max_length=50)
+    name       = models.CharField(max_length=50)
     short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
     category    = models.ManyToManyField(EventCategory)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
-    icon        = models.ImageField(upload_to='glyph',
+    image        = models.ImageField(upload_to='glyph',
                                     blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     def __unicode__(self):
-        return self.title
+        return self.name
 
 class Event(models.Model):
-    title        = models.CharField(max_length=50, blank=True)
+    name        = models.CharField(max_length=50, blank=True)
     comment      = models.CharField(max_length=255, blank=True)
     special      = models.BooleanField(default=False)
     public       = models.BooleanField(default=False)
@@ -58,7 +58,7 @@ autofield, not modifiable""")
     objects = models.GeoManager()
 
     def __unicode__(self):
-        return u"%s (%s)"%(self.title, self.event_type)
+        return u"%s (%s)"%(self.name, self.event_type)
     class Meta:
         unique_together = ('start', 'event_type', 'owner')
 

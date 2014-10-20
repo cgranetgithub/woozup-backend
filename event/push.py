@@ -15,7 +15,7 @@ def event_saved(sender, instance, created, **kwargs):
         friends = get_user_friends(instance.owner)
         ###WARNING filter based on distance
         msg = EVENT_CREATED%(instance.owner.userprofile.name, 
-                             instance.event_type.title, 
+                             instance.event_type.name, 
                              instance.start.date().isoformat(),
                              instance.start.time().isoformat())
         send_notification(friends, msg)
@@ -25,7 +25,7 @@ def event_to_be_changed(sender, instance, update_fields, **kwargs):
     if update_fields:
         # notify only participants
         msg = EVENT_MODIFIED%(instance.owner.userprofile.name, 
-                            instance.event_type.title, 
+                            instance.event_type.name, 
                             instance.start.date().isoformat(),
                             instance.start.time().isoformat())
         send_notification(instance.participants.all(), msg)
@@ -33,20 +33,20 @@ def event_to_be_changed(sender, instance, update_fields, **kwargs):
 def event_canceled(sender, instance, **kwargs):
     # notify only participants
     msg = EVENT_CANCELED%(instance.owner.userprofile.name, 
-                          instance.event_type.title, 
+                          instance.event_type.name, 
                           instance.start.date().isoformat(),
                           instance.start.time().isoformat())
     send_notification(instance.participants.all(), msg)
 
 def participant_joined(user, event):
-    msg = PARTICIPANT_JOINED%(user.userprofile.name, event.event_type.title)
+    msg = PARTICIPANT_JOINED%(user.userprofile.name, event.event_type.name)
     recepients = [ i['id'] for i in event.participants.values() ]
     recepients.append(event.owner.id)
     recepients.remove(user.id)
     send_notification(recepients, msg)
 
 def participant_left(user, event):
-    msg = PARTICIPANT_LEFT%(user.userprofile.name, event.event_type.title)
+    msg = PARTICIPANT_LEFT%(user.userprofile.name, event.event_type.name)
     recepients = [ i['id'] for i in event.participants.values() ]
     recepients.append(event.owner.id)
     send_notification(recepients, msg)

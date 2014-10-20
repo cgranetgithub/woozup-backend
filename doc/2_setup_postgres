@@ -36,3 +36,12 @@ Clean up database
 # drop current database, required if table has new fields
 PGPASSWORD=test psql -hlocalhost geoevent testdjango
 > DROP SCHEMA PUBLIC CASCADE; CREATE SCHEMA PUBLIC; CREATE EXTENSION POSTGIS;
+
+
+
+heroku reset
+-----------
+heroku pg:reset DATABASE --app geoevent
+heroku pg:psql
+CREATE EXTENSION postgis;
+

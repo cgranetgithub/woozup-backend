@@ -20,7 +20,7 @@ class ProfileResource(ModelResource):
     ###WARNING to be finshed, must restrict to the auth user
     #user = fields.ToOneField('userprofile.api.UserResource', 'user',
                              #related_name='userprofile')
-    #name = fields.CharField('name', readonly=True)
+    name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'userprofile'
         queryset = UserProfile.objects.all()
@@ -99,13 +99,9 @@ class UserResource(ModelResource):
     #profile = fields.ToOneField(ProfileResource, 
                                 #'userprofile', full=True)
                                ##'userprofile', related_name='user', full=True)
-    #position = fields.ToOneField(PositionResource, 
-                                #'userposition', full=True)
-                                ##'userposition', related_name='user', full=True)
     class Meta:
         resource_name = 'user'
         queryset = User.objects.all()
-        #list_allowed_methods = ['get']
         list_allowed_methods = []
         detail_allowed_methods = ['get', 'put']
         excludes = ['password', 'is_superuser', 'is_staff']

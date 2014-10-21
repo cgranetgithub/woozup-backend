@@ -1,9 +1,10 @@
 from django.contrib.gis.db import models
 from django.db.models.signals import pre_save, post_save, pre_delete
-from django.contrib.auth.models import User
+#from django.contrib.auth.models import User
 
 from event.push import event_to_be_changed, event_saved, event_canceled
 from service.utils import image_path
+from userprofile.models import UserProfile
 
 class EventCategory(models.Model):
     name       = models.CharField(max_length=50)
@@ -41,8 +42,8 @@ class Event(models.Model):
     start        = models.DateTimeField()
     end          = models.DateTimeField(blank=True, null=True)
     event_type   = models.ForeignKey(EventType)
-    owner        = models.ForeignKey(User, related_name='events_as_owner')
-    participants = models.ManyToManyField(User, 
+    owner        = models.ForeignKey(UserProfile, related_name='events_as_owner')
+    participants = models.ManyToManyField(UserProfile, 
                                           related_name='events_as_participant', 
                                           blank=True, null=True)
     position     = models.GeometryField(null=True, blank=True, help_text=u"""

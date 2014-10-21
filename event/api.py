@@ -11,12 +11,12 @@ from tastypie.authentication import ApiKeyAuthentication
 from django.db.models import Q
 from django.conf.urls import url
 from django.utils.timezone import is_naive 
-from django.contrib.auth.models import User
+#from django.contrib.auth.models import User
 
 from event import push
 from event.models import EventCategory, EventType, Event
-from userprofile.api import UserResource
-from userprofile.models import get_user_friends
+from userprofile.api import ProfileResource
+from userprofile.models import UserProfile, get_user_friends
  
 class MyDateSerializer(Serializer):
     """
@@ -51,7 +51,9 @@ class EventTypeResource(ModelResource):
 class EventResource(ModelResource):
     event_type = fields.ToOneField(EventTypeResource, 'event_type',
                                    full=True)
-    participants = fields.ToManyField(UserResource, 'participants',
+    participants = fields.ToManyField(ProfileResource, 'participants',
+                                      full=True, null=True)
+    owner = fields.ToOneField(ProfileResource, 'owner',
                                       full=True, null=True)
     class Meta:
         serializer = MyDateSerializer()
@@ -60,11 +62,11 @@ class EventResource(ModelResource):
         list_allowed_methods = ['get', 'post']
         detail_allowed_methods = ['get', 'put', 'delete']
         filtering = {
-                    #'owner'     : ALL_WITH_RELATIONS,
+                    #'owner'       : ALL_WITH_RELATIONS,
                     'event_type'  : ALL_WITH_RELATIONS,
                     'start'       : ALL,
                     'position'    : ALL,
-                    'participants': ALL_WITH_RELATIONS,
+                    #'participants': ALL_WITH_RELATIONS,
                     }
         ordering = ['start']
         authorization  = DjangoAuthorization()
@@ -88,16 +90,16 @@ User leaves an event, that is, is removed from the participant list.""",
         ]
     
     def obj_create(self, bundle, **kwargs):
-        user = User.objects.get(username=bundle.request.user.username)
+        user = UserProfile.objects.get(user__username=bundle.request.user.username)
         kwargs['owner'] = user #force owner to the authorized user
         return super(EventResource, self).obj_create(bundle, **kwargs)
 
     def get_object_list(self, request):
         myfriends = get_user_friends(request.user)
         events = Event.objects.filter(
-                                Q( owner__in=myfriends )
-                              | Q( owner=request.user )
-                              | Q( participants__id__exact=request.user.id )
+                                Q( owner__user__in=myfriends )
+                              | Q( owner__user=request.user )
+                              | Q( participants__user__id__exact=request.user.id )
                               ).distinct()
         return events
 

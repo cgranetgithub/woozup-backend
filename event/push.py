@@ -14,7 +14,7 @@ def event_saved(sender, instance, created, **kwargs):
         # notify owner's friends which are close enough to the event
         friends = get_user_friends(instance.owner)
         ###WARNING filter based on distance
-        msg = EVENT_CREATED%(instance.owner.userprofile.name, 
+        msg = EVENT_CREATED%(instance.owner.name, 
                              instance.event_type.name, 
                              instance.start.date().isoformat(),
                              instance.start.time().isoformat())

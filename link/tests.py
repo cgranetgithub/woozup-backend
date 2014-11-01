@@ -210,7 +210,7 @@ class LinkTestCase(TestCase):
                            userid='newuser1@fr.fr')
         Invite.objects.get(sender__user__username=username,
                            userid='newuser2@fr.fr')
-        Link.objects.get(sender__username=username,
+        Link.objects.get(sender__user__username=username,
                          receiver__user__username='user9@fr.fr')
         # then register a new user and check invites conversion
         data = {'username' : 'newuser1@fr.fr', 'password' : 'totopwd'}

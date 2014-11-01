@@ -293,7 +293,7 @@ the API will also recognize 'local_picture_path' field if given """
                     return self.create_response(request, {u'reason': msg},
                                                          HttpBadRequest)
             # launch background processing
-            create_connections.delay(user, data)
+            create_connections.delay(user.userprofile, data)
             #
             return self.create_response(request, {'received': True})
         else:

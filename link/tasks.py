@@ -1,13 +1,14 @@
 from django.db.models import Q
 from django.db.models.signals import post_save
-from django.contrib.auth.models import User
+#from django.contrib.auth.models import User
 from rq.decorators import job
 
 from worker import conn
 from link.models import Link, Invite
+from userprofile.models import UserProfile
 
 @job('default', connection=conn)
-def create_connections(user, data):
+def create_connections(userprofile, data):
     # 1) determine the existing connections
     username_list=[]
     create_link_list = []
@@ -18,28 +19,28 @@ def create_connections(user, data):
             continue
         else:
             username_list.append(i)
-        # Existing User?
+        # Existing UserProfile?
         try:
-            contact = User.objects.get(username=i)
+            contact = UserProfile.objects.get(user__username=i)
             # YES => existing Link?
             try:
                 Link.objects.get(
-                    ( Q(sender=user) & Q(receiver=contact) )
-                    | ( Q(sender=contact) & Q(receiver=user) )
+                    ( Q(sender=userprofile) & Q(receiver=contact) )
+                    | ( Q(sender=contact) & Q(receiver=userprofile) )
                                 )
                 # YES => nothing to do
             except Link.DoesNotExist:
                 # NO => create a new Link
-                link = Link(sender=user, receiver=contact)
+                link = Link(sender=userprofile, receiver=contact)
                 create_link_list.append(link)
-        except User.DoesNotExist:
+        except UserProfile.DoesNotExist:
             # NO => existing Invite?
             try:
-                Invite.objects.get(sender=user, userid=i)
+                Invite.objects.get(sender=userprofile, userid=i)
                 # YES => nothing to do
             except Invite.DoesNotExist:
                 # NO => create a new Invite
-                invite = Invite(sender=user, userid=i,
+                invite = Invite(sender=userprofile, userid=i,
                                 email=data[i]['email'],
                                 display_name=data[i]['display_name'])
                 if 'local_picture_path' in data[i]:
@@ -50,9 +51,10 @@ def create_connections(user, data):
     Invite.objects.bulk_create(create_invite_list)
 
 def transform_invites(sender, instance, created, **kwargs):
-    if created and not instance.is_superuser:
+    #if created and not instance.is_superuser:
+    if created:
         create_link_list = []
-        invites = Invite.objects.filter(userid=instance.username
+        invites = Invite.objects.filter(userid=instance.user.username
                             ).exclude(status='CLO')
         for i in invites:
             link = Link(sender=i.sender, receiver=instance)
@@ -61,4 +63,4 @@ def transform_invites(sender, instance, created, **kwargs):
             create_link_list.append(link)
         Link.objects.bulk_create(create_link_list)
 
-post_save.connect(transform_invites, sender=User)
+post_save.connect(transform_invites, sender=UserProfile)

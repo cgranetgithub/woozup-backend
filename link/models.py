@@ -1,8 +1,9 @@
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
+#from django.contrib.auth.models import User
  
 from service.utils import image_path
+from userprofile.models import UserProfile
 
 # state is independent of the notification sending
 NEW      = 'NEW' # default state after automatic creation
@@ -21,8 +22,8 @@ class Link(models.Model):
                     (REJECTED, 'rejected'),
                     (IGNORED , 'ignored'),
                     (BLOCKED , 'blocked' ) )
-    sender   = models.ForeignKey(User, related_name='link_as_sender')
-    receiver = models.ForeignKey(User, related_name='link_as_receiver')
+    sender   = models.ForeignKey(UserProfile, related_name='link_as_sender')
+    receiver = models.ForeignKey(UserProfile, related_name='link_as_receiver')
     sender_status   = models.CharField(max_length=3, choices=LINK_STATUS,
                                                      default=NEW)
     receiver_status = models.CharField(max_length=3, choices=LINK_STATUS,
@@ -74,7 +75,7 @@ class Invite(models.Model):
                       (ACCEPTED, 'accepted'),
                       (IGNORED , 'ignored'),
                       (CLOSED  , 'closed' ) )
-    sender = models.ForeignKey(User)
+    sender = models.ForeignKey(UserProfile)
     userid = models.CharField(max_length=50, help_text=u'username')
     email = models.EmailField(blank=True)
     display_name  = models.CharField(max_length=255, blank=True,

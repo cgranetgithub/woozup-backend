@@ -1,8 +1,8 @@
 from push_notifications.models import APNSDevice, GCMDevice
 
-def send_notification(userlist, message):
+def send_notification(userprofilelist, message):
     #try:
-    devices = GCMDevice.objects.filter(user__in=userlist)
+    devices = GCMDevice.objects.filter(user__userprofile__in=userprofilelist)
     devices.send_message(message)
     #except:
         #print u"!!!exception (normal on PC)!!!"

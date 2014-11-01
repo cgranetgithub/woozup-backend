@@ -32,21 +32,23 @@ def event_to_be_changed(sender, instance, update_fields, **kwargs):
 
 def event_canceled(sender, instance, **kwargs):
     # notify only participants
-    msg = EVENT_CANCELED%(instance.owner.userprofile.name, 
+    msg = EVENT_CANCELED%(instance.owner.name, 
                           instance.event_type.name, 
                           instance.start.date().isoformat(),
                           instance.start.time().isoformat())
     send_notification(instance.participants.all(), msg)
 
-def participant_joined(user, event):
-    msg = PARTICIPANT_JOINED%(user.userprofile.name, event.event_type.name)
-    recepients = [ i['id'] for i in event.participants.values() ]
-    recepients.append(event.owner.id)
-    recepients.remove(user.id)
+def participant_joined(userprofile, event):
+    msg = PARTICIPANT_JOINED%(userprofile.name, event.event_type.name)
+    #recepients = [ i['id'] for i in event.participants.values() ]
+    recepients = [ i for i in event.participants.all() ]
+    recepients.append(event.owner)
+    recepients.remove(userprofile)
     send_notification(recepients, msg)
 
-def participant_left(user, event):
-    msg = PARTICIPANT_LEFT%(user.userprofile.name, event.event_type.name)
-    recepients = [ i['id'] for i in event.participants.values() ]
-    recepients.append(event.owner.id)
+def participant_left(userprofile, event):
+    msg = PARTICIPANT_LEFT%(userprofile.name, event.event_type.name)
+    #recepients = [ i['id'] for i in event.participants.values() ]
+    recepients = [ i for i in event.participants.all() ]
+    recepients.append(event.owner)
     send_notification(recepients, msg)

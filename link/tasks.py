@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.db.models.signals import post_save
 from django.contrib.auth.models import User
 from rq.decorators import job
 
@@ -59,3 +60,5 @@ def transform_invites(sender, instance, created, **kwargs):
             i.save()
             create_link_list.append(link)
         Link.objects.bulk_create(create_link_list)
+
+post_save.connect(transform_invites, sender=User)

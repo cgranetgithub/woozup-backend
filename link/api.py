@@ -13,7 +13,7 @@ from doc import authdoc
 from link import push
 from link.tasks import create_connections
 from link.models import Link, Invite
-from userprofile.api import UserResource
+from userprofile.api import ProfileResource
 
 class InviteResource(ModelResource):
     #sender = fields.ToOneField(UserResource, 'sender', full=True)
@@ -30,11 +30,11 @@ class InviteResource(ModelResource):
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        return Invite.objects.filter( sender=request.user )
+        return Invite.objects.filter( sender=request.user.userprofile )
 
 class LinkResource(ModelResource):
-    sender   = fields.ToOneField(UserResource, 'sender', full=True)
-    receiver = fields.ToOneField(UserResource, 'receiver', full=True)
+    sender   = fields.ToOneField(ProfileResource, 'sender', full=True)
+    receiver = fields.ToOneField(ProfileResource, 'receiver', full=True)
     class Meta:
         resource_name = 'link'
         queryset = Link.objects.all()
@@ -110,8 +110,8 @@ This will change the Link status from ACC/PEN to ACC/REJ.""",
         ]
 
     def get_object_list(self, request):
-        return Link.objects.filter(  Q(sender=request.user)
-                                   | Q(receiver=request.user) )
+        return Link.objects.filter(  Q(sender=request.user.userprofile)
+                                   | Q(receiver=request.user.userprofile) )
 
     def prepend_urls(self):
         return [
@@ -139,7 +139,7 @@ This will change the Link status from ACC/PEN to ACC/REJ.""",
         if request.user and request.user.is_authenticated():
             try:
                 link = Link.objects.get(id=kwargs['link_id'])
-                if link.sender == request.user:
+                if link.sender == request.user.userprofile:
                     link.sender_status='ACC'
                     link.receiver_status='PEN'
                     link.save()
@@ -177,7 +177,7 @@ This will change the Link status from ACC/PEN to ACC/REJ.""",
         if request.user and request.user.is_authenticated():
             try:
                 link = Link.objects.get(id=kwargs['link_id'])
-                if link.receiver == request.user:
+                if link.receiver == request.user.userprofile:
                     link.receiver_status='ACC'
                     link.save()
                     push.link_accepted(link)
@@ -214,7 +214,7 @@ This will change the Link status from ACC/PEN to ACC/REJ.""",
         if request.user and request.user.is_authenticated():
             try:
                 link = Link.objects.get(id=kwargs['link_id'])
-                if link.receiver == request.user:
+                if link.receiver == request.user.userprofile:
                     link.receiver_status='REJ'
                     link.save()
                     return self.create_response(request, {'success': True})

@@ -16,7 +16,8 @@ def cmp_result(content, searchfor):
     """
     found = 0
     for i in content:
-        if (i['sender']['username'], i['receiver']['username']) in searchfor:
+        if ( i['sender']['user']['username'],
+             i['receiver']['user']['username'] ) in searchfor:
             found += 1
     return found
 
@@ -37,22 +38,29 @@ class LinkTestCase(TestCase):
         u08 = User.objects.create_user(username='user8@fr.fr', password='pwd')
         u09 = User.objects.create_user(username='user9@fr.fr', password='pwd')
         u10 = User.objects.create_user(username='user10@fr.fr', password='pwd')
-        self.l1 = Link.objects.create(sender=u01, receiver=u02)
-        self.l2 = Link.objects.create(sender=u01, receiver=u03)
-        self.l3 = Link.objects.create(sender=u01, receiver=u04)
-        self.l4 = Link.objects.create(sender=u05, receiver=u01)
-        self.l5 = Link.objects.create(sender=u06, receiver=u01)
-        self.l6 = Link.objects.create(sender=u07, receiver=u08)
-        self.l7 = Link.objects.create(sender=u09, receiver=u10)
+        self.l1 = Link.objects.create(sender=u01.userprofile,
+                                      receiver=u02.userprofile)
+        self.l2 = Link.objects.create(sender=u01.userprofile,
+                                      receiver=u03.userprofile)
+        self.l3 = Link.objects.create(sender=u01.userprofile,
+                                      receiver=u04.userprofile)
+        self.l4 = Link.objects.create(sender=u05.userprofile,
+                                      receiver=u01.userprofile)
+        self.l5 = Link.objects.create(sender=u06.userprofile,
+                                      receiver=u01.userprofile)
+        self.l6 = Link.objects.create(sender=u07.userprofile,
+                                      receiver=u08.userprofile)
+        self.l7 = Link.objects.create(sender=u09.userprofile,
+                                      receiver=u10.userprofile)
 
     def test_journey(self):
         """do typical sequence of calls an app would do"""
-        self.assertEqual(self.l1.sender.username, 'user1@fr.fr')
-        self.assertEqual(self.l1.receiver.username, 'user2@fr.fr')
+        self.assertEqual(self.l1.sender.user.username, 'user1@fr.fr')
+        self.assertEqual(self.l1.receiver.user.username, 'user2@fr.fr')
         self.assertEqual(self.l1.sender_status, 'NEW')
         self.assertEqual(self.l1.receiver_status, 'NEW')
-        self.assertEqual(self.l2.sender.username, 'user1@fr.fr')
-        self.assertEqual(self.l2.receiver.username, 'user3@fr.fr')
+        self.assertEqual(self.l2.sender.user.username, 'user1@fr.fr')
+        self.assertEqual(self.l2.receiver.user.username, 'user3@fr.fr')
         self.assertEqual(self.l2.sender_status, 'NEW')
         self.assertEqual(self.l2.receiver_status, 'NEW')
         username = 'user1@fr.fr'
@@ -181,12 +189,12 @@ class LinkTestCase(TestCase):
         # first, post contacts of an existing user
         # and check what was created
         user1_contacts = {'newuser1@fr.fr' : {'email':'newuser1@fr.fr',
-                                               'name':'newuser1'},
+                                               'display_name':'newuser1'},
                            'newuser2@fr.fr' : {'email':'newuser2@fr.fr',
-                                               'name':'newuser2'},
+                                               'display_name':'newuser2'},
                            #'user11@fr.fr' : {'name':'user11',
                                              #'email':'user11@fr.fr' },
-                           'user9@fr.fr' : {'name':'user9',
+                           'user9@fr.fr' : {'display_name':'user9',
                                              'email':'user9@fr.fr'}}
         username = 'user1@fr.fr'
         api_key = self.login(username)
@@ -198,12 +206,12 @@ class LinkTestCase(TestCase):
         import time
         time.sleep(1)
         #the following should NOT raise a DoesNotExist exception
-        Invite.objects.get(sender__username=username,
+        Invite.objects.get(sender__user__username=username,
                            userid='newuser1@fr.fr')
-        Invite.objects.get(sender__username=username,
+        Invite.objects.get(sender__user__username=username,
                            userid='newuser2@fr.fr')
         Link.objects.get(sender__username=username,
-                         receiver__username='user9@fr.fr')
+                         receiver__user__username='user9@fr.fr')
         # then register a new user and check invites conversion
         data = {'username' : 'newuser1@fr.fr', 'password' : 'totopwd'}
         res = self.c.post('/api/v1/auth/register/',
@@ -211,8 +219,8 @@ class LinkTestCase(TestCase):
                           content_type='application/json')
         self.assertEqual(res.status_code, 201)
         #the following should NOT raise a DoesNotExist exception
-        Link.objects.get(sender__username=username,
-                         receiver__username='newuser1@fr.fr')
+        Link.objects.get(sender__user__username=username,
+                         receiver__user__username='newuser1@fr.fr')
 
     def login(self, username):
         data = {'username':username, 'password':'pwd'}

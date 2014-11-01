@@ -5,22 +5,11 @@ from django.contrib.auth.models import User, Group
 from tastypie.models import create_api_key
 
 from service.utils import image_path
-from link.tasks import transform_invites
+#from link.tasks import transform_invites
 
 
 MALE   = 'MA'
 FEMALE = 'FE'
-
-def get_user_friends(user):
-    return User.objects.filter(
-                        ( Q(link_as_sender__sender    =user) | 
-                          Q(link_as_sender__receiver  =user) | 
-                          Q(link_as_receiver__sender  =user) | 
-                          Q(link_as_receiver__receiver=user) ),
-                        ( Q(link_as_sender__sender_status='ACC') & 
-                          Q(link_as_sender__receiver_status='ACC') ) | 
-                        ( Q(link_as_receiver__sender_status='ACC') & 
-                          Q(link_as_receiver__receiver_status='ACC') ) )
 
 class UserProfile(models.Model):
     GENDER = ( (MALE  , 'male'  ),
@@ -36,6 +25,9 @@ autofield, not modifiable""")
     @property
     def name(self):
         return self.user.get_full_name()
+    @property
+    def email(self):
+        return self.user.email
     def __unicode__(self):
         return u'%s profile'%self.user
 
@@ -67,4 +59,15 @@ def create_profiles(sender, instance, created, **kwargs):
 
 post_save.connect(create_profiles  , sender=User)
 post_save.connect(create_api_key   , sender=User)
-post_save.connect(transform_invites, sender=User)
+#post_save.connect(transform_invites, sender=User)
+
+def get_user_friends(userprofile):
+    return UserProfile.objects.filter(
+                        ( Q(link_as_sender__sender    =userprofile) |
+                          Q(link_as_sender__receiver  =userprofile) |
+                          Q(link_as_receiver__sender  =userprofile) |
+                          Q(link_as_receiver__receiver=userprofile) ),
+                        ( Q(link_as_sender__sender_status='ACC') &
+                          Q(link_as_sender__receiver_status='ACC') ) |
+                        ( Q(link_as_receiver__sender_status='ACC') &
+                          Q(link_as_receiver__receiver_status='ACC') ) )

@@ -16,72 +16,6 @@ from doc import authdoc
 from link.models import Link
 from userprofile.models import UserProfile, UserPosition
 
-class ProfileResource(ModelResource):
-    ###WARNING to be finshed, must restrict to the auth user
-    #user = fields.ToOneField('userprofile.api.UserResource', 'user',
-                             #related_name='userprofile')
-    name = fields.CharField(attribute='name', readonly=True)
-    class Meta:
-        resource_name = 'userprofile'
-        queryset = UserProfile.objects.all()
-        #allowed_methods = []
-        list_allowed_methods = []
-        detail_allowed_methods = ['get', 'put']
-        authorization  = DjangoAuthorization()
-        authentication = ApiKeyAuthentication()
-        
-        
-        
-        ## for the doc:
-        #extra_actions = [ 
-            #{   u"name": u"get",
-                #u"http_method": u"GET",
-                ##"resource_type": "list",
-                #u"summary": u"""[Custom] Return the user profile of the 
-#authenticated user.""",
-                #"fields": authdoc
-            #} ,
-            #{   u"name": u"set",
-                #u"http_method": u"PUT",
-                ##"resource_type": "list",
-                #u"summary": u"""[Custom] Update the user profile of the 
-#authenticated user with the data passed.""",
-                #"fields": authdoc
-            #} ]
-
-    #def prepend_urls(self):
-        #return [
-            #url(r"^(?P<resource_name>%s)/get%s$" %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('get'), name="api_get"),
-            #url(r"^(?P<resource_name>%s)/set%s$" %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('set'), name="api_set"),
-        #]
-
-    #def get(self, request, **kwargs):
-        #""" Return the user profile of the authenticated user
-        #Arguments:
-
-        #Note: we do this for security reason, to avoid someone to get
-        #profile of another user
-        #"""
-        #self.method_check(request, allowed=['get'])
-        #self.is_authenticated(request)
-        #self.throttle_check(request)
-        #if request.user and request.user.is_authenticated():
-            #return self.create_response(request,
-                          #{ 'gender': request.user.userprofile.gender,
-                            #'birth_date': request.user.userprofile.birth_date,
-                          #} )
-        #else:
-            #return self.create_response(
-                                    #request,
-                                    #{u'reason': u"You are not authenticated"},
-                                    #HttpUnauthorized )
-    
-    
-    
 class PositionResource(ModelResource):
     #last = fields.CharField('last', null=True)
     class Meta:
@@ -235,6 +169,20 @@ used to send push notification to the device, via the GCM service.""",
         else:
             return self.create_response(request, { 'success': False }, 
                                                  HttpUnauthorized)
+
+class ProfileResource(ModelResource):
+    ###WARNING to be finshed, must restrict to the auth user
+    user = fields.ToOneField(UserResource, 'user', full=True)
+    name = fields.CharField(attribute='name', readonly=True)
+    class Meta:
+        resource_name = 'userprofile'
+        queryset = UserProfile.objects.all()
+        #allowed_methods = []
+        list_allowed_methods = []
+        detail_allowed_methods = ['get', 'put']
+        filtering = {'user' : ALL_WITH_RELATIONS}
+        authorization  = DjangoAuthorization()
+        authentication = ApiKeyAuthentication()
 
 class AuthResource(ModelResource):
     """

@@ -23,19 +23,21 @@ class EventTestCase(TestCase):
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         #user1 creates an event
+        e_id = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
-        data = {'event_type':'/api/v1/event_type/1/', 'start':start,
+        data = {'event_type':'/api/v1/event_type/%d/'%e_id, 'start':start,
                 'position':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = self.c.post('/api/v1/event/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
+        self.assertEqual(res.status_code, 201)
         for (i, j) in res.items():
             if i == 'Location':
                 ide = j.strip('/').split('/')[-1]
                 break
         e = Event.objects.get(id=ide)
-        self.assertEqual(e.owner.username, 'user1@fr.fr')
-        self.assertEqual(e.event_type.id, 1)
+        self.assertEqual(e.owner.user.username, 'user1@fr.fr')
+        self.assertEqual(e.event_type.id, e_id)
         self.assertEqual(e.position.coords, (100.0, 0.0))
         #user1 updates the event
         data = {'position':'{ "type": "Point", "coordinates": [50.0, 50.0] }'}
@@ -43,8 +45,8 @@ class EventTestCase(TestCase):
                          data = json.dumps(data),
                          content_type='application/json')
         e = Event.objects.get(id=ide)
-        self.assertEqual(e.owner.username, 'user1@fr.fr')
-        self.assertEqual(e.event_type.id, 1)
+        self.assertEqual(e.owner.user.username, 'user1@fr.fr')
+        self.assertEqual(e.event_type.id, e_id)
         self.assertEqual(e.position.coords, (50.0, 50.0))
         #user1 deletes the event
         res = self.c.delete('/api/v1/event/%s/%s'%(ide, auth))
@@ -63,12 +65,15 @@ class EventTestCase(TestCase):
         username = 'user1@fr.fr'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
-        data = {'event_type':'/api/v1/event_type/1/', 'start':start,
+        e = EventType.objects.first().id
+        #start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        start = datetime.datetime.now().isoformat()
+        data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
                 'position':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = self.c.post('/api/v1/event/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
+        self.assertEqual(res.status_code, 201)
         res = self.c.get('/api/v1/event/%s'%auth)
         content = json.loads(res.content)
         self.assertEqual(content['meta']['total_count'], 1)
@@ -88,8 +93,9 @@ class EventTestCase(TestCase):
         self.assertEqual(res.status_code, 405)
         res = self.c.delete('/api/v1/event/%s'%auth)
         self.assertEqual(res.status_code, 405)
+        e = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
-        data = {'event_type':'/api/v1/event_type/1/', 'start':start,
+        data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
                 'position':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = self.c.post('/api/v1/event/%s'%auth,
                           data = json.dumps(data),
@@ -133,12 +139,14 @@ class EventTestCase(TestCase):
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         # user1 creates an event
+        e = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
-        data = {'event_type':'/api/v1/event_type/1/', 'start':start,
+        data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
                 'position':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = self.c.post('/api/v1/event/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
+        self.assertEqual(res.status_code, 201)
         for (i, j) in res.items():
             if i == 'Location':
                 ide = j.strip('/').split('/')[-1]
@@ -147,21 +155,22 @@ class EventTestCase(TestCase):
         username = 'user2@fr.fr'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.post('/api/v1/event/%s/join%s'%(ide, auth),
+        res = self.c.post('/api/v1/event/%s/join/%s'%(ide, auth),
                           data = json.dumps(data),
                           content_type='application/json')
+        self.assertEqual(res.status_code, 200)
         username = 'user3@fr.fr'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.post('/api/v1/event/%s/join%s'%(ide, auth),
+        res = self.c.post('/api/v1/event/%s/join/%s'%(ide, auth),
                           data = json.dumps(data),
                           content_type='application/json')
+        self.assertEqual(res.status_code, 200)
         e = Event.objects.get(id=ide)
-        print e.participants.values()
-        participants = [ i['username'] for i in e.participants.values() ]
+        participants = [ i['user_id'] for i in e.participants.values() ]
         self.assertEqual(len(participants), 2)
         self.assertEqual(participants.sort(),
-                         ['user2@fr.fr', 'user3@fr.fr'].sort())
+                         [u02.id, u03.id].sort())
 
     def login(self, username):
         data = {'username':username, 'password':'pwd'}

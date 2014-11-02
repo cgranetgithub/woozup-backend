@@ -12,7 +12,6 @@ class EventTestCase(TestCase):
     c = Client()
     
     def setUp(self):
-        """set up users with new events"""
         super(EventTestCase, self).setUp()
         call_command('create_initial_data')
         u01 = User.objects.create_user(username='user1@fr.fr', password='pwd')

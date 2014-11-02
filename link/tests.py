@@ -26,7 +26,7 @@ class LinkTestCase(TestCase):
     
     def setUp(self):
         """set up users with new links"""
-        super(LinkTestCase, self).setUp()
+        #super(LinkTestCase, self).setUp()
         call_command('create_initial_data')
         u01 = User.objects.create_user(username='user1@fr.fr', password='pwd')
         u02 = User.objects.create_user(username='user2@fr.fr', password='pwd')
@@ -36,8 +36,8 @@ class LinkTestCase(TestCase):
         u06 = User.objects.create_user(username='user6@fr.fr', password='pwd')
         u07 = User.objects.create_user(username='user7@fr.fr', password='pwd')
         u08 = User.objects.create_user(username='user8@fr.fr', password='pwd')
-        u09 = User.objects.create_user(username='user9@fr.fr', password='pwd')
-        u10 = User.objects.create_user(username='user10@fr.fr', password='pwd')
+        self.u09 = User.objects.create_user(username='user9@fr.fr', password='pwd')
+        self.u10 = User.objects.create_user(username='user10@fr.fr', password='pwd')
         self.l1 = Link.objects.create(sender=u01.userprofile,
                                       receiver=u02.userprofile)
         self.l2 = Link.objects.create(sender=u01.userprofile,
@@ -50,8 +50,8 @@ class LinkTestCase(TestCase):
                                       receiver=u01.userprofile)
         self.l6 = Link.objects.create(sender=u07.userprofile,
                                       receiver=u08.userprofile)
-        self.l7 = Link.objects.create(sender=u09.userprofile,
-                                      receiver=u10.userprofile)
+        self.l7 = Link.objects.create(sender=self.u09.userprofile,
+                                      receiver=self.u10.userprofile)
 
     def test_journey(self):
         """do typical sequence of calls an app would do"""
@@ -226,6 +226,20 @@ class LinkTestCase(TestCase):
         #the following should NOT raise a DoesNotExist exception
         Link.objects.get(sender__user__username=username,
                          receiver__user__username='newuser1@fr.fr')
+
+    def test_uniqueness(self):
+        from django.db import IntegrityError
+        from django.core.exceptions import ValidationError
+        with self.assertRaises(ValidationError):
+            with self.assertRaises(IntegrityError):
+                Link.objects.create(sender=self.u09.userprofile,
+                                    receiver=self.u10.userprofile)
+        with self.assertRaises(ValidationError):
+            Link.objects.create(sender=self.u10.userprofile,
+                                receiver=self.u09.userprofile)
+        with self.assertRaises(ValidationError):
+            Link.objects.create(sender=self.u09.userprofile,
+                                receiver=self.u09.userprofile)
 
     def login(self, username):
         data = {'username':username, 'password':'pwd'}

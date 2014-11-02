@@ -5,14 +5,15 @@ from django.test.client import Client
 from django.core.management import call_command
 from django.contrib.auth.models import User
 
-class EventTestCase(TestCase):
+from userprofile.models import UserProfile, UserPosition
+
+class ProfileTestCase(TestCase):
     c = Client()
     
     def setUp(self):
-        """set up users with new events"""
-        super(EventTestCase, self).setUp()
+        super(ProfileTestCase, self).setUp()
         call_command('create_initial_data')
-        u01 = User.objects.create_user(username='user1@fr.fr', password='pwd')
+        self.u01 = User.objects.create_user(username='user1@fr.fr', password='pwd')
 
     def test_register_user(self):
         data = {'username' : 'toto', 'password' : 'totopwd'}
@@ -32,10 +33,11 @@ class EventTestCase(TestCase):
         
     def test_update_user(self):
         username = 'user1@fr.fr'
-        api_key = self.login(username)['api_key']
-        user_id = self.login(username)['userid']
-        profile_id = self.login(username)['profileid']
-        position_id = self.login(username)['positionid']
+        auth_data = self.login(username)
+        api_key = auth_data['api_key']
+        user_id = auth_data['userid']
+        profile_id = auth_data['profileid']
+        position_id = auth_data['positionid']
         auth = '?username=%s&api_key=%s'%(username, api_key)
         res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
@@ -76,6 +78,26 @@ class EventTestCase(TestCase):
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['last'], 'POINT (42.0000000000000000 2.0000000000000000)')
+
+    def test_unmatched_auth_data(self):
+        username = 'user1@fr.fr'
+        auth_data = self.login(username)
+        api_key = auth_data['api_key']
+        user_id = auth_data['userid']
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
+        self.assertEqual(res.status_code, 200)
+        auth = '?username=%s&api_key=%s'%('wrong', api_key)
+        res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
+        self.assertEqual(res.status_code, 401)
+        auth = '?username=%s&api_key=%s'%(username, 'wrong')
+        res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
+        self.assertEqual(res.status_code, 401)
+
+    def test_profiles_creation(self):
+        # if profiles are not properly created, this will generate an error
+        UserProfile.objects.get(user=self.u01)
+        UserPosition.objects.get(user=self.u01)
 
     def login(self, username):
         data = {'username':username, 'password':'pwd'}

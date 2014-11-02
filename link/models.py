@@ -34,9 +34,13 @@ autofield, not modifiable""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     class Meta:
-        unique_together = ("sender", "receiver")
+        unique_together = (("sender", "receiver"), )
         
     def validate_unique(self, **kwargs):
+        # check don't link the same person
+        if self.sender == self.receiver:
+            msg = u"""Sender/Receiver are the same!"""
+            raise ValidationError({u'sender'  :(msg,), u'receiver':(msg,)})
         # check "reverse link" and ensure uniqueness
         l = None
         try:
@@ -48,7 +52,12 @@ autofield, not modifiable""")
 (or vice-versa) couple exists."""
             raise ValidationError({u'sender'  :(msg,), u'receiver':(msg,)})
         super(Link, self).validate_unique(**kwargs)
-        
+
+    def save(self, *args, **kwargs):
+        # custom unique validate
+        self.validate_unique()
+        super(Link, self).save(*args, **kwargs)
+
     def __unicode__(self):
         return u'[%d] %s(%s) -> %s(%s)'%(self.id, self.sender,
                                                  self.sender_status,

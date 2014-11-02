@@ -199,13 +199,18 @@ class LinkTestCase(TestCase):
         username = 'user1@fr.fr'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.post('/api/v1/contact/sort/%s'%auth,
-                          data = json.dumps(user1_contacts),
-                          content_type='application/json')
-        self.assertEqual(res.status_code, 200)
-        import time
-        time.sleep(1)
-        #the following should NOT raise a DoesNotExist exception
+
+        #res = self.c.post('/api/v1/contact/sort/%s'%auth,
+                          #data = json.dumps(user1_contacts),
+                          #content_type='application/json')
+        #self.assertEqual(res.status_code, 200)
+
+        # execute background task directly
+        from link.tasks import create_connections
+        from userprofile.models import UserProfile
+        u = UserProfile.objects.get(user__username=username)
+        create_connections(u, user1_contacts)
+        # the following should NOT raise a DoesNotExist exception
         Invite.objects.get(sender__user__username=username,
                            userid='newuser1@fr.fr')
         Invite.objects.get(sender__user__username=username,

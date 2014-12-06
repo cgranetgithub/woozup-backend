@@ -11,12 +11,11 @@ from tastypie.authentication import ApiKeyAuthentication
 from django.db.models import Q
 from django.conf.urls import url
 from django.utils.timezone import is_naive 
-#from django.contrib.auth.models import User
 
 from event import push
 from event.models import EventCategory, EventType, Event
 from userprofile.api import ProfileResource
-from userprofile.models import UserProfile, get_user_friends
+from userprofile.models import get_user_friends
  
 class MyDateSerializer(Serializer):
     """

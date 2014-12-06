@@ -1,10 +1,6 @@
 from django.contrib.gis.db import models
-from django.db.models.signals import pre_save, post_save, pre_delete
-#from django.contrib.auth.models import User
-
-from event.push import event_to_be_changed, event_saved, event_canceled
-from service.utils import image_path
 from userprofile.models import UserProfile
+from service.utils import image_path
 
 class EventCategory(models.Model):
     name       = models.CharField(max_length=50)
@@ -62,7 +58,3 @@ autofield, not modifiable""")
         return u"%s (%s)"%(self.name, self.event_type)
     class Meta:
         unique_together = ('start', 'event_type', 'owner')
-
-pre_save.connect(event_to_be_changed, sender=Event)
-post_save.connect(event_saved, sender=Event)
-pre_delete.connect(event_canceled, sender=Event)

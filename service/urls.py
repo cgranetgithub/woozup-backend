@@ -16,7 +16,7 @@ def module_exists(module_name):
     else:
         return True
 
-admin.autodiscover()
+#admin.autodiscover() #not needed anymore in 1.7
 
 v1_api = Api(api_name='v1')
 v1_api.register(EventResource())

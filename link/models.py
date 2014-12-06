@@ -1,6 +1,5 @@
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
-#from django.contrib.auth.models import User
  
 from service.utils import image_path
 from userprofile.models import UserProfile

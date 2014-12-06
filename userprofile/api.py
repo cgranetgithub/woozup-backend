@@ -118,8 +118,8 @@ used to send push notification to the device, via the GCM service.""",
         self.is_authenticated(request)
         self.throttle_check(request)
         #
-        from service.notification import send_notification
-        send_notification([request.user.id], 'checking geoevent auth')
+        #from service.notification import send_notification
+        #send_notification([request.user.id], 'checking geoevent auth')
         #
         if request.user and request.user.is_authenticated():
             return self.create_response( request,
@@ -252,12 +252,13 @@ Return a dict with { 'api_key' : API key, 'userid' : User ID,
                                         HttpBadRequest )
         username = data.get('username', '')
         password = data.get('password', '')
-        first_name = data.get('first_name', '')
+        name     = data.get('name', '')
+        email    = data.get('email', '')
         try:
             user = User.objects.create_user(username=username, 
-                                            email=username, 
+                                            email=email, 
                                             password=password,
-                                            first_name=first_name)
+                                            first_name=name)
         except:
             return self.create_response(request,
                                         {u'reason': u'cannot create this user'},

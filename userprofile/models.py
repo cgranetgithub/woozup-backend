@@ -1,7 +1,8 @@
+from django.conf import settings
 from django.db.models import Q
 from django.contrib.gis.db import models
 from django.db.models.signals import post_save
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from tastypie.models import create_api_key
 
 from service.utils import image_path
@@ -14,7 +15,7 @@ FEMALE = 'FE'
 class UserProfile(models.Model):
     GENDER = ( (MALE  , 'male'  ),
                (FEMALE, 'female') )
-    user   = models.OneToOneField(User)
+    user   = models.OneToOneField(settings.AUTH_USER_MODEL)
     gender = models.CharField(max_length=2, choices=GENDER,
                               blank=True, null=True)
     birth_date = models.DateField(blank=True, null=True)
@@ -32,7 +33,7 @@ autofield, not modifiable""")
         return u'%s profile'%self.user
 
 class UserPosition(models.Model):
-    user   = models.OneToOneField(User)
+    user   = models.OneToOneField(settings.AUTH_USER_MODEL)
     last   = models.GeometryField(null=True, blank=True, help_text=u"""
 Type: Geometry, Entry format: GeoJson (example: "{ 'type' : 'Point',
 'coordinates' : [125.6, 10.1] }")<br>""")
@@ -57,9 +58,9 @@ def create_profiles(sender, instance, created, **kwargs):
         UserPosition.objects.create(user=instance)
         instance.groups.add(Group.objects.get(name='std'))
 
-post_save.connect(create_profiles  , sender=User)
-post_save.connect(create_api_key   , sender=User)
-#post_save.connect(transform_invites, sender=User)
+post_save.connect(create_profiles  , sender=settings.AUTH_USER_MODEL)
+post_save.connect(create_api_key   , sender=settings.AUTH_USER_MODEL)
+#post_save.connect(transform_invites, sender=settings.AUTH_USER_MODEL)
 
 def get_user_friends(userprofile):
     return UserProfile.objects.filter(

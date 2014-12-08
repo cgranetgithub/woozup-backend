@@ -13,10 +13,10 @@ class ProfileTestCase(TestCase):
     def setUp(self):
         super(ProfileTestCase, self).setUp()
         call_command('create_initial_data')
-        self.u01 = User.objects.create_user(username='user1@fr.fr', password='pwd')
+        self.u01 = User.objects.create_user(username='33610000001', password='pwd')
 
     def test_register_user(self):
-        data = {'username' : 'toto', 'password' : 'totopwd'}
+        data = {'username' : '33610001111', 'password' : 'totopwd'}
         res = self.c.post('/api/v1/auth/register/',
                           data = json.dumps(data),
                           content_type='application/json')
@@ -25,14 +25,14 @@ class ProfileTestCase(TestCase):
         api_key = content['api_key']
         user_id = content['userid']
         #res = self.c.get('/api/v1/user/?username=%s&api_key=%s'%('toto', api_key))
-        auth = '?username=%s&api_key=%s'%('toto', api_key)
+        auth = '?username=%s&api_key=%s'%('33610001111', api_key)
         res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['username'], 'toto')
+        self.assertEqual(content['username'], '33610001111')
         
     def test_update_user(self):
-        username = 'user1@fr.fr'
+        username = '33610000001'
         auth_data = self.login(username)
         api_key = auth_data['api_key']
         user_id = auth_data['userid']
@@ -80,7 +80,7 @@ class ProfileTestCase(TestCase):
         self.assertEqual(content['last'], 'POINT (42.0000000000000000 2.0000000000000000)')
 
     def test_unmatched_auth_data(self):
-        username = 'user1@fr.fr'
+        username = '33610000001'
         auth_data = self.login(username)
         api_key = auth_data['api_key']
         user_id = auth_data['userid']

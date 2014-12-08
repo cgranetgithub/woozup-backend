@@ -20,7 +20,7 @@ class UserProfile(models.Model):
                               blank=True, null=True)
     birth_date = models.DateField(blank=True, null=True)
     image = models.ImageField(upload_to=image_path,
-                               blank=True, null=True)
+                              blank=True, null=True)
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     @property

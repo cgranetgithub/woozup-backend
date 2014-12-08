@@ -14,11 +14,11 @@ class EventTestCase(TestCase):
     def setUp(self):
         super(EventTestCase, self).setUp()
         call_command('create_initial_data')
-        u01 = User.objects.create_user(username='user1@fr.fr', password='pwd')
+        u01 = User.objects.create_user(username='33610000001', password='pwd')
 
     def test_owner_journey(self):
         """do typical sequence of calls an app would do"""
-        username = 'user1@fr.fr'
+        username = '33610000001'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         #user1 creates an event
@@ -35,7 +35,7 @@ class EventTestCase(TestCase):
                 ide = j.strip('/').split('/')[-1]
                 break
         e = Event.objects.get(id=ide)
-        self.assertEqual(e.owner.user.username, 'user1@fr.fr')
+        self.assertEqual(e.owner.user.username, '33610000001')
         self.assertEqual(e.event_type.id, e_id)
         self.assertEqual(e.position.coords, (100.0, 0.0))
         #user1 updates the event
@@ -44,7 +44,7 @@ class EventTestCase(TestCase):
                          data = json.dumps(data),
                          content_type='application/json')
         e = Event.objects.get(id=ide)
-        self.assertEqual(e.owner.user.username, 'user1@fr.fr')
+        self.assertEqual(e.owner.user.username, '33610000001')
         self.assertEqual(e.event_type.id, e_id)
         self.assertEqual(e.position.coords, (50.0, 50.0))
         #user1 deletes the event
@@ -61,7 +61,7 @@ class EventTestCase(TestCase):
 
     def test_my_events(self):
         """events I can see"""
-        username = 'user1@fr.fr'
+        username = '33610000001'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         e = EventType.objects.first().id
@@ -80,7 +80,7 @@ class EventTestCase(TestCase):
         #self.assertEqual(cmp_result(content['objects'], unexpected), 0)
 
     def test_unauth_method(self):
-        username = 'user1@fr.fr'
+        username = '33610000001'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         #list
@@ -132,9 +132,9 @@ class EventTestCase(TestCase):
         pass
 
     def test_join_leave(self):
-        u02 = User.objects.create_user(username='user2@fr.fr', password='pwd')
-        u03 = User.objects.create_user(username='user3@fr.fr', password='pwd')
-        username = 'user1@fr.fr'
+        u02 = User.objects.create_user(username='33610000002', password='pwd')
+        u03 = User.objects.create_user(username='33610000003', password='pwd')
+        username = '33610000001'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         # user1 creates an event
@@ -151,14 +151,14 @@ class EventTestCase(TestCase):
                 ide = j.strip('/').split('/')[-1]
                 break
         # user2 & user3 join
-        username = 'user2@fr.fr'
+        username = '33610000002'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         res = self.c.post('/api/v1/event/%s/join/%s'%(ide, auth),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        username = 'user3@fr.fr'
+        username = '33610000003'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         res = self.c.post('/api/v1/event/%s/join/%s'%(ide, auth),

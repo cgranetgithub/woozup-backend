@@ -22,7 +22,7 @@ class InviteResource(ModelResource):
         allowed_methods = ['get']
         filtering = {
                     #'sender': ALL_WITH_RELATIONS,
-                    'userid': ALL,
+                    'number': ALL,
                     'status': ALL,
                     }
         authorization  = DjangoAuthorization()
@@ -112,6 +112,20 @@ This will change the Link status from ACC/PEN to ACC/REJ.""",
         return Link.objects.filter(  Q(sender=request.user.userprofile)
                                    | Q(receiver=request.user.userprofile) )
 
+    def dehydrate(self, bundle):
+        bundle.data['number'] = ''
+        bundle.data['email'] = ''
+        bundle.data['name'] = ''
+        username = bundle.request.REQUEST['username']
+        if bundle.obj.sender.user.username == username:
+            the_other = bundle.obj.receiver
+        elif bundle.obj.receiver.user.username == username:
+            the_other = bundle.obj.sender
+        bundle.data['number'] = the_other.user.username
+        bundle.data['email'] = the_other.user.email
+        bundle.data['name'] = the_other.name
+        return bundle
+    
     def prepend_urls(self):
         return [
             url(r"^(?P<resource_name>%s)/(?P<link_id>\w[\w/-]*)/connect%s$" %
@@ -280,15 +294,15 @@ will be passed to the BG job.""" } }.items() )
                                     HttpBadRequest )
             # check data form
             msg = u"""data must have the following form: 
-{ u'username1' : { u'email' : ..., u'display_name' : ... },
-  u'username2' : { ... }
+{ 'number' : { 'email' : ..., 'name' : ... },
+  'number' : { ... }
 }
-the API will also recognize 'local_picture_path' field if given """
+the API will also recognize 'photo' field if given """
             if type(data) is not dict:
                 return self.create_response(request, {u'reason': msg},
                                                      HttpBadRequest)
             for i in data.itervalues():
-                if (u'email' not in i) or (u'display_name' not in i):
+                if (u'email' not in i) or (u'name' not in i):
                     return self.create_response(request, {u'reason': msg},
                                                          HttpBadRequest)
             # launch background processing

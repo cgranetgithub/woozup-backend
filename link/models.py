@@ -84,11 +84,11 @@ class Invite(models.Model):
                       (IGNORED , 'ignored'),
                       (CLOSED  , 'closed' ) )
     sender = models.ForeignKey(UserProfile)
-    userid = models.CharField(max_length=50, help_text=u'username')
+    number = models.CharField(max_length=20, help_text=u'phone number')
     email = models.EmailField(blank=True)
-    display_name  = models.CharField(max_length=255, blank=True,
+    name  = models.CharField(max_length=255, blank=True,
                                 help_text='name to be displayed in the app')
-    local_picture_path = models.CharField(max_length=255, blank=True,
+    photo = models.CharField(max_length=255, blank=True,
                             help_text='local path in the device to a picture')
     avatar = models.ImageField(upload_to=image_path,
                                blank=True, null=True,
@@ -100,9 +100,9 @@ autofield, not modifiable""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     class Meta:
-        unique_together = ('sender', 'userid')
+        unique_together = ('sender', 'number')
 
     def __unicode__(self):
         return u'%s(%d) -> %s|%s|%s'%(self.sender, self.sender.id,
-                                      self.userid, self.display_name,
+                                      self.number, self.name,
                                       self.email)

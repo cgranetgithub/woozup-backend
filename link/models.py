@@ -84,12 +84,12 @@ class Invite(models.Model):
                       (IGNORED , 'ignored'),
                       (CLOSED  , 'closed' ) )
     sender = models.ForeignKey(UserProfile)
-    number = models.CharField(max_length=20, help_text=u'phone number')
+    number = models.CharField(max_length=50, help_text=u'phone number')
     email = models.EmailField(blank=True)
     name  = models.CharField(max_length=255, blank=True,
-                                help_text='name to be displayed in the app')
+                             help_text='name to be displayed in the app')
     photo = models.CharField(max_length=255, blank=True,
-                            help_text='local path in the device to a picture')
+                             help_text='local path in the device to a picture')
     avatar = models.ImageField(upload_to=image_path,
                                blank=True, null=True,
                                help_text='not used for now')

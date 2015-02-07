@@ -1,6 +1,7 @@
 import json
 
 from django.test import TestCase
+from django.utils.http import urlquote_plus
 from django.test.client import Client
 from django.core.management import call_command
 from django.contrib.auth.models import User
@@ -13,10 +14,10 @@ class ProfileTestCase(TestCase):
     def setUp(self):
         super(ProfileTestCase, self).setUp()
         call_command('create_initial_data')
-        self.u01 = User.objects.create_user(username='33610000001', password='pwd')
+        self.u01 = User.objects.create_user(username='+33610000001', password='pwd')
 
     def test_register_user(self):
-        data = {'username' : '33610001111', 'password' : 'totopwd'}
+        data = {'username' : '+33610001111', 'password' : 'totopwd'}
         res = self.c.post('/api/v1/auth/register/',
                           data = json.dumps(data),
                           content_type='application/json')
@@ -25,20 +26,20 @@ class ProfileTestCase(TestCase):
         api_key = content['api_key']
         user_id = content['userid']
         #res = self.c.get('/api/v1/user/?username=%s&api_key=%s'%('toto', api_key))
-        auth = '?username=%s&api_key=%s'%('33610001111', api_key)
+        auth = '?username=%s&api_key=%s'%(urlquote_plus('+33610001111'), api_key)
         res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['username'], '33610001111')
+        self.assertEqual(content['username'], '+33610001111')
         
     def test_update_user(self):
-        username = '33610000001'
+        username = '+33610000001'
         auth_data = self.login(username)
         api_key = auth_data['api_key']
         user_id = auth_data['userid']
         profile_id = auth_data['profileid']
         position_id = auth_data['positionid']
-        auth = '?username=%s&api_key=%s'%(username, api_key)
+        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
         res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
@@ -80,17 +81,17 @@ class ProfileTestCase(TestCase):
         self.assertEqual(content['last'], 'POINT (42.0000000000000000 2.0000000000000000)')
 
     def test_unmatched_auth_data(self):
-        username = '33610000001'
+        username = '+33610000001'
         auth_data = self.login(username)
         api_key = auth_data['api_key']
         user_id = auth_data['userid']
-        auth = '?username=%s&api_key=%s'%(username, api_key)
+        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
         res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         self.assertEqual(res.status_code, 200)
         auth = '?username=%s&api_key=%s'%('wrong', api_key)
         res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         self.assertEqual(res.status_code, 401)
-        auth = '?username=%s&api_key=%s'%(username, 'wrong')
+        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), 'wrong')
         res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         self.assertEqual(res.status_code, 401)
 

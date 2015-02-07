@@ -2,6 +2,7 @@ from django.db.models import Q
 from rq.decorators import job
 from django.apps import apps as django_apps
 from worker import conn
+import phonenumbers
 import django
 
 @job('default', connection=conn)
@@ -11,19 +12,33 @@ def create_connections(u_profile_id, data):
     Link        = django_apps.get_model('link', 'Link')
     Invite      = django_apps.get_model('link', 'Invite')
     user_profile = UserProfile.objects.get(id=u_profile_id)
+    country_code = phonenumbers.parse(user_profile.user.username,
+                                      None).country_code
     # 1) determine the existing connections
-    username_list=[]
+    number_list=[]
     create_link_list = []
     create_invite_list = []
     for i in data.iterkeys():
+        # normalize phonenumber and skip if fail
+        ph = None
+        try:
+            ph = phonenumbers.parse(i, None)
+        except phonenumbers.NumberParseException:
+            try:
+                ph = phonenumbers.parse(i, country_code)
+            except:
+                pass
+        ph = phonenumbers.format_number(ph, phonenumbers.PhoneNumberFormat.E164)
+        if ph is None:
+            continue
         # skip duplicates
-        if i in username_list:
+        if ph in number_list:
             continue
         else:
-            username_list.append(i)
+            number_list.append(ph)
         # Existing UserProfile?
         try:
-            contact = UserProfile.objects.get(user__username=i)
+            contact = UserProfile.objects.get(user__username=ph)
             # YES => existing Link?
             try:
                 Link.objects.get(
@@ -38,11 +53,11 @@ def create_connections(u_profile_id, data):
         except UserProfile.DoesNotExist:
             # NO => existing Invite?
             try:
-                Invite.objects.get(sender=user_profile, number=i)
+                Invite.objects.get(sender=user_profile, number=ph)
                 # YES => nothing to do
             except Invite.DoesNotExist:
                 # NO => create a new Invite
-                invite = Invite(sender=user_profile, number=i,
+                invite = Invite(sender=user_profile, number=ph,
                                 email=data[i]['email'],
                                 name=data[i]['name'])
                 if 'photo' in data[i]:

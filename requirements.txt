@@ -8,7 +8,7 @@ dj-static==0.0.6
 django-cors-headers==1.1.0
 django-push-notifications==1.2.1
 django-storages==1.1.8
-django-tastypie==0.12.1
+-e git+https://github.com/django-tastypie/django-tastypie#egg=django_tastypie-master
 django-uuidfield==0.5.0
 gunicorn==19.3.0
 newrelic==2.50.0.39

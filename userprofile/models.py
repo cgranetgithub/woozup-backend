@@ -15,7 +15,7 @@ FEMALE = 'FE'
 class UserProfile(models.Model):
     GENDER = ( (MALE  , 'male'  ),
                (FEMALE, 'female') )
-    user   = models.OneToOneField(settings.AUTH_USER_MODEL)
+    user   = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True)
     gender = models.CharField(max_length=2, choices=GENDER,
                               blank=True, null=True)
     birth_date = models.DateField(blank=True, null=True)
@@ -31,9 +31,11 @@ autofield, not modifiable""")
         return self.user.email
     def __unicode__(self):
         return u'%s profile'%self.user
+    class Meta:
+        app_label = 'userprofile'
 
 class UserPosition(models.Model):
-    user   = models.OneToOneField(settings.AUTH_USER_MODEL)
+    user   = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True)
     last   = models.GeometryField(null=True, blank=True, help_text=u"""
 Type: Geometry, Entry format: GeoJson (example: "{ 'type' : 'Point',
 'coordinates' : [125.6, 10.1] }")<br>""")
@@ -47,9 +49,10 @@ Type: Geometry, Entry format: GeoJson (example: "{ 'type' : 'Point',
 autofield, not modifiable""")
     # overriding the default manager with a GeoManager instance.
     objects = models.GeoManager()
-
     def __unicode__(self):
         return u'%s %s'%(self.user, self.last)
+    class Meta:
+        app_label = 'userprofile'
 
 def create_profiles(sender, instance, created, **kwargs):
     """Create a user profile when a new user account is created"""

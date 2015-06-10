@@ -1,5 +1,4 @@
 from django.contrib.gis.db import models
-from userprofile.models import UserProfile
 from service.utils import image_path
 
 class EventCategory(models.Model):
@@ -38,7 +37,7 @@ class Event(models.Model):
     start      = models.DateTimeField()
     end        = models.DateTimeField(blank=True, null=True)
     event_type = models.ForeignKey(EventType)
-    owner      = models.ForeignKey(UserProfile,
+    owner      = models.ForeignKey('userprofile.UserProfile',
                                    related_name='events_as_owner')
     closed     = models.BooleanField(default=False,
                     help_text=u"""if closed no more participants accepted""")
@@ -49,9 +48,8 @@ class Event(models.Model):
 (example: "{ 'type':'Point', 'coordinates':[125.6, 10.1] }")<br>""")
     image      = models.ImageField(upload_to=image_path,
                                    blank=True, null=True)
-    participants = models.ManyToManyField(UserProfile, 
-                                          related_name='events_as_participant', 
-                                          blank=True, null=True)
+    participants = models.ManyToManyField('userprofile.UserProfile', 
+                                          related_name='events_as_participant')
     created_at = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
     updated_at = models.DateTimeField(auto_now=True, help_text=u"""

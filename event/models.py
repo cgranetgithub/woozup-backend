@@ -48,7 +48,8 @@ class Event(models.Model):
 (example: "{ 'type':'Point', 'coordinates':[125.6, 10.1] }")<br>""")
     image      = models.ImageField(upload_to=image_path,
                                    blank=True, null=True)
-    participants = models.ManyToManyField('userprofile.UserProfile', 
+    participants = models.ManyToManyField('userprofile.UserProfile',
+                                          blank=True,
                                           related_name='events_as_participant')
     created_at = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")

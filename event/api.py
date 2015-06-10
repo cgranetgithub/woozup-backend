@@ -93,14 +93,14 @@ User leaves an event, that is, is removed from the participant list.""",
         kwargs['owner'] = bundle.request.user.userprofile
         return super(EventResource, self).obj_create(bundle, **kwargs)
 
-    def get_object_list(self, request):
-        myfriends = get_user_friends(request.user.userprofile)
-        events = Event.objects.filter(
-                                Q( owner__user__in=myfriends )
-                              | Q( owner__user=request.user )
-                              | Q( participants__user=request.user )
-                              ).distinct()
-        return events
+    #def get_object_list(self, request):
+        #myfriends = get_user_friends(request.user.userprofile)
+        #events = Event.objects.filter(
+                                #Q( owner__user__in=myfriends )
+                              #| Q( owner__user=request.user )
+                              #| Q( participants__user=request.user )
+                              #).distinct()
+        #return events
 
     def prepend_urls(self):
         return [

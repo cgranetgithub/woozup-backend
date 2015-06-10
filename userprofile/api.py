@@ -124,9 +124,7 @@ used to send push notification to the device, via the GCM service.""",
         if request.user and request.user.is_authenticated():
             return self.create_response( request,
                               { 'success'   : True,
-                                'userid'    : request.user.id,
-                                'profileid' : request.user.userprofile.id,
-                                'positionid': request.user.userposition.id } )
+                                'userid'    : request.user.id } )
         else:
             return self.create_response(request, { 'success': False }, 
                                                  HttpUnauthorized)
@@ -201,8 +199,7 @@ class AuthResource(ModelResource):
              "summary": u"""[Custom API] - Does not require authentication<br><br>
 Create a new User in the backend, as well as its UserProfile and UserPosition
 (location profile).<br>Then authenticate and login the user.<br><br>
-Return a dict with { 'api_key' : API key, 'userid' : User ID, 
-'profileid' : UserProfile ID, 'positionid' : UserPosition ID }.""",
+Return a dict with { 'api_key' : API key, 'userid' : User ID }.""",
              "fields": { "username": {
                                 "type": "string",
                                 "required": True,
@@ -217,8 +214,7 @@ Return a dict with { 'api_key' : API key, 'userid' : User ID,
              "resource_type": "list",
              "summary": u"""[Custom API] - Does not require authentication<br><br>
 Authenticate and login the user.<br><br>
-Return a dict with { 'api_key' : API key, 'userid' : User ID, 
-'profileid' : UserProfile ID, 'positionid' : UserPosition ID }.""",
+Return a dict with { 'api_key' : API key, 'userid' : User ID }.""",
                 "fields": { "username": {
                                 "type": "string",
                                 "required": True,
@@ -300,9 +296,7 @@ Return a dict with { 'api_key' : API key, 'userid' : User ID,
                 login(request, user)
                 return self.create_response(request,
                                {'api_key'   : user.api_key.key,
-                                'userid'    : request.user.id,
-                                'profileid' : request.user.userprofile.id,
-                                'positionid': request.user.userposition.id })
+                                'userid'    : request.user.id})
             else:
                 return self.create_response(request,
                                             {u'reason': u'disabled'},

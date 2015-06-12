@@ -37,18 +37,16 @@ class ProfileTestCase(TestCase):
         auth_data = self.login(username)
         api_key = auth_data['api_key']
         user_id = auth_data['userid']
-        profile_id = auth_data['profileid']
-        position_id = auth_data['positionid']
         auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
         res = self.c.get('/api/v1/user/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['first_name'], '')
-        res = self.c.get('/api/v1/userprofile/%s/%s'%(profile_id, auth))
+        res = self.c.get('/api/v1/userprofile/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['gender'], None)
-        res = self.c.get('/api/v1/userposition/%s/%s'%(position_id, auth))
+        res = self.c.get('/api/v1/userposition/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['last'], None)
@@ -62,20 +60,20 @@ class ProfileTestCase(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['first_name'], 'john')
         data = {'gender' : 'MA'}
-        res = self.c.put('/api/v1/userprofile/%s/%s'%(profile_id, auth),
+        res = self.c.put('/api/v1/userprofile/%s/%s'%(user_id, auth),
                            data = json.dumps(data),
                            content_type='application/json')
         self.assertEqual(res.status_code, 204)
-        res = self.c.get('/api/v1/userprofile/%s/%s'%(profile_id, auth))
+        res = self.c.get('/api/v1/userprofile/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['gender'], 'MA')
         data = {'last' : '{ "type": "Point", "coordinates": [42.0, 2.0] }'}
-        res = self.c.put('/api/v1/userposition/%s/%s'%(position_id, auth),
+        res = self.c.put('/api/v1/userposition/%s/%s'%(user_id, auth),
                            data = json.dumps(data),
                            content_type='application/json')
         self.assertEqual(res.status_code, 204)
-        res = self.c.get('/api/v1/userposition/%s/%s'%(position_id, auth))
+        res = self.c.get('/api/v1/userposition/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['last'], 'POINT (42.0000000000000000 2.0000000000000000)')

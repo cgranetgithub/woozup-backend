@@ -14,6 +14,8 @@ from link.tasks import create_connections
 from link.models import Link, Invite
 from userprofile.api import ProfileResource
 
+import apidoc as doc
+
 class InviteResource(ModelResource):
     #sender = fields.ToOneField(UserResource, 'sender', full=True)
     class Meta:
@@ -53,57 +55,24 @@ class LinkResource(ModelResource):
             { u'name' : u'  ***  DESCRIPTION OF THE LINK BEHAVIOR  ***  ',
               u'http_method':u'',
               u'resource_type':'',
-              u'summary': u""" 
-When a user registers, its contact list is sent to the backend 
-(API contact/sort/).<br>A Link is created between the user and each contact 
-already registered as a user.<br>In parallel, the backend will look for all 
-Invites where the receiver is the new user and transform it into a link.<br>
-<ul>
-<li>sender_status = NEW</li>
-<li>receiver_status = NEW</li>
-</ul> <br> <br>
-If the sender clicks on "connect" button in the app (API link/id/connect/)
-<ul>
-<li>sender_status => ACCEPTED</li>
-<li>receiver_status => PENDING</li>
-</ul> <br> <br>
-If the receiver accepts the request for connection (API link/id/accept/)
-<ul>
-<li>sender_status = ACCEPTED</li>
-<li>receiver_status => ACCEPTED</li>
-</ul> <br> <br>
-If the receiver rejects the request for connection (API link/id/reject/)
-<ul>
-<li>sender_status = ACCEPTED</li>
-<li>receiver_status => REJECTED</li>
-</ul> <br> <br>
-If the sender or the receiver blacklist someone (API link/id/?/)
-<ul>
-<li>x_status => BLOCKED</li>
-</ul>""",
+              u'summary': doc.LinkResource,
               "fields": authdoc},
             {   u"name": u"connect",
                 u"http_method": u"POST",
                 #"resource_type": "list",
-                u"summary": u"""[Custom API] - Requires authentication<br><br>
-Sender requests the receiver to connect.<br>This will change the Link status 
-from NEW/NEW to ACC/PEN.""",
+                u"summary": doc.LinkResourceConnect,
                 "fields": authdoc
             } ,
             {   u"name": u"accept",
                 u"http_method": u"POST",
                 #"resource_type": "list",
-                u"summary": u"""[Custom API] - Requires authentication<br><br>
-Receiver accepts to connect.<br>
-This will change the Link status from ACC/PEN to ACC/ACC.""",
+                u"summary": doc.LinkResourceAccept,
                 "fields": authdoc
             } ,
             {   u"name": u"reject",
                 u"http_method": u"POST",
                 #"resource_type": "list",
-                u"summary": u"""[Custom API] - Requires authentication<br><br>
-Receiver refuse to connect.<br>
-This will change the Link status from ACC/PEN to ACC/REJ.""",
+                u"summary": doc.LinkResourceReject,
                 u"fields": authdoc
             } ,
         ]
@@ -116,7 +85,7 @@ This will change the Link status from ACC/PEN to ACC/REJ.""",
         bundle.data['number'] = ''
         bundle.data['email'] = ''
         bundle.data['name'] = ''
-        username = bundle.request.REQUEST['username']
+        username = bundle.request.user.username
         if bundle.obj.sender.user.username == username:
             the_other = bundle.obj.receiver
         elif bundle.obj.receiver.user.username == username:
@@ -261,14 +230,8 @@ class ContactResource(Resource):
             {   u"name": u"sort",
                 u"http_method": u"POST",
                 "resource_type": "list",
-                u"summary": u"""[Custom API] - Requires authentication<br><br>
-Takes a list of usernames and triggers a background job that will create the 
-appropriate INVITE and LINK between the user and each person in the list""",
-                u"fields": dict( authdoc.items() + { u"username list": {
-                                u"type": "json list",
-                                u"required": True,
-                                u"description": u"""The list of username that 
-will be passed to the BG job.""" } }.items() )
+                u"summary": doc.ContactResourceSort,
+                u"fields": dict( authdoc.items() + doc.ContactResourceSortFields.items())
             } ]
     def prepend_urls(self):
         return [
@@ -293,17 +256,12 @@ will be passed to the BG job.""" } }.items() )
                                     {u'reason': u'cannot deserialize data'},
                                     HttpBadRequest )
             # check data form
-            msg = u"""data must have the following form: 
-{ 'number' : { 'email' : ..., 'name' : ... },
-  'number' : { ... }
-}
-the API will also recognize 'photo' field if given """
             if type(data) is not dict:
-                return self.create_response(request, {u'reason': msg},
+                return self.create_response(request, {u'reason': doc.ContactResourceError},
                                                      HttpBadRequest)
             for i in data.itervalues():
                 if (u'email' not in i) or (u'name' not in i):
-                    return self.create_response(request, {u'reason': msg},
+                    return self.create_response(request, {u'reason': doc.ContactResourceError},
                                                          HttpBadRequest)
             # launch background processing
             create_connections.delay(user.userprofile.id, data)

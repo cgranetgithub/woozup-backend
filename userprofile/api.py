@@ -16,6 +16,8 @@ from doc import authdoc
 from link.models import Link
 from userprofile.models import UserProfile, UserPosition
 
+import apidoc as doc
+
 class PositionResource(ModelResource):
     #last = fields.CharField('last', null=True)
     class Meta:
@@ -49,40 +51,20 @@ class UserResource(ModelResource):
             {   "name": u"logout",
                 "http_method": u"GET",
                 "resource_type": u"list",
-                "summary": u"""[Custom API] - Requires authentication<br><br>
-Logout the user. <br><br>""",
+                "summary": doc.UserResourceLogout,
                 "fields": authdoc
             } ,
             {   "name": u"check_auth",
                 "http_method": u"GET",
                 "resource_type": u"list",
-                "summary": u"""[Custom API] - Requires authentication<br><br>
-Check the user authentication status.<br><br>
-Return a dict with { 'api_key' : API key, 'userid' : User ID, 
-'profileid' : UserProfile ID, 'positionid' : UserPosition ID }.""",
+                "summary": doc.UserResourceCheckAuth,
                 "fields": authdoc
             } ,
             {   "name": u"gcm",
                 "http_method": u"POST",
                 "resource_type": "list",
-                "summary": u"""[Custom API] - Requires authentication - 
-Android only<br><br>
-Update the "Google Cloud Messaging" registration_id of the device.<br>This ID is
-used to send push notification to the device, via the GCM service.""",
-                "fields": dict( authdoc.items() + 
-                               { "name": {
-                                    "type": "string",
-                                    "required": True,
-                                    "description": "Device name" },
-                                "device_id": {
-                                    "type": "string",
-                                    "required": True,
-                                    "description": "Device unique ID" },
-                                "registration_id": {
-                                    "type": "string",
-                                    "required": True,
-                                    "description": "Registration ID" },
-                               }.items() )
+                "summary": doc.UserResourceGCM,
+                "fields": dict( authdoc.items() + doc.UserResourceGCMfields.items() )
             } ,
         ]
 
@@ -182,6 +164,53 @@ class ProfileResource(ModelResource):
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
+class FriendResource(ModelResource):
+    ###WARNING to be finshed, must restrict to the auth user
+    user = fields.ToOneField(UserResource, 'user', full=True)
+    name = fields.CharField(attribute='name', readonly=True)
+    class Meta:
+        resource_name = 'friend'
+        queryset = UserProfile.objects.all()
+        #allowed_methods = []
+        list_allowed_methods = ['get']
+        detail_allowed_methods = []
+        #filtering = {'user' : ALL_WITH_RELATIONS}
+        authorization  = DjangoAuthorization()
+        authentication = ApiKeyAuthentication()
+
+    def get_object_list(self, request):
+        userprofile = request.user.userprofile
+        links = userprofile.link_as_sender.filter(sender_status='ACC',
+                                                  receiver_status='ACC')
+        receivers = UserProfile.objects.filter(
+                                    user_id__in=links.values('receiver_id'))
+        links = userprofile.link_as_receiver.filter(sender_status='ACC',
+                                                    receiver_status='ACC')
+        senders = UserProfile.objects.filter(
+                                    user_id__in=links.values('sender_id'))
+        return senders | receivers
+
+class PendingResource(ModelResource):
+    ###WARNING to be finshed, must restrict to the auth user
+    user = fields.ToOneField(UserResource, 'user', full=True)
+    name = fields.CharField(attribute='name', readonly=True)
+    class Meta:
+        resource_name = 'pending'
+        queryset = UserProfile.objects.all()
+        #allowed_methods = []
+        list_allowed_methods = ['get']
+        detail_allowed_methods = []
+        #filtering = {'user' : ALL_WITH_RELATIONS}
+        authorization  = DjangoAuthorization()
+        authentication = ApiKeyAuthentication()
+
+    def get_object_list(self, request):
+        userprofile = request.user.userprofile
+        links = userprofile.link_as_receiver.filter(receiver_status='PEN')
+        pending = UserProfile.objects.filter(
+                                    user_id__in=links.values('sender_id'))
+        return pending
+
 class AuthResource(ModelResource):
     """
     An API for loging in / registering, no authentication required
@@ -196,33 +225,14 @@ class AuthResource(ModelResource):
             {"name": u"register",
              "http_method": u"POST",
              "resource_type": u"list",
-             "summary": u"""[Custom API] - Does not require authentication<br><br>
-Create a new User in the backend, as well as its UserProfile and UserPosition
-(location profile).<br>Then authenticate and login the user.<br><br>
-Return a dict with { 'api_key' : API key, 'userid' : User ID }.""",
-             "fields": { "username": {
-                                "type": "string",
-                                "required": True,
-                                "description": u"username passed as a data" },
-                         "password": {
-                                "type": "string",
-                                "required": True,
-                                "description": u"password passed as a data" }, }
+             "summary": doc.AuthResourceRegister,
+             "fields": doc.AuthResourceRegisterFields
             } ,
             {"name": "login",
              "http_method": "POST",
              "resource_type": "list",
-             "summary": u"""[Custom API] - Does not require authentication<br><br>
-Authenticate and login the user.<br><br>
-Return a dict with { 'api_key' : API key, 'userid' : User ID }.""",
-                "fields": { "username": {
-                                "type": "string",
-                                "required": True,
-                                "description": u"username passed as a data" },
-                            "password": {
-                                "type": "string",
-                                "required": True,
-                                "description": u"password passed as a data" }, }
+             "summary": doc.AuthResourceLogin,
+             "fields": doc.AuthResourceLoginFields
             } ,
         ]
 
@@ -265,9 +275,7 @@ Return a dict with { 'api_key' : API key, 'userid' : User ID }.""",
                 login(request, user)
                 return self.create_response(request,
                                {'api_key'   : user.api_key.key,
-                                'userid'    : request.user.id,
-                                'profileid' : request.user.userprofile.id,
-                                'positionid': request.user.userposition.id },
+                                'userid'    : request.user.id},
                                 HttpCreated )
             else:
                 return self.create_response(request,

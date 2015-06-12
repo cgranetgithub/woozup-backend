@@ -16,6 +16,9 @@ class EventTestCase(TestCase):
         super(EventTestCase, self).setUp()
         call_command('create_initial_data')
         u01 = User.objects.create_user(username='+33610000001', password='pwd')
+        cat = EventCategory.objects.create(name="meal")
+        e = EventType.objects.create(name="meal")
+        e.category.add(cat)        
 
     def test_owner_journey(self):
         """do typical sequence of calls an app would do"""

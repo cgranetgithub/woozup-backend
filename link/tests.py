@@ -210,7 +210,7 @@ class LinkTestCase(TestCase):
         from link.tasks import create_connections
         from userprofile.models import UserProfile
         u = UserProfile.objects.get(user__username=username)
-        create_connections(u.id, user1_contacts)
+        create_connections(u, user1_contacts)
         # the following should NOT raise a DoesNotExist exception
         Invite.objects.get(sender__user__username=username,
                            number='+33600000001')

@@ -101,6 +101,6 @@ autofield, not modifiable""")
         unique_together = ('sender', 'number')
 
     def __unicode__(self):
-        return u'%s(%d) -> %s|%s|%s'%(self.sender, self.sender.id,
+        return u'%s(%d) -> %s|%s|%s'%(self.sender, self.sender.user_id,
                                       self.number, self.name,
                                       self.email)

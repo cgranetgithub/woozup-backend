@@ -3,7 +3,7 @@ from django.contrib import admin
 
 from tastypie.api import Api
 
-from link.api import *
+#from link.api import *
 from event.api import *
 from userprofile.api import *
 #from service.notification import GCMDeviceAuthenticatedResource
@@ -25,13 +25,14 @@ v1_api.register(EventCategoryResource())
 v1_api.register(ProfileResource())
 v1_api.register(PositionResource())
 v1_api.register(UserResource())
-v1_api.register(FriendResource())
-v1_api.register(PendingResource())
+v1_api.register(MyFriendsResource())
+v1_api.register(PendingFriendsResource())
+v1_api.register(NewFriendsResource())
 v1_api.register(AuthResource())
 #v1_api.register(GCMDeviceAuthenticatedResource())
-v1_api.register(LinkResource())
-v1_api.register(InviteResource())
-v1_api.register(ContactResource())
+#v1_api.register(LinkResource())
+#v1_api.register(InviteResource())
+#v1_api.register(ContactResource())
 
 urlpatterns = patterns('',
     url(r'^api/'  , include(v1_api.urls)),

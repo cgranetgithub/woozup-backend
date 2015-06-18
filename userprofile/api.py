@@ -1,22 +1,18 @@
 from tastypie import fields
-from tastypie.http import (HttpUnauthorized, HttpForbidden,
-                           HttpCreated, HttpBadRequest)
 from tastypie.utils import trailing_slash
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authorization import DjangoAuthorization
 from tastypie.authentication import ApiKeyAuthentication
 
-from django.db.models import Q
+#from django.db.models import Q
 from django.conf.urls import url
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from push_notifications.models import APNSDevice, GCMDevice
-
-from doc import authdoc
-from link.models import Link
-from userprofile.models import UserProfile, UserPosition
 
 import apidoc as doc
+from doc import authdoc
+from userprofile.models import UserProfile, UserPosition
+
+import apifn
 
 class PositionResource(ModelResource):
     #last = fields.CharField('last', null=True)
@@ -82,73 +78,81 @@ class UserResource(ModelResource):
             url(r'^(?P<resource_name>%s)/gcm%s$' %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('gcm'), name='api_gcm'),
+            url(r"^(?P<resource_name>%s)/invite/(?P<user_id>\w[\w/-]*)%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('invite'), name="api_invite"),
+            url(r"^(?P<resource_name>%s)/accept/(?P<user_id>\w[\w/-]*)%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('accept'), name="api_accept"),
+            url(r"^(?P<resource_name>%s)/reject/(?P<user_id>\w[\w/-]*)%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('reject'), name="api_reject"),
         ]
 
     def logout(self, request, **kwargs):
         self.method_check(request, allowed=['get'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        if request.user and request.user.is_authenticated():
-            logout(request)
-            return self.create_response(request, { 'success': True })
-        else:
-            return self.create_response(request, { 'success': False }, 
-                                                 HttpUnauthorized)
-
+        (req, data, status) = apifn.logout(request)
+        return self.create_response(req, data, status)
+        
     def check_auth(self, request, **kwargs):
+        #
         self.method_check(request, allowed=['get'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        #
-        #from service.notification import send_notification
-        #send_notification([request.user.id], 'checking geoevent auth')
-        #
-        if request.user and request.user.is_authenticated():
-            return self.create_response( request,
-                              { 'success'   : True,
-                                'userid'    : request.user.id } )
-        else:
-            return self.create_response(request, { 'success': False }, 
-                                                 HttpUnauthorized)
-
+        (req, data, status) = apifn.check_auth(request)
+        return self.create_response(req, data, status)
+        
     def gcm(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        if request.user and request.user.is_authenticated():
-            try:
-                data = self.deserialize(
-                            request, request.body, 
-                            format=request.META.get(
-                            'CONTENT_TYPE', 'application/json'))
-            except:
-                return self.create_response(
-                            request,
-                            {u'reason': u'cannot deserialize data'},
-                            HttpBadRequest )
-            name = data.get('name', '')
-            device_id = data.get('device_id', '')
-            if isinstance(device_id, unicode):
-                device_id = str(device_id)
-            registration_id = data.get('registration_id', '')
-            try:
-                (gcmd, created) = GCMDevice.objects.get_or_create(
-                                                        user=request.user,
-                                                        #name=name, 
-                                                        device_id=device_id)
-                gcmd.registration_id = registration_id
-                gcmd.device_id = device_id
-                gcmd.name = name
-                gcmd.save()
-                return self.create_response(request, { 'success': True })
-            except:
-                return self.create_response(
-                            request,
-                            {u'reason': u'cannot create this gcm'},
-                            HttpBadRequest )
-        else:
-            return self.create_response(request, { 'success': False }, 
-                                                 HttpUnauthorized)
+        try:
+            data = self.deserialize(request, request.body, 
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                    {u'reason': u'cannot deserialize data'},
+                                    HttpBadRequest )
+        (req, data, status) = apifn.gcm(request, data)
+        return self.create_response(req, data, status)
+        
+    def invite(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        sender_id   = request.user.id
+        receiver_id = kwargs['user_id']
+        new_sender_status   = 'ACC'
+        new_receiver_status = 'PEN'
+        (req, data, status) = apifn.change_link(request, sender_id,
+                                                receiver_id, new_sender_status,
+                                                new_receiver_status)
+        return self.create_response(req, data, status)
+    def accept(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        sender_id   = kwargs['user_id']
+        receiver_id = request.user.id
+        new_receiver_status = 'ACC'
+        (req, data, status) = apifn.change_link(request, sender_id,
+                                                receiver_id, None,
+                                                new_receiver_status)
+        return self.create_response(req, data, status)
+    def reject(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        sender_id   = kwargs['user_id']
+        receiver_id = request.user.id
+        new_receiver_status = 'REJ'
+        (req, data, status) = apifn.change_link(request, sender_id,
+                                                receiver_id, None,
+                                                new_receiver_status)
+        return self.create_response(req, data, status)
 
 class ProfileResource(ModelResource):
     ###WARNING to be finshed, must restrict to the auth user
@@ -164,14 +168,12 @@ class ProfileResource(ModelResource):
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
-class FriendResource(ModelResource):
-    ###WARNING to be finshed, must restrict to the auth user
+class MyFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
-        resource_name = 'friend'
+        resource_name = 'friends/my'
         queryset = UserProfile.objects.all()
-        #allowed_methods = []
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         #filtering = {'user' : ALL_WITH_RELATIONS}
@@ -190,14 +192,12 @@ class FriendResource(ModelResource):
                                     user_id__in=links.values('sender_id'))
         return senders | receivers
 
-class PendingResource(ModelResource):
-    ###WARNING to be finshed, must restrict to the auth user
+class PendingFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
-        resource_name = 'pending'
+        resource_name = 'friends/pending'
         queryset = UserProfile.objects.all()
-        #allowed_methods = []
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         #filtering = {'user' : ALL_WITH_RELATIONS}
@@ -210,6 +210,25 @@ class PendingResource(ModelResource):
         pending = UserProfile.objects.filter(
                                     user_id__in=links.values('sender_id'))
         return pending
+
+class NewFriendsResource(ModelResource):
+    user = fields.ToOneField(UserResource, 'user', full=True)
+    name = fields.CharField(attribute='name', readonly=True)
+    class Meta:
+        resource_name = 'friends/new'
+        queryset = UserProfile.objects.all()
+        list_allowed_methods = ['get']
+        detail_allowed_methods = []
+        #filtering = {'user' : ALL_WITH_RELATIONS}
+        authorization  = DjangoAuthorization()
+        authentication = ApiKeyAuthentication()
+
+    def get_object_list(self, request):
+        userprofile = request.user.userprofile
+        links = userprofile.link_as_sender.filter(receiver_status='NEW')
+        new = UserProfile.objects.filter(
+                                    user_id__in=links.values('receiver_id'))
+        return new
 
 class AuthResource(ModelResource):
     """
@@ -256,36 +275,8 @@ class AuthResource(ModelResource):
             return self.create_response(request,
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
-        username = data.get('username', '')
-        password = data.get('password', '')
-        name     = data.get('name', '')
-        email    = data.get('email', '')
-        try:
-            user = User.objects.create_user(username=username, 
-                                            email=email, 
-                                            password=password,
-                                            first_name=name)
-        except:
-            return self.create_response(request,
-                                        {u'reason': u'cannot create this user'},
-                                        HttpBadRequest )
-        user = authenticate(username=username, password=password)
-        if user:
-            if user.is_active:
-                login(request, user)
-                return self.create_response(request,
-                               {'api_key'   : user.api_key.key,
-                                'userid'    : request.user.id},
-                                HttpCreated )
-            else:
-                return self.create_response(request,
-                                            {u'reason': u'disabled'},
-                                            HttpForbidden )
-        else:
-            return self.create_response(request,
-                                        {u'reason': u'incorrect'},
-                                        HttpUnauthorized )
-
+        
+        apifn.register(request, data)
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
@@ -296,20 +287,5 @@ class AuthResource(ModelResource):
             return self.create_response(request,
                                         {'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
-        username = data.get('username', '')
-        password = data.get('password', '')
-        user = authenticate(username=username, password=password)
-        if user:
-            if user.is_active:
-                login(request, user)
-                return self.create_response(request,
-                               {'api_key'   : user.api_key.key,
-                                'userid'    : request.user.id})
-            else:
-                return self.create_response(request,
-                                            {u'reason': u'disabled'},
-                                            HttpForbidden )
-        else:
-            return self.create_response(request,
-                                        {u'reason': u'incorrect'},
-                                        HttpUnauthorized )
+        apifn.login(request, data)
+        

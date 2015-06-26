@@ -20,6 +20,8 @@ def module_exists(module_name):
 
 v1_api = Api(api_name='v1')
 v1_api.register(EventResource())
+v1_api.register(MyEventResource())
+v1_api.register(FriendEventResource())
 v1_api.register(EventTypeResource())
 v1_api.register(EventCategoryResource())
 v1_api.register(ProfileResource())

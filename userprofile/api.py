@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 
 import apidoc as doc
 from doc import authdoc
-from userprofile.models import UserProfile, UserPosition
+from userprofile.models import UserProfile, UserPosition, get_user_friends
 
 import apifn
 
@@ -182,15 +182,16 @@ class MyFriendsResource(ModelResource):
 
     def get_object_list(self, request):
         userprofile = request.user.userprofile
-        links = userprofile.link_as_sender.filter(sender_status='ACC',
-                                                  receiver_status='ACC')
-        receivers = UserProfile.objects.filter(
-                                    user_id__in=links.values('receiver_id'))
-        links = userprofile.link_as_receiver.filter(sender_status='ACC',
-                                                    receiver_status='ACC')
-        senders = UserProfile.objects.filter(
-                                    user_id__in=links.values('sender_id'))
-        return senders | receivers
+        #links = userprofile.link_as_sender.filter(sender_status='ACC',
+                                                  #receiver_status='ACC')
+        #receivers = UserProfile.objects.filter(
+                                    #user_id__in=links.values('receiver_id'))
+        #links = userprofile.link_as_receiver.filter(sender_status='ACC',
+                                                    #receiver_status='ACC')
+        #senders = UserProfile.objects.filter(
+                                    #user_id__in=links.values('sender_id'))
+        #return senders | receivers
+        return get_user_friends(userprofile)
 
 class PendingFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)
@@ -276,7 +277,8 @@ class AuthResource(ModelResource):
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
         
-        apifn.register(request, data)
+        (req, data, status) = apifn.register(request, data)
+        return self.create_response(req, data, status)
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
@@ -287,5 +289,5 @@ class AuthResource(ModelResource):
             return self.create_response(request,
                                         {'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
-        apifn.login(request, data)
-        
+        (req, data, status) = apifn.login(request, data)
+        return self.create_response(req, data, status)

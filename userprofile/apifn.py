@@ -45,11 +45,10 @@ def login(request, data):
 def logout(request):
     if request.user and request.user.is_authenticated():
         auth.logout(request)
-        return (request, {'userid':request.user.id },
-                    HttpResponse)
+        return (request, {'userid':request.user.id }, HttpResponse)
     else:
         return (request, {u'reason': u"You are not authenticated"},
-                    HttpUnauthorized)
+                HttpUnauthorized)
 
 def check_auth(request):
     #

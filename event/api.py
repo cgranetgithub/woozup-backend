@@ -14,7 +14,9 @@ from django.utils.timezone import is_naive
 from event.models import EventCategory, EventType, Event
 from userprofile.api import ProfileResource
 from userprofile.models import get_user_friends
- 
+
+import apifn
+
 class MyDateSerializer(Serializer):
     """
     Our own serializer to format datetimes in ISO 8601 but with timezone
@@ -69,14 +71,30 @@ class AbstractEventResource(ModelResource):
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
-
-class EventResource(AbstractEventResource):
+class AllEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
-        resource_name = 'event'
+        resource_name = 'allevents'
     
-class MyEventResource(AbstractEventResource):
+    def get_object_list(self, request):
+        mine = Event.objects.filter(owner__user=request.user)
+        myfriends = get_user_friends(request.user.userprofile)
+        owners = list(myfriends.values_list('user_id', flat=True)
+                                                        ) + [request.user.id]
+        events = Event.objects.filter(owner__in=owners).distinct()
+        return events
+
+class MyAgendaResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
-        resource_name = 'myevent'
+        resource_name = 'myagenda'
+    
+    def get_object_list(self, request):
+        mine = Event.objects.filter(owner__user=request.user)
+        participation = request.user.userprofile.events_as_participant.all()
+        return mine | participation
+
+class MyEventsResource(AbstractEventResource):
+    class Meta(AbstractEventResource.Meta):
+        resource_name = 'myevents'
         list_allowed_methods = ['get', 'post']
         detail_allowed_methods = ['get', 'put', 'delete']
 
@@ -89,9 +107,9 @@ class MyEventResource(AbstractEventResource):
         events = Event.objects.filter(owner__user=request.user)
         return events
 
-class FriendEventResource(AbstractEventResource):
+class FriendsEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
-        resource_name = 'friendevent'
+        resource_name = 'friendsevents'
         # for the doc:
         extra_actions = [ 
             {   u"name": u"join",
@@ -111,19 +129,16 @@ User leaves an event, that is, is removed from the participant list.""",
         ]
 
     def get_object_list(self, request):
-        print request.user.userprofile
         myfriends = get_user_friends(request.user.userprofile)
-        print myfriends
         events = Event.objects.filter(owner__in=myfriends).distinct()
-        print events
         return events
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<event_id>\w[\w/-]*)/join%s$" %
+            url(r"^(?P<resource_name>%s)/join/(?P<event_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('join'), name="api_join"),
-            url(r"^(?P<resource_name>%s)/(?P<event_id>\w[\w/-]*)/leave%s$" %
+            url(r"^(?P<resource_name>%s)/leave/(?P<event_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('leave'), name="api_leave"),
         ]
@@ -136,7 +151,8 @@ User leaves an event, that is, is removed from the participant list.""",
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        (req, data, status) = apifn.join(request)
+        event_id = kwargs['event_id']
+        (req, data, status) = apifn.join(request, event_id)
         return self.create_response(req, data, status)
     
     def leave(self, request, **kwargs):
@@ -147,5 +163,6 @@ User leaves an event, that is, is removed from the participant list.""",
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        (req, data, status) = apifn.leave(request)
+        event_id = kwargs['event_id']
+        (req, data, status) = apifn.leave(request, event_id)
         return self.create_response(req, data, status)

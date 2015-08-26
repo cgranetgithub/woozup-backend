@@ -19,9 +19,10 @@ def module_exists(module_name):
 #admin.autodiscover() #not needed anymore in 1.7
 
 v1_api = Api(api_name='v1')
-v1_api.register(EventResource())
-v1_api.register(MyEventResource())
-v1_api.register(FriendEventResource())
+v1_api.register(MyAgendaResource())
+v1_api.register(MyEventsResource())
+v1_api.register(FriendsEventsResource())
+v1_api.register(AllEventsResource())
 v1_api.register(EventTypeResource())
 v1_api.register(EventCategoryResource())
 v1_api.register(ProfileResource())

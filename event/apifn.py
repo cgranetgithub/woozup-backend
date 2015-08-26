@@ -3,18 +3,18 @@ from django.http import HttpResponse
 from event.models import Event
 from event import push
 
-def join(request):
+def join(request, event_id):
     if request.user and request.user.is_authenticated():
+        profile = request.user.userprofile
         try:
-            event = Event.objects.get(id=kwargs['event_id'])
-            if request.user is not event.owner.user:
+            event = Event.objects.get(id=event_id)
+            if profile is not event.owner:
                 #participants = [ i['id'] for i in event.participants.values() ]
                 #if request.user.id not in participants:
-                if request.user.userprofile not in event.participants.all():
-                    event.participants.add(request.user.userprofile)
+                if profile not in event.participants.all():
+                    event.participants.add(profile)
                     event.save()
-                    push.participant_joined(request.user.userprofile,
-                                            event)
+                    push.participant_joined(profile, event)
                     return (request, {}, HttpResponse)
                 else:
                     return (request, {u'reason': u'You are already a participant'},
@@ -30,17 +30,18 @@ def join(request):
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)
 
-def leave(request):
+def leave(request, event_id):
     if request.user and request.user.is_authenticated():
+        profile = request.user.userprofile
         try:
-            event = Event.objects.get(id=kwargs['event_id'])
-            if request.user is not event.owner.user:
+            event = Event.objects.get(id=event_id)
+            if profile is not event.owner:
                 #participants = [ i['id'] for i in event.participants.values() ]
                 #if request.user.id in participants:
-                if request.user.userprofile in event.participants.all():
-                    event.participants.remove(request.user.userprofile)
+                if profile in event.participants.all():
+                    event.participants.remove(profile)
                     event.save()
-                    push.participant_left(request.user.userprofile, event)
+                    push.participant_left(profile, event)
                     return (request, {}, HttpResponse)
                 else:
                     return (request, {u'reason': u'You are already a participant'},
@@ -97,7 +98,7 @@ def leave(request):
     #self.log_throttled_access(request)
     #if request.user and request.user.is_authenticated():
         #try:
-            #myfriends = get_user_friends(request.user.userprofile)
+            #myfriends = get_user_friends(profile)
             #events = Event.objects.filter(owner__in=myfriends
                                     #).exclude(
                                         #Q( owner__user=request.user )

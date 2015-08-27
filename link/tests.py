@@ -29,14 +29,14 @@ class LinkTestCase(TestCase):
         """set up users with new links"""
         #super(LinkTestCase, self).setUp()
         call_command('create_initial_data')
-        u01 = User.objects.create_user(username='+33610000001', password='pwd')
-        u02 = User.objects.create_user(username='+33610000002', password='pwd')
-        u03 = User.objects.create_user(username='+33610000003', password='pwd')
-        u04 = User.objects.create_user(username='+33610000004', password='pwd')
-        u05 = User.objects.create_user(username='+33610000005', password='pwd')
-        u06 = User.objects.create_user(username='+33610000006', password='pwd')
-        u07 = User.objects.create_user(username='+33610000007', password='pwd')
-        u08 = User.objects.create_user(username='+33610000008', password='pwd')
+        self.u01 = User.objects.create_user(username='+33610000001', password='pwd')
+        self.u02 = User.objects.create_user(username='+33610000002', password='pwd')
+        self.u03 = User.objects.create_user(username='+33610000003', password='pwd')
+        self.u04 = User.objects.create_user(username='+33610000004', password='pwd')
+        self.u05 = User.objects.create_user(username='+33610000005', password='pwd')
+        self.u06 = User.objects.create_user(username='+33610000006', password='pwd')
+        self.u07 = User.objects.create_user(username='+33610000007', password='pwd')
+        self.u08 = User.objects.create_user(username='+33610000008', password='pwd')
         self.u09 = User.objects.create_user(username='+33610000009', password='pwd')
         self.u10 = User.objects.create_user(username='+33610000010', password='pwd')
         self.l1 = Link.objects.create(sender=u01.userprofile,
@@ -68,8 +68,8 @@ class LinkTestCase(TestCase):
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
         #user1 wants to connect to some users
-        res = self.c.post('/api/v1/link/%s/connect/%s'%(self.l1.id, auth))
-        res = self.c.post('/api/v1/link/%s/connect/%s'%(self.l2.id, auth))
+        res = self.c.post('/api/v1/user/invite/%s%s'%(self.u1.id, auth))
+        res = self.c.post('/api/v1/user/invite/%s%s'%(self.u2.id, auth))
         l1 = Link.objects.get(id=self.l1.id)
         l2 = Link.objects.get(id=self.l2.id)
         self.assertEqual(l1.sender_status, 'ACC')
@@ -80,7 +80,7 @@ class LinkTestCase(TestCase):
         username = '+33610000002'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
-        res = self.c.post('/api/v1/link/%s/accept/%s'%(self.l1.id, auth))
+        res = self.c.post('/api/v1/user/accept/%s%s'%(self.u1.id, auth))
         l1 = Link.objects.get(id=self.l1.id)
         self.assertEqual(l1.sender_status, 'ACC')
         self.assertEqual(l1.receiver_status, 'ACC')
@@ -88,103 +88,10 @@ class LinkTestCase(TestCase):
         username = '+33610000003'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
-        res = self.c.post('/api/v1/link/%s/reject/%s'%(self.l2.id, auth))
+        res = self.c.post('/api/v1/user/reject/%s%s'%(self.u2.id, auth))
         l2 = Link.objects.get(id=self.l2.id)
         self.assertEqual(l2.sender_status, 'ACC')
         self.assertEqual(l2.receiver_status, 'REJ')
-
-    def test_my_links(self):
-        """links that belong to me"""
-        username = '+33610000001'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
-        res = self.c.get('/api/v1/link/%s'%auth)
-        content = json.loads(res.content)
-        self.assertEqual(content['meta']['total_count'], 5)
-        expected = ( ('+33610000001', '+33610000002'),
-                     ('+33610000001', '+33610000003'),
-                     ('+33610000001', '+33610000004'),
-                     ('+33610000005', '+33610000001'),
-                     ('+33610000006', '+33610000001') )
-        self.assertEqual(cmp_result(content['objects'], expected), 5)
-        unexpected = ( ('+33610000001', '+33610000001'),
-                       ('+33610000002', '+33610000001'),
-                       ('+33610000001', '+33610000005'),
-                       ('+33610000007', '+33610000008'),
-                       ('+33610000009', '+33610000010') )
-        self.assertEqual(cmp_result(content['objects'], unexpected), 0)
-
-    def test_unauth_method(self):
-        username = '+33610000001'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
-        #list
-        res = self.c.get('/api/v1/link/%s'%auth)
-        self.assertEqual(res.status_code, 200)
-        res = self.c.put('/api/v1/link/%s'%auth)
-        self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/%s'%auth)
-        self.assertEqual(res.status_code, 405)
-        res = self.c.delete('/api/v1/link/%s'%auth)
-        self.assertEqual(res.status_code, 405)
-        #detail
-        res = self.c.get('/api/v1/link/%s/%s'%(self.l1.id, auth))
-        self.assertEqual(res.status_code, 200)
-        res = self.c.put('/api/v1/link/%s/%s'%(self.l1.id, auth))
-        self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/%s/%s'%(self.l1.id, auth))
-        self.assertEqual(res.status_code, 405)
-        res = self.c.delete('/api/v1/link/%s/%s'%(self.l1.id, auth))
-        self.assertEqual(res.status_code, 405)
-        #connect
-        res = self.c.get('/api/v1/link/%s/connect/%s'%(self.l1.id, auth))
-        self.assertEqual(res.status_code, 405)
-        res = self.c.put('/api/v1/link/%s/connect/%s'%(self.l1.id, auth))
-        self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/%s/connect/%s'%(self.l1.id, auth))
-        self.assertEqual(res.status_code, 200)
-        res = self.c.delete('/api/v1/link/%s/connect/%s'%(self.l1.id, auth))
-        self.assertEqual(res.status_code, 405)
-        #accept
-        res = self.c.get('/api/v1/link/%s/accept/%s'%(self.l4.id, auth))
-        self.assertEqual(res.status_code, 405)
-        res = self.c.put('/api/v1/link/%s/accept/%s'%(self.l4.id, auth))
-        self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/%s/accept/%s'%(self.l4.id, auth))
-        self.assertEqual(res.status_code, 200)
-        res = self.c.delete('/api/v1/link/%s/accept/%s'%(self.l4.id, auth))
-        self.assertEqual(res.status_code, 405)
-        #reject
-        res = self.c.get('/api/v1/link/%s/reject/%s'%(self.l5.id, auth))
-        self.assertEqual(res.status_code, 405)
-        res = self.c.put('/api/v1/link/%s/reject/%s'%(self.l5.id, auth))
-        self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/link/%s/reject/%s'%(self.l5.id, auth))
-        self.assertEqual(res.status_code, 200)
-        res = self.c.delete('/api/v1/link/%s/reject/%s'%(self.l5.id, auth))
-        self.assertEqual(res.status_code, 405)
-
-    def test_unauth_user(self):
-        res = self.c.get('/api/v1/link/')
-        self.assertEqual(res.status_code, 401)
-        res = self.c.get('/api/v1/link/1/')
-        self.assertEqual(res.status_code, 401)
-
-    def test_link_detail(self):
-        """test access to links that belong to me or not"""
-        # can access my link detail
-        username = '+33610000001'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
-        res = self.c.get('/api/v1/link/%s/%s'%(self.l1.id, auth))
-        self.assertEqual(res.status_code, 200)
-        res = self.c.get('/api/v1/link/%s/%s'%(self.l4.id, auth))
-        self.assertEqual(res.status_code, 200)
-        # cannot access others link detail
-        res = self.c.get('/api/v1/link/%s/%s'%(self.l7.id, auth))
-        self.assertEqual(res.status_code, 404)
-        #make sure link exists, in case of...
-        Link.objects.get(id=self.l7.id) #will raise an exception if doesnotexist
 
     def test_contact_and_connection(self):
         # first, post contacts of an existing user

@@ -101,7 +101,7 @@ class MyEventsResource(AbstractEventResource):
     def obj_create(self, bundle, **kwargs):
         #force owner to the authorized user
         kwargs['owner'] = bundle.request.user.userprofile
-        return super(MyEventResource, self).obj_create(bundle, **kwargs)
+        return super(MyEventsResource, self).obj_create(bundle, **kwargs)
 
     def get_object_list(self, request):
         events = Event.objects.filter(owner__user=request.user)

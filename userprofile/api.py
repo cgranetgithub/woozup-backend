@@ -279,6 +279,7 @@ class AuthResource(ModelResource):
         
         (req, data, status) = apifn.register(request, data)
         return self.create_response(req, data, status)
+    
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:

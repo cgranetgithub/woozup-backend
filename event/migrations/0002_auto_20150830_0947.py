@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='event',
             name='participants',
-            field=models.ManyToManyField(related_name='events_as_participant', to='userprofile.UserProfile'),
+            field=models.ManyToManyField(related_name='events_as_participant', to='userprofile.UserProfile', blank=True),
         ),
         migrations.AlterUniqueTogether(
             name='event',

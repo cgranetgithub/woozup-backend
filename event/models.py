@@ -2,11 +2,12 @@ from django.contrib.gis.db import models
 from service.utils import image_path
 
 class EventCategory(models.Model):
-    name       = models.CharField(max_length=50)
+    name        = models.CharField(max_length=50)
     short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
-    image        = models.ImageField(upload_to='glyph')
+    image       = models.ImageField(upload_to='glyph')
+    style       = models.CharField(max_length=255, blank=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
@@ -15,12 +16,13 @@ autofield, not modifiable""")
         return self.name
  
 class EventType(models.Model):
-    name       = models.CharField(max_length=50)
+    name        = models.CharField(max_length=50)
     short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
     category    = models.ManyToManyField(EventCategory)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
-    image        = models.ImageField(upload_to='glyph',
+    style       = models.CharField(max_length=255, blank=True)
+    image       = models.ImageField(upload_to='glyph',
                                     blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")

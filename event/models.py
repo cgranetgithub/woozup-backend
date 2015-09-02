@@ -45,7 +45,10 @@ class Event(models.Model):
                     help_text=u"""if closed no more participants accepted""")
     p_limit    = models.IntegerField(blank=True, null=True,
                     help_text=u"""maximum number of participants""")
-    position   = models.GeometryField(null=True, blank=True,
+    location_name = models.CharField(max_length=255, blank=True)
+    location_address = models.CharField(max_length=255, blank=True)
+    location_id = models.CharField(max_length=255, blank=True)
+    location_coords = models.GeometryField(null=True, blank=True,
                     help_text=u"""Type: Geometry, Entry format: GeoJson 
 (example: "{ 'type':'Point', 'coordinates':[125.6, 10.1] }")<br>""")
     image      = models.ImageField(upload_to=image_path,

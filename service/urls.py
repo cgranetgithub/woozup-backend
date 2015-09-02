@@ -8,6 +8,8 @@ from event.api import *
 from userprofile.api import *
 #from service.notification import GCMDeviceAuthenticatedResource
 
+from userprofile.views import register_by_access_token
+
 def module_exists(module_name):
     try:
         __import__(module_name)
@@ -38,8 +40,13 @@ v1_api.register(AuthResource())
 #v1_api.register(ContactResource())
 
 urlpatterns = patterns('',
+    url('', include('social.apps.django_app.urls', namespace='social')),
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
+    url(r'^$', 'userprofile.views.social_login'),
+    url(r'^home/$', 'userprofile.views.home'),
+    url(r'^logout/$', 'userprofile.views.social_logout'),
 )
 
 if module_exists('tastypie_swagger'):

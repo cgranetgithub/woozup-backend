@@ -10,6 +10,7 @@ from tastypie.authentication import ApiKeyAuthentication
 from django.db.models import Q
 from django.conf.urls import url
 from django.utils.timezone import is_naive 
+from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
 from event.models import EventCategory, EventType, Event
 from userprofile.api import ProfileResource
@@ -76,10 +77,11 @@ class AllEventsResource(AbstractEventResource):
         resource_name = 'allevents'
     
     def get_object_list(self, request):
-        mine = Event.objects.filter(owner__user=request.user)
-        myfriends = get_user_friends(request.user.userprofile)
-        owners = list(myfriends.values_list('user_id', flat=True)
-                                                        ) + [request.user.id]
+        user = request.user
+        # restrict result to my events + my friends' events
+        mine = Event.objects.filter(owner__user=user)
+        myfriends = get_user_friends(user.userprofile)
+        owners = list(myfriends.values_list('user_id', flat=True)) + [user.id]
         events = Event.objects.filter(owner__in=owners).distinct()
         return events
 
@@ -88,9 +90,11 @@ class MyAgendaResource(AbstractEventResource):
         resource_name = 'myagenda'
     
     def get_object_list(self, request):
+        # restrict result to my events + the events I go to
         mine = Event.objects.filter(owner__user=request.user)
         participation = request.user.userprofile.events_as_participant.all()
-        return mine | participation
+        events = mine | participation
+        return events
 
 class MyEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
@@ -104,6 +108,7 @@ class MyEventsResource(AbstractEventResource):
         return super(MyEventsResource, self).obj_create(bundle, **kwargs)
 
     def get_object_list(self, request):
+        # restrict result to my events
         events = Event.objects.filter(owner__user=request.user)
         return events
 
@@ -129,8 +134,13 @@ User leaves an event, that is, is removed from the participant list.""",
         ]
 
     def get_object_list(self, request):
-        myfriends = get_user_friends(request.user.userprofile)
+        user = request.user
+        # restrict result to my friends' events
+        myfriends = get_user_friends(user.userprofile)
         events = Event.objects.filter(owner__in=myfriends).distinct()
+        # filter by distance
+        events = events.filter(location_coords__distance_lte=(
+                                            user.userposition.last, D(km=100)))
         return events
 
     def prepend_urls(self):

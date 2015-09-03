@@ -19,10 +19,35 @@ class PositionResource(ModelResource):
     class Meta:
         resource_name = 'userposition'
         queryset = UserPosition.objects.all()
-        list_allowed_methods = ['get']
-        detail_allowed_methods = ['get', 'put']
+        list_allowed_methods = []
+        detail_allowed_methods = ['get']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
+
+    def get_object_list(self, request):
+        return User.objects.filter(id=request.user.id)
+
+    def prepend_urls(self):
+        return [
+            url(r'^(?P<resource_name>%s)/setlast%s$' %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('setlast'), name='api_setlast'),
+        ]
+
+    def setlast(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        try:
+            data = self.deserialize(request, request.body, 
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                        {u'reason': u'cannot deserialize data'},
+                                        HttpBadRequest )
+        (req, result, status) = apifn.setlast(request, data)
+        return self.create_response(req, result, status)
     
 class UserResource(ModelResource):
     """
@@ -35,7 +60,7 @@ class UserResource(ModelResource):
         resource_name = 'user'
         queryset = User.objects.all()
         list_allowed_methods = []
-        detail_allowed_methods = ['get', 'put']
+        detail_allowed_methods = ['get']
         excludes = ['password', 'is_superuser', 'is_staff']
         filtering = {
                     'username': ALL,
@@ -93,16 +118,16 @@ class UserResource(ModelResource):
         self.method_check(request, allowed=['get'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        (req, data, status) = apifn.logout(request)
-        return self.create_response(req, data, status)
+        (req, result, status) = apifn.logout(request)
+        return self.create_response(req, result, status)
         
     def check_auth(self, request, **kwargs):
         #
         self.method_check(request, allowed=['get'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        (req, data, status) = apifn.check_auth(request)
-        return self.create_response(req, data, status)
+        (req, result, status) = apifn.check_auth(request)
+        return self.create_response(req, result, status)
         
     def gcm(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -116,8 +141,8 @@ class UserResource(ModelResource):
             return self.create_response(request,
                                     {u'reason': u'cannot deserialize data'},
                                     HttpBadRequest )
-        (req, data, status) = apifn.gcm(request, data)
-        return self.create_response(req, data, status)
+        (req, result, status) = apifn.gcm(request, data)
+        return self.create_response(req, result, status)
         
     def invite(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -127,10 +152,10 @@ class UserResource(ModelResource):
         receiver_id = kwargs['user_id']
         new_sender_status   = 'ACC'
         new_receiver_status = 'PEN'
-        (req, data, status) = apifn.change_link(request, sender_id,
+        (req, result, status) = apifn.change_link(request, sender_id,
                                                 receiver_id, new_sender_status,
                                                 new_receiver_status)
-        return self.create_response(req, data, status)
+        return self.create_response(req, result, status)
     def accept(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
@@ -138,10 +163,10 @@ class UserResource(ModelResource):
         sender_id   = kwargs['user_id']
         receiver_id = request.user.id
         new_receiver_status = 'ACC'
-        (req, data, status) = apifn.change_link(request, sender_id,
+        (req, result, status) = apifn.change_link(request, sender_id,
                                                 receiver_id, None,
                                                 new_receiver_status)
-        return self.create_response(req, data, status)
+        return self.create_response(req, result, status)
     def reject(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
@@ -149,24 +174,25 @@ class UserResource(ModelResource):
         sender_id   = kwargs['user_id']
         receiver_id = request.user.id
         new_receiver_status = 'REJ'
-        (req, data, status) = apifn.change_link(request, sender_id,
+        (req, result, status) = apifn.change_link(request, sender_id,
                                                 receiver_id, None,
                                                 new_receiver_status)
-        return self.create_response(req, data, status)
+        return self.create_response(req, result, status)
 
 class ProfileResource(ModelResource):
-    ###WARNING to be finshed, must restrict to the auth user
     user = fields.ToOneField(UserResource, 'user', full=True)
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'userprofile'
         queryset = UserProfile.objects.all()
-        #allowed_methods = []
         list_allowed_methods = []
-        detail_allowed_methods = ['get', 'put']
+        detail_allowed_methods = ['get']
         filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
+
+    def get_object_list(self, request):
+        return User.objects.filter(id=request.user.id)
 
 class MyFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)
@@ -182,15 +208,6 @@ class MyFriendsResource(ModelResource):
 
     def get_object_list(self, request):
         userprofile = request.user.userprofile
-        #links = userprofile.link_as_sender.filter(sender_status='ACC',
-                                                  #receiver_status='ACC')
-        #receivers = UserProfile.objects.filter(
-                                    #user_id__in=links.values('receiver_id'))
-        #links = userprofile.link_as_receiver.filter(sender_status='ACC',
-                                                    #receiver_status='ACC')
-        #senders = UserProfile.objects.filter(
-                                    #user_id__in=links.values('sender_id'))
-        #return senders | receivers
         return get_user_friends(userprofile)
 
 class PendingFriendsResource(ModelResource):
@@ -276,9 +293,8 @@ class AuthResource(ModelResource):
             return self.create_response(request,
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
-        
-        (req, data, status) = apifn.register(request, data)
-        return self.create_response(req, data, status)
+        (req, result, status) = apifn.register(request, data)
+        return self.create_response(req, result, status)
     
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -290,5 +306,5 @@ class AuthResource(ModelResource):
             return self.create_response(request,
                                         {'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
-        (req, data, status) = apifn.login(request, data)
-        return self.create_response(req, data, status)
+        (req, result, status) = apifn.login(request, data)
+        return self.create_response(req, result, status)

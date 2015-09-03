@@ -5,6 +5,22 @@ from push_notifications.models import APNSDevice, GCMDevice
 from tastypie.http import (HttpUnauthorized, HttpForbidden,
                            HttpCreated, HttpBadRequest)
 from django.http import HttpResponse
+from django.contrib.gis.geos import GEOSGeometry
+
+def setlast(request, data):
+    if request.user and request.user.is_authenticated():
+        last = data.get('last', '')
+        pnt = GEOSGeometry(last)
+        print last, request.user.userposition.last, pnt
+        request.user.userposition.last = last
+        print request.user.userposition.last
+        request.user.userposition.save()
+        print request.user.userposition.last
+        return (request, {}, HttpResponse)
+    else:
+        return (request, {u'reason': u"You are not authenticated"},
+                HttpUnauthorized)
+    
 
 def register(request, data):
     username = data.get('username', '')

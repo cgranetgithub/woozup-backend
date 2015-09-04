@@ -11,11 +11,8 @@ def setlast(request, data):
     if request.user and request.user.is_authenticated():
         last = data.get('last', '')
         pnt = GEOSGeometry(last)
-        print last, request.user.userposition.last, pnt
         request.user.userposition.last = last
-        print request.user.userposition.last
         request.user.userposition.save()
-        print request.user.userposition.last
         return (request, {}, HttpResponse)
     else:
         return (request, {u'reason': u"You are not authenticated"},
@@ -50,8 +47,9 @@ def login(request, data):
     if user:
         if user.is_active:
             auth.login(request, user)
-            return (request, {'api_key': user.api_key.key,
-                              'userid' : request.user.id  }, HttpResponse)
+            return (request, {'api_key' : user.api_key.key,
+                              'userid'  : request.user.id,
+                              'username': user.username}, HttpResponse)
         else:
             return (request, {u'reason': u'disabled'}, HttpForbidden)
     else:

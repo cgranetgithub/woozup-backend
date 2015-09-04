@@ -12,7 +12,9 @@ def register_by_access_token(request, backend):
     user = request.backend.do_auth(token)
     if user:
         login(request, user)
-        return JsonResponse({'username':user.username, 'key':user.api_key.key})
+        return JsonResponse({'api_key' : user.api_key.key,
+                             'userid'  : request.user.id,
+                             'username': user.username})
     else:
         return JsonResponse({'error':'bad user'})
     

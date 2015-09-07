@@ -1,11 +1,14 @@
 from link import push
 from link.models import Link
+
+from django.http import HttpResponse
 from django.contrib import auth
+from django.contrib.auth.models import User
+from django.contrib.gis.geos import GEOSGeometry
+
 from push_notifications.models import APNSDevice, GCMDevice
 from tastypie.http import (HttpUnauthorized, HttpForbidden,
                            HttpCreated, HttpBadRequest)
-from django.http import HttpResponse
-from django.contrib.gis.geos import GEOSGeometry
 
 def setlast(request, data):
     if request.user and request.user.is_authenticated():
@@ -33,8 +36,9 @@ def register(request, data):
     if user:
         if user.is_active:
             auth.login(request, user)
-            return (request, {'api_key': user.api_key.key,
-                              'userid' : request.user.id  }, HttpCreated)
+            return (request, {'api_key' : user.api_key.key,
+                              'userid'  : request.user.id,
+                              'username': user.username}, HttpCreated)
         else:
             return (request, {u'reason': u'inactive user'}, HttpForbidden)
     else:

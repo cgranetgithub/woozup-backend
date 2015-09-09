@@ -45,7 +45,7 @@ ContactResourceSortFields = { u"username list": {
                                 u"description": u"""The list of username that 
 will be passed to the BG job.""" } }
 ContactResourceError = u"""data must have the following form: 
-{ 'number' : { 'email' : ..., 'name' : ... },
-  'number' : { ... }
+{ number : { 'email' : ..., 'name' : ... },
+  number : { ... }
 }
 the API will also recognize 'photo' field if given """

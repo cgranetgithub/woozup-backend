@@ -264,7 +264,7 @@ class ContactResource(Resource):
                     return self.create_response(request, {u'reason': doc.ContactResourceError},
                                                          HttpBadRequest)
             # launch background processing
-            create_connections.delay(user.userprofile.id, data)
+            create_connections.delay(user.userprofile, data)
             #
             return self.create_response(request, {'received': True})
         else:

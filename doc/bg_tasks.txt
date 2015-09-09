@@ -1,0 +1,13 @@
+install redis-server
+# sudo apt-get install redis-server
+
+launch server
+# redis-server
+
+launch worker (in the venv / django project, from 'rq' package)
+# rqworker
+
+set env variable about settings
+# export DJANGO_SETTINGS_MODULE=service.settings.dev
+
+now you can trig bg tasks from django

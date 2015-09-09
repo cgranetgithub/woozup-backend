@@ -3,7 +3,7 @@ from django.contrib import admin
 
 from tastypie.api import Api
 
-#from link.api import *
+from link.api import ContactResource
 from event.api import *
 from userprofile.api import *
 #from service.notification import GCMDeviceAuthenticatedResource
@@ -17,8 +17,6 @@ def module_exists(module_name):
         return False
     else:
         return True
-
-#admin.autodiscover() #not needed anymore in 1.7
 
 v1_api = Api(api_name='v1')
 v1_api.register(MyAgendaResource())
@@ -37,7 +35,7 @@ v1_api.register(AuthResource())
 #v1_api.register(GCMDeviceAuthenticatedResource())
 #v1_api.register(LinkResource())
 #v1_api.register(InviteResource())
-#v1_api.register(ContactResource())
+v1_api.register(ContactResource())
 
 urlpatterns = patterns('',
     url('', include('social.apps.django_app.urls', namespace='social')),

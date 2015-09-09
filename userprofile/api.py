@@ -156,6 +156,7 @@ class UserResource(ModelResource):
                                                 receiver_id, new_sender_status,
                                                 new_receiver_status)
         return self.create_response(req, result, status)
+    
     def accept(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)

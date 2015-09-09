@@ -65,15 +65,12 @@ class Invite(models.Model):
     """ INVITE behavior
     when a user is discovered on the device,
     an invite is automatically created by the backend
-        - Invite created
         - status=NEW
-    sender clicks on "invite" button
+    sender clicks on "invite" button, a message is sent to the receiver
         - status=PENDING
     sender clicks on "ignore" button
         - status=IGNORED
-    receiver accepts invitation
-        - status=ACCEPTED
-    receiver accepted invitation from someone else or created an account
+    receiver registered in the service => a link is created and the invitation is closed
         - status=CLOSED
     """
     INVITE_STATUS = ( (NEW     , 'new'),

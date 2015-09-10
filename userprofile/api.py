@@ -106,6 +106,9 @@ class UserResource(ModelResource):
             url(r"^(?P<resource_name>%s)/invite/(?P<user_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('invite'), name="api_invite"),
+            url(r"^(?P<resource_name>%s)/ignore/(?P<user_id>\w[\w/-]*)%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('ignore'), name="api_ignore"),
             url(r"^(?P<resource_name>%s)/accept/(?P<user_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('accept'), name="api_accept"),
@@ -157,6 +160,17 @@ class UserResource(ModelResource):
                                                 new_receiver_status)
         return self.create_response(req, result, status)
     
+    def ignore(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        sender_id   = kwargs['user_id']
+        receiver_id = request.user.id
+        new_sender_status = 'IGN'
+        (req, result, status) = apifn.change_link(request, sender_id,
+                                                receiver_id, new_sender_status,
+                                                None)
+        return self.create_response(req, result, status)
     def accept(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)

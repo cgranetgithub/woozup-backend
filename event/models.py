@@ -14,7 +14,7 @@ autofield, not modifiable""")
 autofield, not modifiable""")
     def __unicode__(self):
         return self.name
- 
+
 class EventType(models.Model):
     name        = models.CharField(max_length=50)
     short_name  = models.CharField(max_length=20)

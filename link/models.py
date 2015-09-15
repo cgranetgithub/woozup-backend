@@ -78,26 +78,27 @@ class Invite(models.Model):
                       (ACCEPTED, 'accepted'),
                       (IGNORED , 'ignored'),
                       (CLOSED  , 'closed' ) )
-    sender = models.ForeignKey('userprofile.UserProfile')
-    number = models.CharField(max_length=50, help_text=u'phone number')
-    email = models.EmailField(blank=True)
-    name  = models.CharField(max_length=255, blank=True,
-                             help_text='name to be displayed in the app')
-    photo = models.CharField(max_length=255, blank=True,
+    sender  = models.ForeignKey('userprofile.UserProfile')
+    name    = models.CharField(max_length=255, blank=True,
+                               help_text='name to be displayed in the app')
+    numbers = models.CharField(max_length=255, blank=True,
+                               help_text=u'phone numbers list')
+    emails  = models.CharField(max_length=255, blank=True,
+                               help_text=u'email addresses list')
+    photo   = models.CharField(max_length=255, blank=True,
                              help_text='local path in the device to a picture')
-    avatar = models.ImageField(upload_to=image_path,
+    avatar  = models.ImageField(upload_to=image_path,
                                blank=True, null=True,
                                help_text='not used for now')
-    status = models.CharField(max_length=3, choices=INVITE_STATUS, default=NEW)
+    status  = models.CharField(max_length=3, choices=INVITE_STATUS, default=NEW)
     sent_at = models.DateTimeField(blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     class Meta:
-        unique_together = ('sender', 'number')
+        unique_together = ('sender', 'name')
 
     def __unicode__(self):
-        return u'%s(%d) -> %s|%s|%s'%(self.sender, self.sender.user_id,
-                                      self.number, self.name,
-                                      self.email)
+        return u'%s(%d) -> %s (%s | %s)'%(self.sender, self.sender.user_id,
+                                      self.name, self.emails, self.numbers)

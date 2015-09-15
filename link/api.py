@@ -115,10 +115,10 @@ class ContactResource(Resource):
             if type(data) is not dict:
                 return self.create_response(request, {u'reason': doc.ContactResourceError},
                                                      HttpBadRequest)
-            for i in data.itervalues():
-                if (u'email' not in i) or (u'name' not in i):
-                    return self.create_response(request, {u'reason': doc.ContactResourceError},
-                                                         HttpBadRequest)
+            #for i in data.itervalues():
+                #if (u'email' not in i) or (u'name' not in i):
+                    #return self.create_response(request, {u'reason': doc.ContactResourceError},
+                                                         #HttpBadRequest)
             # launch background processing
             create_connections.delay(user.userprofile, data)
             #

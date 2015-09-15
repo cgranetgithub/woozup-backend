@@ -4,10 +4,9 @@ from django.contrib.gis.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import Group
 from tastypie.models import create_api_key
-
+from phonenumber_field.modelfields import PhoneNumberField
 from service.utils import image_path
 #from link.tasks import transform_invites
-
 
 MALE   = 'MA'
 FEMALE = 'FE'
@@ -16,9 +15,10 @@ class UserProfile(models.Model):
     GENDER = ( (MALE  , 'male'  ),
                (FEMALE, 'female') )
     user   = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True)
-    gender = models.CharField(max_length=2, choices=GENDER,
-                              blank=True, null=True)
+    gender = models.CharField(max_length=2, choices=GENDER, blank=True)
     birth_date = models.DateField(blank=True, null=True)
+    phone_number = PhoneNumberField(blank=True)
+    locale = models.CharField(max_length=3, blank=True)
     image = models.ImageField(upload_to=image_path,
                               blank=True, null=True)
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""

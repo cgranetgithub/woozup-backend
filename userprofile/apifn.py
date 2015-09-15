@@ -27,15 +27,18 @@ def register(request, data):
     password = data.get('password', '')
     name     = data.get('name', '')
     email    = data.get('email', '')
-    try:
-        user = User.objects.create_user(username=username, email=email, 
-                                        password=password, first_name=name)
-    except:
-        return (request, {u'reason': u'user creation failed'}, HttpBadRequest)
+    number   = data.get('number', '')
+    #try:
+    user = User.objects.create_user(username=username, email=email, 
+                                    password=password, first_name=name)
+    #except:
+        #return (request, {u'reason': u'user creation failed'}, HttpBadRequest)
     user = auth.authenticate(username=username, password=password)
     if user:
         if user.is_active:
             auth.login(request, user)
+            user.userprofile.phone_number = number
+            user.userprofile.save()
             return (request, {'api_key' : user.api_key.key,
                               'userid'  : request.user.id,
                               'username': user.username}, HttpCreated)

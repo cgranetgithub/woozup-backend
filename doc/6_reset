@@ -1,0 +1,9 @@
+heroku pg:reset DATABASE --app geoevent
+heroku pg:psql
+CREATE EXTENSION postgis;
+
+heroku run python manage.py migrate
+heroku run python manage.py create_initial_data
+heroku run python manage.py loaddata eventcategory.json
+heroku run python manage.py loaddata eventtype.json
+heroku run python manage.py createsuperuser

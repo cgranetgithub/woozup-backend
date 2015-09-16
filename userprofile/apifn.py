@@ -23,16 +23,31 @@ def setlast(request, data):
     
 
 def register(request, data):
-    username = data.get('username', '')
+    username = data.get('username', '').lower().strip()
     password = data.get('password', '')
     name     = data.get('name', '')
-    email    = data.get('email', '')
+    email    = data.get('email', '').lower().strip()
     number   = data.get('number', '')
-    #try:
-    user = User.objects.create_user(username=username, email=email, 
-                                    password=password, first_name=name)
-    #except:
-        #return (request, {u'reason': u'user creation failed'}, HttpBadRequest)
+    # check data
+    reason = None
+    if not username:
+        reason = "Username is required"
+    if not password:
+        reason = "Password is required"
+    if not name:
+        reason = "Name is required"
+    if reason:
+        return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
+    try:
+        user = User.objects.get(username=username)
+        #do no return, if user pass correct username+passwd, we can login
+    except User.DoesNotExist:
+        try:
+            user = User.objects.create_user(username=username, email=email, 
+                                            password=password, first_name=name)
+        except:
+            return (request, {u'reason': u'user creation failed',
+                              u'code': '300'}, HttpBadRequest)
     user = auth.authenticate(username=username, password=password)
     if user:
         if user.is_active:
@@ -43,12 +58,14 @@ def register(request, data):
                               'userid'  : request.user.id,
                               'username': user.username}, HttpCreated)
         else:
-            return (request, {u'reason': u'inactive user'}, HttpForbidden)
+            return (request, {u'reason': u'inactive user',
+                              u'code': '150'}, HttpForbidden)
     else:
-        return (request, {u'reason': u'incorrect user'}, HttpUnauthorized)
+        return (request, {u'reason': u'wrong login/password',
+                          u'code': '200'}, HttpUnauthorized)
 
 def login(request, data):
-    username = data.get('username', '')
+    username = data.get('username', '').lower().strip()
     password = data.get('password', '')
     user = auth.authenticate(username=username, password=password)
     if user:

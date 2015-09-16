@@ -38,30 +38,32 @@ def create_connections(profile, data):
     create_link_list = []
     create_invite_list = []
     # for each contact
-    for (name, info) in data.iteritems():
-        emails = info.get('emails', '').split(',')
+    for contact in data:
+        print contact
+        emails = contact.get('emails', '').split(',')
         # find corresponding users
         profiles = find_users_from_email_list(emails)
         # exist => check links
-        for contact in profiles:
+        for p in profiles:
             # existing Link?
             try:
                 Link.objects.get(
-                    ( Q(sender=profile) & Q(receiver=contact) )
-                    | ( Q(sender=contact) & Q(receiver=profile) )
+                    ( Q(sender=profile) & Q(receiver=p) )
+                    | ( Q(sender=p) & Q(receiver=profile) )
                                 )
                 # YES => nothing to do
             except Link.DoesNotExist:
                 # NO => create a new Link
-                link = Link(sender=profile, receiver=contact)
+                link = Link(sender=profile, receiver=p)
                 create_link_list.append(link)
         # NO corresponding user => check invites
         if not profiles:
+            name = contact.get('name', '')
             if name:
                 Invite.objects.get_or_create(sender = profile, name=name,
-                                             numbers = info.get('numbers', ''),
-                                             emails = info.get('emails', ''),
-                                             photo = info.get('photo', ''))
+                                             numbers = contact.get('numbers', ''),
+                                             emails = contact.get('emails', ''),
+                                             photo = contact.get('photo', ''))
     # create the missing connections (bulk for better performance)
     Link.objects.bulk_create(create_link_list)
     #Invite.objects.bulk_create(create_invite_list)
@@ -131,9 +133,6 @@ def create_connections(profile, data):
 # called by userprofile.apps on post_save signal
 def transform_invites(sender, instance, created, **kwargs):
     django.setup()
-    #Link = django_apps.get_model('link', 'Link')
-    #Invite = django_apps.get_model('link', 'Invite')
-    #if created and not instance.is_superuser:
     if created:
         create_link_list = []
         invites = []

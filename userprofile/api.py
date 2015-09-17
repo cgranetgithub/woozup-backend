@@ -197,17 +197,18 @@ class UserResource(ModelResource):
 class ProfileResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)
     name = fields.CharField(attribute='name', readonly=True)
+    email = fields.CharField(attribute='email', readonly=True)
     class Meta:
         resource_name = 'userprofile'
         queryset = UserProfile.objects.all()
         list_allowed_methods = []
         detail_allowed_methods = ['get']
-        filtering = {'user' : ALL_WITH_RELATIONS}
+        #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        return User.objects.filter(id=request.user.id)
+        return UserProfile.objects.filter(user=request.user)
 
 class MyFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)

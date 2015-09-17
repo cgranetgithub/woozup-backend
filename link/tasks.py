@@ -39,7 +39,6 @@ def create_connections(profile, data):
     create_invite_list = []
     # for each contact
     for contact in data:
-        print contact
         emails = contact.get('emails', '').split(',')
         # find corresponding users
         profiles = find_users_from_email_list(emails)

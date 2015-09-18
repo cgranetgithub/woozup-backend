@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 import apidoc as doc
 from doc import authdoc
 from userprofile.models import UserProfile, UserPosition, get_user_friends
+from service.b64field import Base64FileField
 
 import apifn
 
@@ -198,6 +199,8 @@ class ProfileResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)
     name = fields.CharField(attribute='name', readonly=True)
     email = fields.CharField(attribute='email', readonly=True)
+    #image = fields.FileField(attribute="image", null=True, blank=True)
+    image_field = Base64FileField("image", null=True, blank=True)
     class Meta:
         resource_name = 'userprofile'
         queryset = UserProfile.objects.all()
@@ -209,6 +212,28 @@ class ProfileResource(ModelResource):
 
     def get_object_list(self, request):
         return UserProfile.objects.filter(user=request.user)
+    
+    def prepend_urls(self):
+        return [
+            url(r'^(?P<resource_name>%s)/setpicture%s$' %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('setpicture'), name='api_setpicture'),
+        ]
+
+    def setpicture(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        try:
+            data = self.deserialize(request, request.body, 
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                        {u'reason': u'cannot deserialize data'},
+                                        HttpBadRequest )
+        (req, result, status) = apifn.setpicture(request, data)
+        return self.create_response(req, result, status)
 
 class MyFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)

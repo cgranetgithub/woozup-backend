@@ -1,10 +1,13 @@
+from base64 import b64decode
+
 from link import push
 from link.models import Link
 
 from django.http import HttpResponse
 from django.contrib import auth
-from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.auth.models import User
 
 from push_notifications.models import APNSDevice, GCMDevice
 from tastypie.http import (HttpUnauthorized, HttpForbidden,
@@ -21,6 +24,17 @@ def setlast(request, data):
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)
     
+def setpicture(request, data):
+    if request.user and request.user.is_authenticated():
+        b64_text = data.get('file', '')
+        filename = data.get('name', '')
+        image_data = b64decode(b64_text)
+        request.user.userprofile.image = ContentFile(image_data, filename)
+        request.user.userprofile.save()
+        return (request, {}, HttpResponse)
+    else:
+        return (request, {u'reason': u"You are not authenticated"},
+                HttpUnauthorized)
 
 def register(request, data):
     username = data.get('username', '').lower().strip()

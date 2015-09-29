@@ -8,10 +8,12 @@ from django.contrib import auth
 from django.core.files.base import ContentFile
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import User
+from django.utils.timezone import now as datetime_now
 
 from push_notifications.models import APNSDevice, GCMDevice
 from tastypie.http import (HttpUnauthorized, HttpForbidden,
                            HttpCreated, HttpBadRequest)
+from tastypie.models import ApiKey
 
 def setlast(request, data):
     if request.user and request.user.is_authenticated():
@@ -70,7 +72,8 @@ def register(request, data):
             user.userprofile.save()
             return (request, {'api_key' : user.api_key.key,
                               'userid'  : request.user.id,
-                              'username': user.username}, HttpCreated)
+                              'username': user.username,
+                              'code'    : '0'}, HttpCreated)
         else:
             return (request, {u'reason': u'inactive user',
                               u'code': '150'}, HttpForbidden)
@@ -96,6 +99,11 @@ def login(request, data):
 
 def logout(request):
     if request.user and request.user.is_authenticated():
+        # change api_key
+        api_key = request.user.api_key
+        api_key.key = api_key.generate_key()
+        api_key.created = datetime_now()
+        api_key.save()
         auth.logout(request)
         return (request, {'userid':request.user.id }, HttpResponse)
     else:

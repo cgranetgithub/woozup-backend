@@ -21,12 +21,14 @@ class PositionResource(ModelResource):
         resource_name = 'userposition'
         queryset = UserPosition.objects.all()
         list_allowed_methods = []
-        detail_allowed_methods = ['get']
+        detail_allowed_methods = ['get', 'put']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        return User.objects.filter(id=request.user.id)
+        return UserPosition.objects.filter(user=request.user)
+
+ ### WARNING need to restrict to user
 
     def prepend_urls(self):
         return [
@@ -61,8 +63,9 @@ class UserResource(ModelResource):
         resource_name = 'user'
         queryset = User.objects.all()
         list_allowed_methods = []
-        detail_allowed_methods = ['get']
+        detail_allowed_methods = ['get', 'put']
         excludes = ['password', 'is_superuser', 'is_staff']
+        includes = ['first_name', 'last_name']
         filtering = {
                     'username': ALL,
                     }
@@ -92,6 +95,8 @@ class UserResource(ModelResource):
 
     def get_object_list(self, request):
         return User.objects.filter(id=request.user.id)
+
+### WARNING need to restrict to user
 
     def prepend_urls(self):
         return [
@@ -205,7 +210,7 @@ class ProfileResource(ModelResource):
         resource_name = 'userprofile'
         queryset = UserProfile.objects.all()
         list_allowed_methods = []
-        detail_allowed_methods = ['get']
+        detail_allowed_methods = ['get', 'put', 'patch']
         #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
@@ -213,6 +218,8 @@ class ProfileResource(ModelResource):
     def get_object_list(self, request):
         return UserProfile.objects.filter(user=request.user)
     
+### WARNING need to restrict to user
+
     def prepend_urls(self):
         return [
             url(r'^(?P<resource_name>%s)/setpicture%s$' %

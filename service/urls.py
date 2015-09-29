@@ -48,5 +48,10 @@ urlpatterns = patterns('',
 
 if module_exists('tastypie_swagger'):
     urlpatterns += patterns('',
-                            url(r'api/doc/', include('tastypie_swagger.urls', 
-                                                namespace='tastypie_swagger')))
+        url(r'api/doc/',
+        include('tastypie_swagger.urls', namespace='v1_api_tastypie_swagger'),
+        kwargs={
+            "tastypie_api_module":v1_api,
+            "namespace":"v1_api_tastypie_swagger",
+            "version": "0.1"})
+    )

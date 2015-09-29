@@ -8,6 +8,7 @@ import service.utils
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('userprofile', '0001_initial'),
     ]
 
     operations = [
@@ -24,6 +25,7 @@ class Migration(migrations.Migration):
                 ('sent_at', models.DateTimeField(null=True, blank=True)),
                 ('created_at', models.DateTimeField(help_text='\nautofield, not modifiable', auto_now_add=True)),
                 ('updated_at', models.DateTimeField(help_text='\nautofield, not modifiable', auto_now=True)),
+                ('sender', models.ForeignKey(to='userprofile.UserProfile')),
             ],
         ),
         migrations.CreateModel(
@@ -35,6 +37,16 @@ class Migration(migrations.Migration):
                 ('sent_at', models.DateTimeField(null=True, blank=True)),
                 ('created_at', models.DateTimeField(help_text='\nautofield, not modifiable', auto_now_add=True)),
                 ('updated_at', models.DateTimeField(help_text='\nautofield, not modifiable', auto_now=True)),
+                ('receiver', models.ForeignKey(related_name='link_as_receiver', to='userprofile.UserProfile')),
+                ('sender', models.ForeignKey(related_name='link_as_sender', to='userprofile.UserProfile')),
             ],
+        ),
+        migrations.AlterUniqueTogether(
+            name='link',
+            unique_together=set([('sender', 'receiver')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='invite',
+            unique_together=set([('sender', 'numbers'), ('sender', 'emails')]),
         ),
     ]

@@ -134,17 +134,20 @@ def transform_invites(sender, instance, created, **kwargs):
     django.setup()
     if created:
         create_link_list = []
-        invites = []
+        invites = Invite.objects.filter(
+                                numbers__icontains=instance.user.username
+                                ).exclude(status='CLO')
+        invites = invites | Invite.objects.filter(
+                                emails__icontains=instance.user.username
+                                ).exclude(status='CLO')
         if instance.phone_number:
-            nbr = Invite.objects.filter(
+            invites = invites | Invite.objects.filter(
                                     numbers__icontains=instance.phone_number
                                     ).exclude(status='CLO')
-            invites += nbr
         if instance.user.email:
-            eml = Invite.objects.filter(
+            invites = invites | Invite.objects.filter(
                                     emails__icontains=instance.user.email
                                     ).exclude(status='CLO')
-            invites += eml
         for i in invites:
             link = Link(sender=i.sender, receiver=instance)
             create_link_list.append(link)

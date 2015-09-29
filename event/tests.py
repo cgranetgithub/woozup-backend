@@ -29,7 +29,7 @@ class EventTestCase(TestCase):
         e_id = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/%d/'%e_id, 'start':start,
-                'position':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
+                'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = self.c.post('/api/v1/myevents/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
@@ -41,16 +41,16 @@ class EventTestCase(TestCase):
         e = Event.objects.get(id=ide)
         self.assertEqual(e.owner.user.username, '+33610000001')
         self.assertEqual(e.event_type.id, e_id)
-        self.assertEqual(e.position.coords, (100.0, 0.0))
+        self.assertEqual(e.location_coords.coords, (100.0, 0.0))
         #user1 updates the event
-        data = {'position':'{ "type": "Point", "coordinates": [50.0, 50.0] }'}
+        data = {'location_coords':'{ "type": "Point", "coordinates": [50.0, 50.0] }'}
         res = self.c.put('/api/v1/myevents/%s/%s'%(ide, auth),
                          data = json.dumps(data),
                          content_type='application/json')
         e = Event.objects.get(id=ide)
         self.assertEqual(e.owner.user.username, '+33610000001')
         self.assertEqual(e.event_type.id, e_id)
-        self.assertEqual(e.position.coords, (50.0, 50.0))
+        self.assertEqual(e.location_coords.coords, (50.0, 50.0))
         #user1 deletes the event
         res = self.c.delete('/api/v1/myevents/%s/%s'%(ide, auth))
         res = self.c.get('/api/v1/myevents/%s/%s'%(ide, auth))
@@ -158,14 +158,14 @@ class EventTestCase(TestCase):
         username = '+33610000002'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
-        res = self.c.post('/api/v1/friendsevents/join/%s%s'%(ide, auth),
+        res = self.c.post('/api/v1/friendsevents/join/%s/%s'%(ide, auth),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
         username = '+33610000003'
         api_key = self.login(username)
         auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
-        res = self.c.post('/api/v1/friendsevents/join/%s%s'%(ide, auth),
+        res = self.c.post('/api/v1/friendsevents/join/%s/%s'%(ide, auth),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)

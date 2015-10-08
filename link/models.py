@@ -97,7 +97,7 @@ autofield, not modifiable""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     class Meta:
-        unique_together = (('sender', 'numbers'), ('sender', 'emails'))
+        unique_together = ('sender', 'numbers', 'emails')
 
     def __unicode__(self):
         return u'%s(%d) -> %s (%s | %s)'%(self.sender, self.sender.user_id,

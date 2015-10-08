@@ -9,6 +9,7 @@ import service.utils
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('userprofile', '0001_initial'),
     ]
 
     operations = [
@@ -20,6 +21,7 @@ class Migration(migrations.Migration):
                 ('comment', models.CharField(max_length=255, blank=True)),
                 ('special', models.BooleanField(default=False)),
                 ('public', models.BooleanField(default=False)),
+                ('canceled', models.BooleanField(default=False)),
                 ('start', models.DateTimeField()),
                 ('end', models.DateTimeField(null=True, blank=True)),
                 ('closed', models.BooleanField(default=False, help_text='if closed no more participants accepted')),
@@ -66,5 +68,19 @@ class Migration(migrations.Migration):
             model_name='event',
             name='event_type',
             field=models.ForeignKey(to='event.EventType'),
+        ),
+        migrations.AddField(
+            model_name='event',
+            name='owner',
+            field=models.ForeignKey(related_name='events_as_owner', to='userprofile.UserProfile'),
+        ),
+        migrations.AddField(
+            model_name='event',
+            name='participants',
+            field=models.ManyToManyField(related_name='events_as_participant', to='userprofile.UserProfile', blank=True),
+        ),
+        migrations.AlterUniqueTogether(
+            name='event',
+            unique_together=set([('start', 'event_type', 'owner')]),
         ),
     ]

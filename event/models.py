@@ -36,6 +36,7 @@ class Event(models.Model):
     comment    = models.CharField(max_length=255, blank=True)
     special    = models.BooleanField(default=False)
     public     = models.BooleanField(default=False)
+    canceled   = models.BooleanField(default=False)
     start      = models.DateTimeField()
     end        = models.DateTimeField(blank=True, null=True)
     event_type = models.ForeignKey(EventType)

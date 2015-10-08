@@ -58,14 +58,49 @@ def create_connections(profile, data):
         # NO corresponding user => check invites
         if not profiles:
             name = contact.get('name', '')
+            numbers = contact.get('numbers', '')
+            emails = contact.get('emails', '')
+            photo = contact.get('photo', '')
             if name:
-                Invite.objects.get_or_create(sender = profile, name=name,
-                                             numbers = contact.get('numbers', ''),
-                                             emails = contact.get('emails', ''),
-                                             photo = contact.get('photo', ''))
+                if emails:
+                    try:
+                        invite = Invite.objects.get(sender = profile,
+                                                    emails = emails)
+                        invite.name = name
+                        invite.numbers = numbers
+                        invite.save()
+                    except Invite.DoesNotExist:
+                        if numbers:
+                            try:
+                                invite = Invite.objects.get(sender = profile,
+                                                            numbers = numbers)
+                                invite.name = name
+                                invite.emails = emails
+                                invite.save()
+                            except Invite.DoesNotExist:
+                                invite = Invite(sender = profile, name=name,
+                                                emails = emails,
+                                                numbers = numbers)
+                                create_invite_list.append(invite)
+                elif numbers:
+                    try:
+                        invite = Invite.objects.get(sender = profile,
+                                                    numbers = numbers)
+                        invite.name = name
+                        invite.emails = emails
+                        invite.save()
+                    except Invite.DoesNotExist:
+                        invite = Invite(sender = profile, name=name,
+                                        emails = emails,
+                                        numbers = numbers)
+                        create_invite_list.append(invite)
+                #Invite.objects.get_or_create(sender = profile, name=name,
+                                             #numbers = contact.get('numbers', ''),
+                                             #emails = contact.get('emails', ''),
+                                             #photo = contact.get('photo', ''))
     # create the missing connections (bulk for better performance)
     Link.objects.bulk_create(create_link_list)
-    #Invite.objects.bulk_create(create_invite_list)
+    Invite.objects.bulk_create(create_invite_list)
            
 
 #@job('default', connection=conn)

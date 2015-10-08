@@ -47,6 +47,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='invite',
-            unique_together=set([('sender', 'numbers'), ('sender', 'emails')]),
+            unique_together=set([('sender', 'numbers', 'emails')]),
         ),
     ]

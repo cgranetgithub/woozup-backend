@@ -74,7 +74,7 @@ class AbstractEventResource(ModelResource):
 
 class AllEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
-        resource_name = 'allevents'
+        resource_name = 'events/all'
     
     def get_object_list(self, request):
         user = request.user
@@ -87,7 +87,7 @@ class AllEventsResource(AbstractEventResource):
 
 class MyAgendaResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
-        resource_name = 'myagenda'
+        resource_name = 'events/agenda'
     
     def get_object_list(self, request):
         # restrict result to my events + the events I go to
@@ -98,7 +98,7 @@ class MyAgendaResource(AbstractEventResource):
 
 class MyEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
-        resource_name = 'myevents'
+        resource_name = 'events/mine'
         list_allowed_methods = ['get', 'post']
         detail_allowed_methods = ['get', 'put', 'delete']
 
@@ -114,7 +114,7 @@ class MyEventsResource(AbstractEventResource):
 
 class FriendsEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
-        resource_name = 'friendsevents'
+        resource_name = 'events/friends'
         # for the doc:
         extra_actions = [ 
             {   u"name": u"join",
@@ -139,8 +139,9 @@ User leaves an event, that is, is removed from the participant list.""",
         myfriends = get_user_friends(user.userprofile)
         events = Event.objects.filter(owner__in=myfriends).distinct()
         # filter by distance
-        events = events.filter(location_coords__distance_lte=(
-                                            user.userposition.last, D(km=100)))
+        if user.userposition.last:
+            events = events.filter(location_coords__distance_lte=(
+                                                user.userposition.last, D(km=100)))
         return events
 
     def prepend_urls(self):

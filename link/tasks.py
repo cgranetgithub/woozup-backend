@@ -35,8 +35,6 @@ def find_users_from_email_list(email_list):
 @job('default', connection=conn)
 def create_connections(profile, data):
     django.setup()
-    create_link_list = []
-    create_invite_list = []
     # for each contact
     for contact in data:
         emails = contact.get('emails', '').split(',')
@@ -53,8 +51,7 @@ def create_connections(profile, data):
                 # YES => nothing to do
             except Link.DoesNotExist:
                 # NO => create a new Link
-                link = Link(sender=profile, receiver=p)
-                create_link_list.append(link)
+                Link.objects.create(sender=profile, receiver=p)
         # NO corresponding user => check invites
         if not profiles:
             name = contact.get('name', '')
@@ -78,10 +75,10 @@ def create_connections(profile, data):
                                 invite.emails = emails
                                 invite.save()
                             except Invite.DoesNotExist:
-                                invite = Invite(sender = profile, name=name,
-                                                emails = emails,
-                                                numbers = numbers)
-                                create_invite_list.append(invite)
+                                Invite.objects.create(sender = profile,
+                                                      name=name,
+                                                      emails = emails,
+                                                      numbers = numbers)
                 elif numbers:
                     try:
                         invite = Invite.objects.get(sender = profile,
@@ -90,18 +87,9 @@ def create_connections(profile, data):
                         invite.emails = emails
                         invite.save()
                     except Invite.DoesNotExist:
-                        invite = Invite(sender = profile, name=name,
-                                        emails = emails,
-                                        numbers = numbers)
-                        create_invite_list.append(invite)
-                #Invite.objects.get_or_create(sender = profile, name=name,
-                                             #numbers = contact.get('numbers', ''),
-                                             #emails = contact.get('emails', ''),
-                                             #photo = contact.get('photo', ''))
-    # create the missing connections (bulk for better performance)
-    Link.objects.bulk_create(create_link_list)
-    Invite.objects.bulk_create(create_invite_list)
-           
+                        Invite.objects.create(sender = profile, name=name,
+                                              emails = emails,
+                                              numbers = numbers)           
 
 #@job('default', connection=conn)
 #def create_connections(profile, data):

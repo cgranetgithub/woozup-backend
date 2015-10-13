@@ -246,7 +246,7 @@ class MyFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
-        resource_name = 'friends/my'
+        resource_name = 'friends/mine'
         queryset = UserProfile.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
@@ -291,10 +291,13 @@ class NewFriendsResource(ModelResource):
 
     def get_object_list(self, request):
         userprofile = request.user.userprofile
-        links = userprofile.link_as_sender.filter(receiver_status='NEW')
-        new = UserProfile.objects.filter(
+        links = userprofile.link_as_sender.filter(sender_status='NEW')
+        receivers = UserProfile.objects.filter(
                                     user_id__in=links.values('receiver_id'))
-        return new
+        links = userprofile.link_as_receiver.filter(receiver_status='NEW')
+        senders = UserProfile.objects.filter(
+                                    user_id__in=links.values('sender_id'))
+        return senders | receivers
 
 class AuthResource(ModelResource):
     """

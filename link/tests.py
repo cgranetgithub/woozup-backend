@@ -138,6 +138,17 @@ class LinkTestCase(TestCase):
         Link.objects.get(sender__user__username=username,
                          receiver__user__username='newuser1@fr.fr')
 
+    def test_contact_big(self):
+        import contact_example as ce
+        username = 'user1@fr.fr'
+        api_key = self.login(username)
+        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        # execute background task directly
+        u = UserProfile.objects.get(user__username=username)
+        create_connections(u, ce.michael)        
+        create_connections(u, ce.charles)
+        create_connections(u, ce.caroline)
+
     def test_uniqueness(self):
         from django.db import IntegrityError
         from django.core.exceptions import ValidationError

@@ -42,16 +42,17 @@ def create_connections(profile, data):
         profiles = find_users_from_email_list(emails)
         # exist => check links
         for p in profiles:
-            # existing Link?
-            try:
-                Link.objects.get(
-                    ( Q(sender=profile) & Q(receiver=p) )
-                    | ( Q(sender=p) & Q(receiver=profile) )
-                                )
-                # YES => nothing to do
-            except Link.DoesNotExist:
-                # NO => create a new Link
-                Link.objects.create(sender=profile, receiver=p)
+            if profile != p:
+                # existing Link?
+                try:
+                    Link.objects.get(
+                        ( Q(sender=profile) & Q(receiver=p) )
+                        | ( Q(sender=p) & Q(receiver=profile) )
+                                    )
+                    # YES => nothing to do
+                except Link.DoesNotExist:
+                    # NO => create a new Link
+                    Link.objects.create(sender=profile, receiver=p)
         # NO corresponding user => check invites
         if not profiles:
             name = contact.get('name', '')

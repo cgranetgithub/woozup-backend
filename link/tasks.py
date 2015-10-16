@@ -10,26 +10,53 @@ from link.models import Link, Invite
 def is_email(email):
     return True
 
-def find_users_from_email(email):
-    profiles = []
+def get_clean_emails(contact):
     try:
-        contact = UserProfile.objects.get(user__username=email)
-        profiles.append(contact)
-    except UserProfile.DoesNotExist:
-        pass
-    contacts = UserProfile.objects.filter(user__email=email)
-    for c in contacts:
-        profiles.append(c)
-    return profiles
+        emails = contact.get('emails', '')
+    except:
+        return []
+    raw_email_list = emails.split(',')
+    new_email_list = []
+    for i in raw_email_list:
+        if is_email(i):
+            new_email_list.append(i.strip())
+    result = list(set(new_email_list))
+    result.sort()
+    return result
+
+def get_clean_numbers(contact):
+    try:
+        numbers = contact.get('numbers', '')
+    except:
+        return []
+    raw_number_list = numbers.split(',')
+    new_number_list = []
+    for i in raw_number_list:
+        #if is_email(i):
+        new_number_list.append(i.strip())
+    result = list(set(new_number_list))
+    result.sort()
+    return result
+
+#def find_users_from_email(email):
+    #profiles = []
+    #try:
+        #contact = UserProfile.objects.get(user__username=email)
+        #profiles.append(contact)
+    #except UserProfile.DoesNotExist:
+        #pass
+    #contacts = UserProfile.objects.filter(user__email=email)
+    #for c in contacts:
+        #profiles.append(c)
+    #return set(profiles)
 
 def find_users_from_email_list(email_list):
     profiles = []
-    for email in email_list:
-        email = email.strip()
-        if is_email(email):
-            profiles += find_users_from_email(email)
-    profiles = list(set(profiles))
-    return profiles
+    #for email in email_list:
+        #profiles += find_users_from_email(email)
+    l1 = UserProfile.objects.filter(user__username__in=email_list)
+    l2 = UserProfile.objects.filter(user__email__in=email_list)
+    return l1 | l2
 
 
 @job('default', connection=conn)
@@ -37,9 +64,10 @@ def create_connections(profile, data):
     django.setup()
     # for each contact
     for contact in data:
-        emails = contact.get('emails', '').split(',')
+        email_list = get_clean_emails(contact)
+        number_list = get_clean_numbers(contact)
         # find corresponding users
-        profiles = find_users_from_email_list(emails)
+        profiles = find_users_from_email_list(email_list)
         # exist => check links
         for p in profiles:
             if profile != p:
@@ -56,8 +84,8 @@ def create_connections(profile, data):
         # NO corresponding user => check invites
         if not profiles:
             name = contact.get('name', '')
-            numbers = contact.get('numbers', '')
-            emails = contact.get('emails', '')
+            emails = ', '.join(email_list)
+            numbers = ', '.join(number_list)
             photo = contact.get('photo', '')
             if name:
                 if emails:

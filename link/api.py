@@ -36,6 +36,7 @@ class InviteResource(ModelResource):
         resource_name = 'invite'
         queryset = Invite.objects.all()
         allowed_methods = ['get']
+        ordering = ['name']
         filtering = {
                     #'sender': ALL_WITH_RELATIONS,
                     'number': ALL,

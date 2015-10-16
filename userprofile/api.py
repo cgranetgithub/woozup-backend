@@ -210,6 +210,7 @@ class ProfileResource(ModelResource):
         resource_name = 'userprofile'
         queryset = UserProfile.objects.all()
         list_allowed_methods = []
+        ordering = ['user']
         detail_allowed_methods = ['get', 'put', 'patch']
         #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
@@ -250,6 +251,7 @@ class MyFriendsResource(ModelResource):
         queryset = UserProfile.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
+        ordering = ['user']
         #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
@@ -266,6 +268,7 @@ class PendingFriendsResource(ModelResource):
         queryset = UserProfile.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
+        ordering = ['user']
         #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
@@ -285,6 +288,7 @@ class NewFriendsResource(ModelResource):
         queryset = UserProfile.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
+        ordering = ['user']
         #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()

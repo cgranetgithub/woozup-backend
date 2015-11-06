@@ -215,7 +215,7 @@ class ProfileResource(ModelResource):
         queryset = UserProfile.objects.all()
         list_allowed_methods = []
         ordering = ['user']
-        detail_allowed_methods = ['get', 'put', 'patch']
+        detail_allowed_methods = ['get']
         #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
@@ -223,13 +223,14 @@ class ProfileResource(ModelResource):
     def get_object_list(self, request):
         return UserProfile.objects.filter(user=request.user)
     
-### WARNING need to restrict to user
-
     def prepend_urls(self):
         return [
             url(r'^(?P<resource_name>%s)/setpicture%s$' %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('setpicture'), name='api_setpicture'),
+            url(r'^(?P<resource_name>%s)/setprofile%s$' %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('setprofile'), name='api_setprofile'),
         ]
 
     def setpicture(self, request, **kwargs):
@@ -245,6 +246,21 @@ class ProfileResource(ModelResource):
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
         (req, result, status) = apifn.setpicture(request, data)
+        return self.create_response(req, result, status)
+
+    def setprofile(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        try:
+            data = self.deserialize(request, request.body, 
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                        {u'reason': u'cannot deserialize data'},
+                                        HttpBadRequest )
+        (req, result, status) = apifn.setprofile(request, data)
         return self.create_response(req, result, status)
 
 class MyFriendsResource(ModelResource):

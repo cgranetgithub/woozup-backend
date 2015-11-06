@@ -25,6 +25,26 @@ def setlast(request, data):
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)
     
+def setprofile(request, data):
+    if request.user and request.user.is_authenticated():
+        first_name = data.get('first_name', '')
+        last_name  = data.get('last_name', '')
+        email      = data.get('email', '')
+        request.user.first_name = first_name
+        request.user.last_name  = last_name
+        request.user.email      = email
+        request.user.save()
+        number = data.get('number', '')
+        gender = data.get('gender', '')
+        request.user.userprofile.phone_number = number
+        if gender in ['MA', 'FE']:
+            request.user.userprofile.gender  = gender
+        request.user.userprofile.save()
+        return (request, {}, HttpResponse)
+    else:
+        return (request, {u'reason': u"You are not authenticated"},
+                HttpUnauthorized)
+
 def setpicture(request, data):
     if request.user and request.user.is_authenticated():
         b64_text = data.get('file', '')

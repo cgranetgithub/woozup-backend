@@ -12,6 +12,7 @@ import apidoc as doc
 from doc import authdoc
 from userprofile.models import UserProfile, UserPosition, get_user_friends
 from service.b64field import Base64FileField
+from link import push
 
 import apifn
 
@@ -161,9 +162,11 @@ class UserResource(ModelResource):
         receiver_id = kwargs['user_id']
         new_sender_status   = 'ACC'
         new_receiver_status = 'PEN'
-        (req, result, status) = apifn.change_link(request, sender_id,
-                                                receiver_id, new_sender_status,
-                                                new_receiver_status)
+        (req, result, status, link, inverted) = apifn.change_link(request,
+                                                    sender_id, receiver_id,
+                                                    new_sender_status,
+                                                    new_receiver_status)
+        push.link_requested(link, inverted)
         return self.create_response(req, result, status)
     
     def ignore(self, request, **kwargs):
@@ -184,9 +187,10 @@ class UserResource(ModelResource):
         sender_id   = kwargs['user_id']
         receiver_id = request.user.id
         new_receiver_status = 'ACC'
-        (req, result, status) = apifn.change_link(request, sender_id,
-                                                receiver_id, None,
-                                                new_receiver_status)
+        (req, result, status, link, inverted) = apifn.change_link(request,
+                                                    sender_id, receiver_id,
+                                                    None, new_receiver_status)
+        push.link_accepted(link, inverted)
         return self.create_response(req, result, status)
     def reject(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -276,9 +280,12 @@ class PendingFriendsResource(ModelResource):
     def get_object_list(self, request):
         userprofile = request.user.userprofile
         links = userprofile.link_as_receiver.filter(receiver_status='PEN')
-        pending = UserProfile.objects.filter(
+        senders = UserProfile.objects.filter(
                                     user_id__in=links.values('sender_id'))
-        return pending
+        links = userprofile.link_as_sender.filter(sender_status='PEN')
+        receivers = UserProfile.objects.filter(
+                                    user_id__in=links.values('receiver_id'))
+        return senders | receivers
 
 class NewFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)

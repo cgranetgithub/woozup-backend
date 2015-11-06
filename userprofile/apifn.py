@@ -1,6 +1,5 @@
 from base64 import b64decode
 
-from link import push
 from link.models import Link
 
 from django.http import HttpResponse
@@ -151,6 +150,7 @@ def change_link(request, sender_id, receiver_id,
     """ Generic function for changing link status
     """
     if request.user and request.user.is_authenticated():
+        inverted = False
         try:
             link = Link.objects.get(sender=sender_id,
                                     receiver=receiver_id)
@@ -158,14 +158,22 @@ def change_link(request, sender_id, receiver_id,
                 link.sender_status = new_sender_status
             if new_receiver_status:
                 link.receiver_status = new_receiver_status
-            link.save()
-            push.link_requested(link)
-            return (request, {}, HttpResponse)
         except Link.DoesNotExist:
-            return (request, {u'reason': u'Link not found'},
-                        HttpForbidden)
-        except:
-            return (request, {u'reason': u'Unexpected'}, HttpForbidden)
+            try:
+                link = Link.objects.get(sender=receiver_id,
+                                        receiver=sender_id)
+                if new_sender_status:
+                    link.receiver_status = new_sender_status
+                if new_receiver_status:
+                    link.sender_status = new_receiver_status
+                inverted = True
+            except Link.DoesNotExist:
+                return (request, {u'reason': u'Link not found'},
+                            HttpForbidden)
+            except:
+                return (request, {u'reason': u'Unexpected'}, HttpForbidden)
+        link.save()
+        return (request, {}, HttpResponse, link, inverted)
     else:
         return (request, {u'reason': u"You are not authenticated"},
                     HttpUnauthorized)

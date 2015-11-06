@@ -1,0 +1,9 @@
+[run]
+source =
+   event
+   link
+   manage.py
+   Procfile
+   service
+   userprofile
+   worker.py

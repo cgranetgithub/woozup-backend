@@ -18,7 +18,8 @@ def event_saved(sender, instance, created, **kwargs):
                              instance.event_type.name, 
                              instance.start.date().isoformat(),
                              instance.start.time().isoformat())
-        send_notification(friends, msg)
+        data = {'ttl':'Rendez-vous', 'msg':msg, 'instance':'event', 'id':instance.id}
+        send_notification(friends, data)
 
 def event_to_be_changed(sender, instance, update_fields, **kwargs):
     #print update_fields ###TOBE FINISHED
@@ -28,7 +29,8 @@ def event_to_be_changed(sender, instance, update_fields, **kwargs):
                             instance.event_type.name, 
                             instance.start.date().isoformat(),
                             instance.start.time().isoformat())
-        send_notification(instance.participants.all(), msg)
+        data = {'ttl':'Rendez-vous', 'msg':msg, 'instance':'event', 'id':instance.id}
+        send_notification(instance.participants.all(), data)
 
 def event_canceled(sender, instance, **kwargs):
     # notify only participants
@@ -36,7 +38,8 @@ def event_canceled(sender, instance, **kwargs):
                           instance.event_type.name, 
                           instance.start.date().isoformat(),
                           instance.start.time().isoformat())
-    send_notification(instance.participants.all(), msg)
+    data = {'ttl':'Rendez-vous', 'msg':msg, 'instance':'event', 'id':instance.id}
+    send_notification(instance.participants.all(), data)
 
 def participant_joined(userprofile, event):
     msg = PARTICIPANT_JOINED%(userprofile.name, event.event_type.name)
@@ -44,11 +47,13 @@ def participant_joined(userprofile, event):
     recepients = [ i for i in event.participants.all() ]
     recepients.append(event.owner)
     recepients.remove(userprofile)
-    send_notification(recepients, msg)
+    data = {'ttl':'Rendez-vous', 'msg':msg, 'instance':'event', 'id':instance.id}
+    send_notification(recepients, data)
 
 def participant_left(userprofile, event):
     msg = PARTICIPANT_LEFT%(userprofile.name, event.event_type.name)
     #recepients = [ i['id'] for i in event.participants.values() ]
     recepients = [ i for i in event.participants.all() ]
     recepients.append(event.owner)
-    send_notification(recepients, msg)
+    data = {'ttl':'Rendez-vous', 'msg':msg, 'instance':'event', 'id':instance.id}
+    send_notification(recepients, data)

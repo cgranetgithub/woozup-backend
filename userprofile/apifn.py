@@ -60,26 +60,26 @@ def setpicture(request, data):
 def register(request, data):
     username = data.get('username', '').lower().strip()
     password = data.get('password', '')
-    name     = data.get('name', '')
-    email    = data.get('email', '').lower().strip()
-    number   = data.get('number', '')
+    #name     = data.get('name', '')
+    #email    = data.get('email', '').lower().strip()
+    #number   = data.get('number', '')
     # check data
     reason = None
     if not username:
         reason = "Username is required"
     if not password:
         reason = "Password is required"
-    if not name:
-        reason = "Name is required"
+    #if not name:
+        #reason = "Name is required"
     if reason:
         return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
     try:
         user = User.objects.get(username=username)
-        #do no return, if user pass correct username+passwd, we can login
+        return (request, {u'reason': u'user already exists',
+                            u'code': '200'}, HttpBadRequest)
     except User.DoesNotExist:
         try:
-            user = User.objects.create_user(username=username, email=email, 
-                                            password=password, first_name=name)
+            user = User.objects.create_user(username=username, password=password)
         except:
             return (request, {u'reason': u'user creation failed',
                               u'code': '300'}, HttpBadRequest)
@@ -87,8 +87,8 @@ def register(request, data):
     if user:
         if user.is_active:
             auth.login(request, user)
-            user.userprofile.phone_number = number
-            user.userprofile.save()
+            #user.userprofile.phone_number = number
+            #user.userprofile.save()
             return (request, {'api_key' : user.api_key.key,
                               'userid'  : request.user.id,
                               'username': user.username,
@@ -97,8 +97,8 @@ def register(request, data):
             return (request, {u'reason': u'inactive user',
                               u'code': '150'}, HttpForbidden)
     else:
-        return (request, {u'reason': u'wrong login/password',
-                          u'code': '200'}, HttpUnauthorized)
+        return (request, {u'reason': u'unable to authenticate',
+                          u'code': '400'}, HttpUnauthorized)
 
 def login(request, data):
     username = data.get('username', '').lower().strip()

@@ -12,8 +12,11 @@ def is_email(email):
 
 def get_clean_emails(contact):
     try:
-        emails = contact.get('emails', '')
+        emails = contact.get('emails')
     except:
+        return []
+    emails = emails.strip()
+    if not emails:
         return []
     raw_email_list = emails.split(',')
     new_email_list = []
@@ -26,8 +29,11 @@ def get_clean_emails(contact):
 
 def get_clean_numbers(contact):
     try:
-        numbers = contact.get('numbers', '')
+        numbers = contact.get('numbers')
     except:
+        return []
+    numbers = numbers.strip()
+    if not numbers:
         return []
     raw_number_list = numbers.split(',')
     new_number_list = []
@@ -51,7 +57,7 @@ def get_clean_numbers(contact):
     #return set(profiles)
 
 def find_users_from_email_list(email_list):
-    profiles = []
+    #profiles = []
     #for email in email_list:
         #profiles += find_users_from_email(email)
     l1 = UserProfile.objects.filter(user__username__in=email_list)

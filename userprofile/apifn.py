@@ -16,29 +16,54 @@ from tastypie.models import ApiKey
 
 def setlast(request, data):
     if request.user and request.user.is_authenticated():
-        last = data.get('last', '')
-        pnt = GEOSGeometry(last)
-        request.user.userposition.last = last
-        request.user.userposition.save()
-        return (request, {}, HttpResponse)
+        try:
+            last = data.get('last').strip()
+        except:
+            return (request, {u'reason': "empty"}, HttpBadRequest)
+        if last:
+            pnt = GEOSGeometry(last)
+            request.user.userposition.last = last
+            request.user.userposition.save()
+            return (request, {}, HttpResponse)
+        else:
+            return (request, {u'reason': "empty"}, HttpBadRequest)
     else:
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)
     
 def setprofile(request, data):
     if request.user and request.user.is_authenticated():
-        first_name = data.get('first_name', '')
-        last_name  = data.get('last_name', '')
-        email      = data.get('email', '')
-        request.user.first_name = first_name
-        request.user.last_name  = last_name
-        request.user.email      = email
+        try:
+            first_name = data.get('first_name').strip()
+            if first_name:
+                request.user.first_name = first_name
+        except:
+            pass
+        try:
+            last_name = data.get('last_name').strip()
+            if last_name:
+                request.user.last_name = last_name
+        except:
+            pass
+        try:
+            email = data.get('email').strip()
+            if email:
+                request.user.email = email
+        except:
+            pass
         request.user.save()
-        number = data.get('number', '')
-        gender = data.get('gender', '')
-        request.user.userprofile.phone_number = number
-        if gender in ['MA', 'FE']:
-            request.user.userprofile.gender  = gender
+        try:
+            number = data.get('number').strip()
+            if number:
+                request.user.userprofile.phone_number = number
+        except:
+            pass
+        try:
+            gender = data.get('gender').strip()
+            if gender in ['MA', 'FE']:
+                request.user.userprofile.gender = gender
+        except:
+            pass
         request.user.userprofile.save()
         return (request, {}, HttpResponse)
     else:
@@ -58,20 +83,21 @@ def setpicture(request, data):
                 HttpUnauthorized)
 
 def register(request, data):
-    username = data.get('username', '').lower().strip()
-    password = data.get('password', '')
-    #name     = data.get('name', '')
-    #email    = data.get('email', '').lower().strip()
-    #number   = data.get('number', '')
-    # check data
-    reason = None
-    if not username:
-        reason = "Username is required"
-    if not password:
-        reason = "Password is required"
-    #if not name:
-        #reason = "Name is required"
-    if reason:
+    reason = "Username is required"
+    try:
+        username = data.get('username').lower().strip()
+        if not username:
+            return (request, {u'reason': reason, u'code': '10'},
+                    HttpBadRequest)
+    except:
+        return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
+    reason = "Password is required"
+    try:
+        password = data.get('password', '').strip()
+        if not password:
+            return (request, {u'reason': reason, u'code': '10'},
+                    HttpBadRequest)
+    except:
         return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
     try:
         user = User.objects.get(username=username)
@@ -102,7 +128,7 @@ def register(request, data):
 
 def login(request, data):
     username = data.get('username', '').lower().strip()
-    password = data.get('password', '')
+    password = data.get('password', '').strip()
     user = auth.authenticate(username=username, password=password)
     if user:
         if user.is_active:
@@ -143,19 +169,32 @@ def check_auth(request):
 
 def gcm(request, data):
     if request.user and request.user.is_authenticated():
-        name = data.get('name', '')
-        device_id = data.get('device_id', '')
-        if isinstance(device_id, unicode):
-            device_id = str(device_id)
-        registration_id = data.get('registration_id', '')
+        try:
+            device_id = data.get('device_id').strip()
+        except:
+            return (request, {u'reason': "empty"}, HttpBadRequest)
+        if device_id:
+            if isinstance(device_id, unicode):
+                device_id = str(device_id)
+        else:
+            return (request, {u'reason': "empty"}, HttpBadRequest)
         try:
             (gcmd, created) = GCMDevice.objects.get_or_create(
                                                     user=request.user,
                                                     #name=name, 
                                                     device_id=device_id)
-            gcmd.registration_id = registration_id
-            gcmd.device_id = device_id
-            gcmd.name = name
+            try:
+                registration_id = data.get('registration_id').strip()
+                if registration_id:
+                    gcmd.registration_id = registration_id
+            except:
+                pass
+            try:
+                name = data.get('name').strip()
+                if name:
+                    gcmd.name = name
+            except:
+                pass
             gcmd.save()
             return (request, {'userid':request.user.id }, HttpResponse)
         except:

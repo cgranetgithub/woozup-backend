@@ -1,0 +1,13 @@
+install http://postgresapp.com/
+
+cd /Applications/Postgres.app/Contents/Versions/9.4/bin
+
+./createuser --pwprompt --superuser testdjango
+./createdb -Otestdjango -Eutf8 geoevent
+./psql -U testdjango -W geoevent
+
+CREATE EXTENSION postgis;
+
+$ sudo mv /usr/lib/libpq.5.dylib /usr/lib/libpq.5.dylib.old
+$ sudo ln -s /Applications/Postgres.app/Contents/Versions/9.4/lib/libpq.5.dylib /usr/lib
+ 

@@ -20,7 +20,11 @@ pip install -r requirements.txt
 # for DEV
 pip install -r dev-reqs.txt
 
-
+ON MAC
+------
+$ brew install gdal
+$ brew install libgeoip
+install http://postgresapp.com
 
 ARCHIVE
 -------

@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 from django.contrib import admin
 
 from tastypie.api import Api
@@ -8,7 +8,7 @@ from event.api import *
 from userprofile.api import *
 #from service.notification import GCMDeviceAuthenticatedResource
 
-from userprofile.views import register_by_access_token
+from userprofile.views import *
 
 def module_exists(module_name):
     try:
@@ -36,22 +36,23 @@ v1_api.register(AuthResource())
 v1_api.register(InviteResource())
 v1_api.register(ContactResource())
 
-urlpatterns = patterns('',
+urlpatterns = [
     url('', include('social.apps.django_app.urls', namespace='social')),
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
-    url(r'^$', 'userprofile.views.social_login'),
-    url(r'^home/$', 'userprofile.views.home'),
-    url(r'^logout/$', 'userprofile.views.social_logout'),
-)
+    url(r'^$', social_login),
+    url(r'^home/$', home),
+    url(r'^logout/$', social_logout),
+]
 
 if module_exists('tastypie_swagger'):
-    urlpatterns += patterns('',
-        url(r'api/doc/',
-        include('tastypie_swagger.urls', namespace='v1_api_tastypie_swagger'),
-        kwargs={
-            "tastypie_api_module":v1_api,
-            "namespace":"v1_api_tastypie_swagger",
-            "version": "0.1"})
-    )
+    urlpatterns += [
+        url(r'api/doc/', include('tastypie_swagger.urls',
+                                 namespace='v1_api_tastypie_swagger'),
+                         kwargs={
+                            "tastypie_api_module":v1_api,
+                            "namespace":"v1_api_tastypie_swagger",
+                            "version": "0.1"}
+        )
+    ]

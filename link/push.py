@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from userprofile.models import get_user_friends
 from service.notification import send_notification
 
 REQUEST_LINK = u"%s souhaite se connecter avec vous"

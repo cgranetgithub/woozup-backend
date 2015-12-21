@@ -14,7 +14,7 @@ from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
 from event.models import EventCategory, EventType, Event
 from userprofile.api import ProfileResource
-from userprofile.models import get_user_friends
+from userprofile.utils import get_user_friends
 
 import apifn
 

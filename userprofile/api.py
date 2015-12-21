@@ -10,7 +10,8 @@ from django.contrib.auth.models import User
 
 import apidoc as doc
 from doc import authdoc
-from userprofile.models import UserProfile, UserPosition, get_user_friends
+from userprofile.models import UserProfile, UserPosition
+from userprofile.utils import get_user_friends
 from service.b64field import Base64FileField
 from link import push
 

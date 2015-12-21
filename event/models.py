@@ -65,8 +65,6 @@ class Event(models.Model):
 autofield, not modifiable""")
     updated_at = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
-    # overriding the default manager with a GeoManager instance.
-    objects = models.GeoManager()
 
     def __unicode__(self):
         return u"%s (%s)"%(self.name, self.event_type)

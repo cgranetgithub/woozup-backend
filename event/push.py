@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from userprofile.models import get_user_friends
+from userprofile.utils import get_user_friends
 from service.notification import send_notification
-from django.contrib.gis.functions import Distance
+#from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
 EVENT_CREATED = u"%s vous invite à %s"
 EVENT_MODIFIED = u"%s a modifié '%s'"
@@ -12,20 +13,19 @@ PARTICIPANT_LEFT = u"%s a annulé '%s'"
 
 def event_saved(sender, instance, created, **kwargs):
     if created:
-        # check distance
-        #print Distance(instance.owner.user.userposition.last,
-                       #instance.location_coords)
-        # notify owner's friends which are close enough to the event
+        # notify owner's friends who are close enough to the event
         friends = get_user_friends(instance.owner)
+        close_friends = friends.filter(user__userposition__last__distance_lte=(
+                                        instance.location_coords, D(km=100)))
         ###WARNING filter based on distance
         msg = EVENT_CREATED%(instance.owner.name, 
                              instance.event_type.name)
         data = {'ttl':'Invitation Woozup', 'msg':msg,
                 'instance':'event', 'id':instance.id}
-        send_notification(friends, data)
+        send_notification(close_friends, data)
 
 def event_to_be_changed(sender, instance, update_fields, **kwargs):
-    #print update_fields ###TOBE FINISHED
+    #print update_fields ### TO BE FINISHED
     if update_fields:
         # notify only participants
         msg = EVENT_MODIFIED%(instance.owner.userprofile.name, 

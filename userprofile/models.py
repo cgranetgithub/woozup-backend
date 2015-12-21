@@ -49,8 +49,6 @@ Type: Geometry, Entry format: GeoJson (example: "{ 'type' : 'Point',
 'coordinates' : [125.6, 10.1] }")<br>""")
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
-    # overriding the default manager with a GeoManager instance.
-    objects = models.GeoManager()
     def __unicode__(self):
         return u'%s %s'%(self.user, self.last)
     class Meta:
@@ -66,25 +64,3 @@ def create_profiles(sender, instance, created, **kwargs):
 post_save.connect(create_profiles  , sender=settings.AUTH_USER_MODEL)
 post_save.connect(create_api_key   , sender=settings.AUTH_USER_MODEL)
 #post_save.connect(transform_invites, sender=settings.AUTH_USER_MODEL)
-
-def get_user_friends(userprofile):
-    #return UserProfile.objects.filter(
-                        #( Q(link_as_sender__sender    =userprofile) |
-                          #Q(link_as_sender__receiver  =userprofile) |
-                          #Q(link_as_receiver__sender  =userprofile) |
-                          #Q(link_as_receiver__receiver=userprofile) ),
-                        #( Q(link_as_sender__sender_status='ACC') &
-                          #Q(link_as_sender__receiver_status='ACC') ) |
-                        #( Q(link_as_receiver__sender_status='ACC') &
-                          #Q(link_as_receiver__receiver_status='ACC') ) )
-    link_as_sender = userprofile.link_as_sender.filter(
-                            sender_status='ACC',
-                            receiver_status='ACC')
-    receivers = UserProfile.objects.filter(
-                            user_id__in=link_as_sender.values('receiver_id'))
-    link_as_receiver = userprofile.link_as_receiver.filter(
-                            sender_status='ACC',
-                            receiver_status='ACC')
-    senders = UserProfile.objects.filter(
-                            user_id__in=link_as_receiver.values('sender_id'))
-    return senders | receivers

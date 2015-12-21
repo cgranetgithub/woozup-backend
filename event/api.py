@@ -14,7 +14,7 @@ from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
 from event.models import EventCategory, EventType, Event
 from userprofile.api import ProfileResource
-from userprofile.models import get_user_friends
+from userprofile.utils import get_user_friends
 
 import apifn
 
@@ -141,7 +141,7 @@ User leaves an event, that is, is removed from the participant list.""",
         # filter by distance
         if user.userposition.last:
             events = events.filter(location_coords__distance_lte=(
-                                                user.userposition.last, D(km=100)))
+                                            user.userposition.last, D(km=100)))
         return events
 
     def prepend_urls(self):

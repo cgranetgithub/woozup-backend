@@ -1,6 +1,6 @@
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
-from service.utils import image_path
+#from service.utils import image_path
 
 # state is independent of the notification sending
 NEW      = 'NEW' # default state after automatic creation
@@ -86,10 +86,10 @@ class Invite(models.Model):
     emails  = models.CharField(max_length=255, blank=True,
                                help_text=u'email addresses list')
     photo   = models.CharField(max_length=255, blank=True,
-                             help_text='local path in the device to a picture')
-    avatar  = models.ImageField(upload_to=image_path,
-                               blank=True, null=True,
-                               help_text='not used for now')
+                               help_text='local path in the device to a picture')
+    #avatar  = models.ImageField(upload_to=image_path,
+                               #blank=True, null=True,
+                               #help_text='not used for now')
     status  = models.CharField(max_length=3, choices=INVITE_STATUS, default=NEW)
     sent_at = models.DateTimeField(blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""

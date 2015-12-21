@@ -1,6 +1,5 @@
 from base64 import b64decode
 
-from link import push
 from link.models import Link
 
 from django.http import HttpResponse
@@ -17,15 +16,60 @@ from tastypie.models import ApiKey
 
 def setlast(request, data):
     if request.user and request.user.is_authenticated():
-        last = data.get('last', '')
-        pnt = GEOSGeometry(last)
-        request.user.userposition.last = last
-        request.user.userposition.save()
-        return (request, {}, HttpResponse)
+        try:
+            last = data.get('last').strip()
+        except:
+            return (request, {u'reason': "empty"}, HttpBadRequest)
+        if last:
+            pnt = GEOSGeometry(last)
+            request.user.userposition.last = last
+            request.user.userposition.save()
+            return (request, {}, HttpResponse)
+        else:
+            return (request, {u'reason': "empty"}, HttpBadRequest)
     else:
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)
     
+def setprofile(request, data):
+    if request.user and request.user.is_authenticated():
+        try:
+            first_name = data.get('first_name').strip()
+            if first_name:
+                request.user.first_name = first_name
+        except:
+            pass
+        try:
+            last_name = data.get('last_name').strip()
+            if last_name:
+                request.user.last_name = last_name
+        except:
+            pass
+        try:
+            email = data.get('email').strip()
+            if email:
+                request.user.email = email
+        except:
+            pass
+        request.user.save()
+        try:
+            number = data.get('number').strip()
+            if number:
+                request.user.userprofile.phone_number = number
+        except:
+            pass
+        try:
+            gender = data.get('gender').strip()
+            if gender in ['MA', 'FE']:
+                request.user.userprofile.gender = gender
+        except:
+            pass
+        request.user.userprofile.save()
+        return (request, {}, HttpResponse)
+    else:
+        return (request, {u'reason': u"You are not authenticated"},
+                HttpUnauthorized)
+
 def setpicture(request, data):
     if request.user and request.user.is_authenticated():
         b64_text = data.get('file', '')
@@ -39,28 +83,29 @@ def setpicture(request, data):
                 HttpUnauthorized)
 
 def register(request, data):
-    username = data.get('username', '').lower().strip()
-    password = data.get('password', '')
-    name     = data.get('name', '')
-    email    = data.get('email', '').lower().strip()
-    number   = data.get('number', '')
-    # check data
-    reason = None
-    if not username:
-        reason = "Username is required"
-    if not password:
-        reason = "Password is required"
-    if not name:
-        reason = "Name is required"
-    if reason:
+    reason = "Username is required"
+    try:
+        username = data.get('username').lower().strip()
+        if not username:
+            return (request, {u'reason': reason, u'code': '10'},
+                    HttpBadRequest)
+    except:
+        return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
+    reason = "Password is required"
+    try:
+        password = data.get('password', '').strip()
+        if not password:
+            return (request, {u'reason': reason, u'code': '10'},
+                    HttpBadRequest)
+    except:
         return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
     try:
         user = User.objects.get(username=username)
-        #do no return, if user pass correct username+passwd, we can login
+        return (request, {u'reason': u'user already exists',
+                            u'code': '200'}, HttpBadRequest)
     except User.DoesNotExist:
         try:
-            user = User.objects.create_user(username=username, email=email, 
-                                            password=password, first_name=name)
+            user = User.objects.create_user(username=username, password=password)
         except:
             return (request, {u'reason': u'user creation failed',
                               u'code': '300'}, HttpBadRequest)
@@ -68,8 +113,8 @@ def register(request, data):
     if user:
         if user.is_active:
             auth.login(request, user)
-            user.userprofile.phone_number = number
-            user.userprofile.save()
+            #user.userprofile.phone_number = number
+            #user.userprofile.save()
             return (request, {'api_key' : user.api_key.key,
                               'userid'  : request.user.id,
                               'username': user.username,
@@ -78,12 +123,12 @@ def register(request, data):
             return (request, {u'reason': u'inactive user',
                               u'code': '150'}, HttpForbidden)
     else:
-        return (request, {u'reason': u'wrong login/password',
-                          u'code': '200'}, HttpUnauthorized)
+        return (request, {u'reason': u'unable to authenticate',
+                          u'code': '400'}, HttpUnauthorized)
 
 def login(request, data):
     username = data.get('username', '').lower().strip()
-    password = data.get('password', '')
+    password = data.get('password', '').strip()
     user = auth.authenticate(username=username, password=password)
     if user:
         if user.is_active:
@@ -124,19 +169,32 @@ def check_auth(request):
 
 def gcm(request, data):
     if request.user and request.user.is_authenticated():
-        name = data.get('name', '')
-        device_id = data.get('device_id', '')
-        if isinstance(device_id, unicode):
-            device_id = str(device_id)
-        registration_id = data.get('registration_id', '')
+        try:
+            device_id = data.get('device_id').strip()
+        except:
+            return (request, {u'reason': "empty"}, HttpBadRequest)
+        if device_id:
+            if isinstance(device_id, unicode):
+                device_id = str(device_id)
+        else:
+            return (request, {u'reason': "empty"}, HttpBadRequest)
         try:
             (gcmd, created) = GCMDevice.objects.get_or_create(
                                                     user=request.user,
                                                     #name=name, 
                                                     device_id=device_id)
-            gcmd.registration_id = registration_id
-            gcmd.device_id = device_id
-            gcmd.name = name
+            try:
+                registration_id = data.get('registration_id').strip()
+                if registration_id:
+                    gcmd.registration_id = registration_id
+            except:
+                pass
+            try:
+                name = data.get('name').strip()
+                if name:
+                    gcmd.name = name
+            except:
+                pass
             gcmd.save()
             return (request, {'userid':request.user.id }, HttpResponse)
         except:
@@ -151,6 +209,7 @@ def change_link(request, sender_id, receiver_id,
     """ Generic function for changing link status
     """
     if request.user and request.user.is_authenticated():
+        inverted = False
         try:
             link = Link.objects.get(sender=sender_id,
                                     receiver=receiver_id)
@@ -158,14 +217,22 @@ def change_link(request, sender_id, receiver_id,
                 link.sender_status = new_sender_status
             if new_receiver_status:
                 link.receiver_status = new_receiver_status
-            link.save()
-            push.link_requested(link)
-            return (request, {}, HttpResponse)
         except Link.DoesNotExist:
-            return (request, {u'reason': u'Link not found'},
-                        HttpForbidden)
-        except:
-            return (request, {u'reason': u'Unexpected'}, HttpForbidden)
+            try:
+                link = Link.objects.get(sender=receiver_id,
+                                        receiver=sender_id)
+                if new_sender_status:
+                    link.receiver_status = new_sender_status
+                if new_receiver_status:
+                    link.sender_status = new_receiver_status
+                inverted = True
+            except Link.DoesNotExist:
+                return (request, {u'reason': u'Link not found'},
+                            HttpForbidden)
+            except:
+                return (request, {u'reason': u'Unexpected'}, HttpForbidden)
+        link.save()
+        return (request, {}, HttpResponse, link, inverted)
     else:
         return (request, {u'reason': u"You are not authenticated"},
                     HttpUnauthorized)

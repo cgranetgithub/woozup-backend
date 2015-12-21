@@ -23,9 +23,9 @@ def join(request, event_id):
                 return (request, {u'reason': u'You cannot join your own event'},
                         HttpForbidden)
         except Event.DoesNotExist:
-            return (request, {u'reason': u'Event not found'}, HttpForbidden)
+            return (request, {u'reason': u'Event not found'}, HttpBadRequest)
         except:
-            return (request, {u'reason': u'Unexpected'}, HttpForbidden)
+            return (request, {u'reason': u'Unexpected'}, HttpBadRequest)
     else:
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)

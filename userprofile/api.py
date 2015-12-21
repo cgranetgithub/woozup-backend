@@ -10,8 +10,10 @@ from django.contrib.auth.models import User
 
 import apidoc as doc
 from doc import authdoc
-from userprofile.models import UserProfile, UserPosition, get_user_friends
+from userprofile.models import UserProfile, UserPosition
+from userprofile.utils import get_user_friends
 from service.b64field import Base64FileField
+from link import push
 
 import apifn
 
@@ -161,9 +163,11 @@ class UserResource(ModelResource):
         receiver_id = kwargs['user_id']
         new_sender_status   = 'ACC'
         new_receiver_status = 'PEN'
-        (req, result, status) = apifn.change_link(request, sender_id,
-                                                receiver_id, new_sender_status,
-                                                new_receiver_status)
+        (req, result, status, link, inverted) = apifn.change_link(request,
+                                                    sender_id, receiver_id,
+                                                    new_sender_status,
+                                                    new_receiver_status)
+        push.link_requested(link, inverted)
         return self.create_response(req, result, status)
     
     def ignore(self, request, **kwargs):
@@ -184,9 +188,10 @@ class UserResource(ModelResource):
         sender_id   = kwargs['user_id']
         receiver_id = request.user.id
         new_receiver_status = 'ACC'
-        (req, result, status) = apifn.change_link(request, sender_id,
-                                                receiver_id, None,
-                                                new_receiver_status)
+        (req, result, status, link, inverted) = apifn.change_link(request,
+                                                    sender_id, receiver_id,
+                                                    None, new_receiver_status)
+        push.link_accepted(link, inverted)
         return self.create_response(req, result, status)
     def reject(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -211,7 +216,7 @@ class ProfileResource(ModelResource):
         queryset = UserProfile.objects.all()
         list_allowed_methods = []
         ordering = ['user']
-        detail_allowed_methods = ['get', 'put', 'patch']
+        detail_allowed_methods = ['get']
         #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
@@ -219,13 +224,14 @@ class ProfileResource(ModelResource):
     def get_object_list(self, request):
         return UserProfile.objects.filter(user=request.user)
     
-### WARNING need to restrict to user
-
     def prepend_urls(self):
         return [
             url(r'^(?P<resource_name>%s)/setpicture%s$' %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('setpicture'), name='api_setpicture'),
+            url(r'^(?P<resource_name>%s)/setprofile%s$' %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('setprofile'), name='api_setprofile'),
         ]
 
     def setpicture(self, request, **kwargs):
@@ -241,6 +247,21 @@ class ProfileResource(ModelResource):
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
         (req, result, status) = apifn.setpicture(request, data)
+        return self.create_response(req, result, status)
+
+    def setprofile(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        try:
+            data = self.deserialize(request, request.body, 
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                        {u'reason': u'cannot deserialize data'},
+                                        HttpBadRequest )
+        (req, result, status) = apifn.setprofile(request, data)
         return self.create_response(req, result, status)
 
 class MyFriendsResource(ModelResource):
@@ -276,9 +297,12 @@ class PendingFriendsResource(ModelResource):
     def get_object_list(self, request):
         userprofile = request.user.userprofile
         links = userprofile.link_as_receiver.filter(receiver_status='PEN')
-        pending = UserProfile.objects.filter(
+        senders = UserProfile.objects.filter(
                                     user_id__in=links.values('sender_id'))
-        return pending
+        links = userprofile.link_as_sender.filter(sender_status='PEN')
+        receivers = UserProfile.objects.filter(
+                                    user_id__in=links.values('receiver_id'))
+        return senders | receivers
 
 class NewFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)

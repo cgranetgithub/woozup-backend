@@ -1,12 +1,12 @@
 from django.contrib.gis.db import models
-from service.utils import image_path
+#from service.utils import image_path
 
 class EventCategory(models.Model):
     name        = models.CharField(max_length=50)
     short_name  = models.CharField(max_length=20)
     description = models.CharField(max_length=255)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
-    image       = models.ImageField(upload_to='glyph')
+    image       = models.ImageField(upload_to='category_image')
     style       = models.CharField(max_length=255, blank=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
@@ -22,7 +22,9 @@ class EventType(models.Model):
     category    = models.ManyToManyField(EventCategory)
     order       = models.PositiveSmallIntegerField(blank=True, null=True)
     style       = models.CharField(max_length=255, blank=True)
-    image       = models.ImageField(upload_to='glyph',
+    icon        = models.ImageField(upload_to='type_icon',
+                                    blank=True, null=True)
+    background  = models.ImageField(upload_to='type_bg',
                                     blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
@@ -52,7 +54,9 @@ class Event(models.Model):
     location_coords = models.GeometryField(null=True, blank=True,
                     help_text=u"""Type: Geometry, Entry format: GeoJson 
 (example: "{ 'type':'Point', 'coordinates':[125.6, 10.1] }")<br>""")
-    image      = models.ImageField(upload_to=image_path,
+    #image      = models.ImageField(upload_to=image_path,
+                                   #blank=True, null=True)
+    image      = models.ImageField(upload_to='event_image',
                                    blank=True, null=True)
     participants = models.ManyToManyField('userprofile.UserProfile',
                                           blank=True,
@@ -61,8 +65,6 @@ class Event(models.Model):
 autofield, not modifiable""")
     updated_at = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
-    # overriding the default manager with a GeoManager instance.
-    objects = models.GeoManager()
 
     def __unicode__(self):
         return u"%s (%s)"%(self.name, self.event_type)

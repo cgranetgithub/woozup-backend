@@ -27,7 +27,7 @@ class UserProfile(models.Model):
 autofield, not modifiable""")
     @property
     def name(self):
-        return self.user.get_full_name()
+        return self.user.get_full_name() or self.user.username
     @property
     def email(self):
         return self.user.email

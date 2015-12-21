@@ -21,7 +21,7 @@ def event_saved(sender, instance, created, **kwargs):
         msg = EVENT_CREATED%(instance.owner.name, 
                              instance.event_type.name)
         data = {'ttl':'Invitation Woozup', 'msg':msg,
-                'instance':'event', 'id':instance.id}
+                'reason':'newevent', 'id':instance.id}
         send_notification(close_friends, data)
 
 def event_to_be_changed(sender, instance, update_fields, **kwargs):
@@ -31,7 +31,7 @@ def event_to_be_changed(sender, instance, update_fields, **kwargs):
         msg = EVENT_MODIFIED%(instance.owner.userprofile.name, 
                             instance.name)
         data = {'ttl':'Changement Woozup', 'msg':msg,
-                'instance':'event', 'id':instance.id}
+                'reason':'eventchanged', 'id':instance.id}
         send_notification(instance.participants.all(), data)
 
 def event_canceled(sender, instance, **kwargs):
@@ -39,7 +39,7 @@ def event_canceled(sender, instance, **kwargs):
     msg = EVENT_CANCELED%(instance.owner.name, 
                           instance.name)
     data = {'ttl':' Annulation Woozup', 'msg':msg,
-            'instance':'event', 'id':instance.id}
+            'reason':'eventcanceled', 'id':instance.id}
     send_notification(instance.participants.all(), data)
 
 def participant_joined(userprofile, event):
@@ -48,7 +48,7 @@ def participant_joined(userprofile, event):
     recepients = [ i for i in event.participants.all() ]
     recepients.append(event.owner)
     recepients.remove(userprofile)
-    data = {'ttl':'Woozup', 'msg':msg, 'instance':'event', 'id':event.id}
+    data = {'ttl':'Woozup', 'msg':msg, 'reason':'joinevent', 'id':event.id}
     send_notification(recepients, data)
 
 def participant_left(userprofile, event):
@@ -56,5 +56,5 @@ def participant_left(userprofile, event):
     #recepients = [ i['id'] for i in event.participants.values() ]
     recepients = [ i for i in event.participants.all() ]
     recepients.append(event.owner)
-    data = {'ttl':'Woozup', 'msg':msg, 'instance':'event', 'id':event.id}
+    data = {'ttl':'Woozup', 'msg':msg, 'reason':'leftevent', 'id':event.id}
     send_notification(recepients, data)

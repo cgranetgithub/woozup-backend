@@ -173,10 +173,7 @@ def push_notif_reg(request, data):
             device_id = data.get('device_id').strip()
         except:
             return (request, {u'reason': "empty device_id"}, HttpBadRequest)
-        if device_id:
-            if isinstance(device_id, unicode):
-                device_id = str(device_id)
-        else:
+        if not device_id:
             return (request, {u'reason': "empty device_id"}, HttpBadRequest)
         try:
             platform = data.get('platform').strip()
@@ -190,14 +187,12 @@ def push_notif_reg(request, data):
             return (request, {u'reason': "empty platform"}, HttpBadRequest)
         try:
             if platform == 'ios':
-                (device, created) = GCMDevice.objects.get_or_create(
-                                                    user=request.user,
-                                                    #name=name,
-                                                    device_id=device_id)
-            elif platform == 'android':
                 (device, created) = APNSDevice.objects.get_or_create(
                                                     user=request.user,
-                                                    #name=name,
+                                                    device_id=device_id)
+            elif platform == 'android':
+                (device, created) = GCMDevice.objects.get_or_create(
+                                                    user=request.user,
                                                     device_id=device_id)
             else:
                 return (request, {u'reason': "unknown platform"}, HttpBadRequest)

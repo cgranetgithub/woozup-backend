@@ -143,11 +143,12 @@ EMAIL_USE_TLS = False
 GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
 GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
 
-# Notification to mobiles
+
+# PUSH NOTIFICATIONS
 PUSH_NOTIFICATIONS_SETTINGS = {
-        "GCM_API_KEY": os.environ.get("GCM_API_KEY", ""),
-        #"APNS_CERTIFICATE": "/path/to/your/certificate.pem",
-        }
+    "GCM_API_KEY": os.environ.get("GCM_API_KEY", ""),
+    "APNS_CERTIFICATE": "./pushcert.pem"
+}
 
 # Cache settings.
 CACHES = {

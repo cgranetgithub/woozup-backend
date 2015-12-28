@@ -3,11 +3,10 @@ Logout the user. <br><br>"""
 UserResourceCheckAuth = u"""[Custom API] - Requires authentication<br><br>
 Check the user authentication status.<br><br>
 Return a dict with { 'api_key' : API key, 'userid' : User ID }."""
-UserResourceGCM = u"""[Custom API] - Requires authentication - 
-Android only<br><br>
-Update the "Google Cloud Messaging" registration_id of the device.<br>This ID is
-used to send push notification to the device, via the GCM service."""
-UserResourceGCMfields = { "name": {
+UserResourcePushNotifReg = u"""[Custom API] - Requires authentication <br><br>
+Update the registration_id / token of the device.<br>This ID is
+used to send push notification to the device, via the GCM/APN service."""
+UserResourcePushNotifRegFields = { "name": {
         "type": "string",
         "required": True,
         "description": "Device name" },
@@ -21,7 +20,7 @@ UserResourceGCMfields = { "name": {
         "description": "Registration ID" },
     }
 AuthResourceRegister = u"""[Custom API] - Does not require authentication
-<br><br>Create a new User in the backend, as well as its UserProfile and 
+<br><br>Create a new User in the backend, as well as its UserProfile and
 UserPosition (location profile).<br>Then authenticate and login the user.
 <br><br>Return a dict with { 'api_key' : API key, 'userid' : User ID }."""
 AuthResourceRegisterFields = { "username": {
@@ -45,5 +44,3 @@ AuthResourceLoginFields = { "username": {
                                 "required": True,
                                 "description": u"password passed as a data" },
                           }
-
-

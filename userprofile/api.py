@@ -44,7 +44,7 @@ class PositionResource(ModelResource):
         self.is_authenticated(request)
         self.throttle_check(request)
         try:
-            data = self.deserialize(request, request.body, 
+            data = self.deserialize(request, request.body,
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
@@ -53,12 +53,12 @@ class PositionResource(ModelResource):
                                         HttpBadRequest )
         (req, result, status) = apifn.setlast(request, data)
         return self.create_response(req, result, status)
-    
+
 class UserResource(ModelResource):
     """
     An API for accessing a User, requires authentication
     """
-    #profile = fields.ToOneField(ProfileResource, 
+    #profile = fields.ToOneField(ProfileResource,
                                 #'userprofile', full=True)
                                ##'userprofile', related_name='user', full=True)
     class Meta:
@@ -74,7 +74,7 @@ class UserResource(ModelResource):
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
         # for the doc:
-        extra_actions = [ 
+        extra_actions = [
             {   "name": u"logout",
                 "http_method": u"GET",
                 "resource_type": u"list",
@@ -87,11 +87,11 @@ class UserResource(ModelResource):
                 "summary": doc.UserResourceCheckAuth,
                 "fields": authdoc
             } ,
-            {   "name": u"gcm",
+            {   "name": u"push_notif_reg",
                 "http_method": u"POST",
                 "resource_type": "list",
-                "summary": doc.UserResourceGCM,
-                "fields": dict( authdoc.items() + doc.UserResourceGCMfields.items() )
+                "summary": doc.UserResourcePushNotifReg,
+                "fields": dict( authdoc.items() + doc.UserResourcePushNotifRegFields.items() )
             } ,
         ]
 
@@ -108,9 +108,9 @@ class UserResource(ModelResource):
             url(r'^(?P<resource_name>%s)/check_auth%s$' %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('check_auth'), name='api_check_auth'),
-            url(r'^(?P<resource_name>%s)/gcm%s$' %
+            url(r'^(?P<resource_name>%s)/push_notif_reg%s$' %
                 (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('gcm'), name='api_gcm'),
+                self.wrap_view('push_notif_reg'), name='api_push_notif_reg'),
             url(r"^(?P<resource_name>%s)/invite/(?P<user_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('invite'), name="api_invite"),
@@ -131,7 +131,7 @@ class UserResource(ModelResource):
         self.throttle_check(request)
         (req, result, status) = apifn.logout(request)
         return self.create_response(req, result, status)
-        
+
     def check_auth(self, request, **kwargs):
         #
         self.method_check(request, allowed=['get'])
@@ -139,22 +139,22 @@ class UserResource(ModelResource):
         self.throttle_check(request)
         (req, result, status) = apifn.check_auth(request)
         return self.create_response(req, result, status)
-        
-    def gcm(self, request, **kwargs):
+
+    def push_notif_reg(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
         try:
-            data = self.deserialize(request, request.body, 
+            data = self.deserialize(request, request.body,
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
             return self.create_response(request,
                                     {u'reason': u'cannot deserialize data'},
                                     HttpBadRequest )
-        (req, result, status) = apifn.gcm(request, data)
+        (req, result, status) = apifn.push_notif_reg(request, data)
         return self.create_response(req, result, status)
-        
+
     def invite(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
@@ -169,7 +169,7 @@ class UserResource(ModelResource):
                                                     new_receiver_status)
         push.link_requested(link, inverted)
         return self.create_response(req, result, status)
-    
+
     def ignore(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
@@ -223,7 +223,7 @@ class ProfileResource(ModelResource):
 
     def get_object_list(self, request):
         return UserProfile.objects.filter(user=request.user)
-    
+
     def prepend_urls(self):
         return [
             url(r'^(?P<resource_name>%s)/setpicture%s$' %
@@ -239,7 +239,7 @@ class ProfileResource(ModelResource):
         self.is_authenticated(request)
         self.throttle_check(request)
         try:
-            data = self.deserialize(request, request.body, 
+            data = self.deserialize(request, request.body,
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
@@ -254,7 +254,7 @@ class ProfileResource(ModelResource):
         self.is_authenticated(request)
         self.throttle_check(request)
         try:
-            data = self.deserialize(request, request.body, 
+            data = self.deserialize(request, request.body,
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
@@ -337,7 +337,7 @@ class AuthResource(ModelResource):
         allowed_methods = []
         resource_name = 'auth'
         # for the doc:
-        extra_actions = [ 
+        extra_actions = [
             {"name": u"register",
              "http_method": u"POST",
              "resource_type": u"list",
@@ -365,7 +365,7 @@ class AuthResource(ModelResource):
     def register(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
-            data = self.deserialize(request, request.body, 
+            data = self.deserialize(request, request.body,
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
@@ -374,11 +374,11 @@ class AuthResource(ModelResource):
                                         HttpBadRequest )
         (req, result, status) = apifn.register(request, data)
         return self.create_response(req, result, status)
-    
+
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
-            data = self.deserialize(request, request.body, 
+            data = self.deserialize(request, request.body,
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:

@@ -30,7 +30,7 @@ def setlast(request, data):
     else:
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)
-    
+
 def setprofile(request, data):
     if request.user and request.user.is_authenticated():
         try:
@@ -167,38 +167,51 @@ def check_auth(request):
         return (request, {u'reason': u"You are not authenticated"},
                     HttpUnauthorized)
 
-def gcm(request, data):
+def push_notif_reg(request, data):
     if request.user and request.user.is_authenticated():
         try:
             device_id = data.get('device_id').strip()
         except:
-            return (request, {u'reason': "empty"}, HttpBadRequest)
+            return (request, {u'reason': "empty device_id"}, HttpBadRequest)
         if device_id:
             if isinstance(device_id, unicode):
                 device_id = str(device_id)
         else:
-            return (request, {u'reason': "empty"}, HttpBadRequest)
+            return (request, {u'reason': "empty device_id"}, HttpBadRequest)
         try:
-            (gcmd, created) = GCMDevice.objects.get_or_create(
+            platform = data.get('platform').strip()
+        except:
+            return (request, {u'reason': "empty platform"}, HttpBadRequest)
+        try:
+            registration_id = data.get('registration_id').strip()
+            if not registration_id:
+                return (request, {u'reason': "empty registration_id"}, HttpBadRequest)
+        except:
+            return (request, {u'reason': "empty platform"}, HttpBadRequest)
+        try:
+            if platform == 'ios':
+                (device, created) = GCMDevice.objects.get_or_create(
                                                     user=request.user,
-                                                    #name=name, 
+                                                    #name=name,
                                                     device_id=device_id)
-            try:
-                registration_id = data.get('registration_id').strip()
-                if registration_id:
-                    gcmd.registration_id = registration_id
-            except:
-                pass
+            elif platform == 'android':
+                (device, created) = APNSDevice.objects.get_or_create(
+                                                    user=request.user,
+                                                    #name=name,
+                                                    device_id=device_id)
+            else:
+                return (request, {u'reason': "unknown platform"}, HttpBadRequest)
+            device.registration_id = registration_id
             try:
                 name = data.get('name').strip()
                 if name:
-                    gcmd.name = name
+                    device.name = name
             except:
                 pass
-            gcmd.save()
+            device.save()
             return (request, {'userid':request.user.id }, HttpResponse)
         except:
-            return (request, {u'reason': u'cannot create this gcm'},
+            return (request, {u'reason': u'error during registration'},
                         HttpBadRequest)
     else:
         return (request, {u'reason': u"You are not authenticated"},

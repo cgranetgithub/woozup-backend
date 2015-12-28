@@ -147,7 +147,7 @@ GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
 # PUSH NOTIFICATIONS
 PUSH_NOTIFICATIONS_SETTINGS = {
     "GCM_API_KEY": os.environ.get("GCM_API_KEY", ""),
-    "APNS_CERTIFICATE": "./pushcert.pem"
+    "APNS_CERTIFICATE": os.path.join(BASE_DIR, "pushcert.pem")
 }
 
 # Cache settings.

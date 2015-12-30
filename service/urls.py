@@ -44,6 +44,7 @@ urlpatterns = [
     url(r'^$', social_login),
     url(r'^home/$', home),
     url(r'^logout/$', social_logout),
+    url(r'^accounts/', include('allauth.urls')),
 ]
 
 if module_exists('tastypie_swagger'):

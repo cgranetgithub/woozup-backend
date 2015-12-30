@@ -29,11 +29,7 @@ del DEFAULT_FILE_STORAGE
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
 
-EMAIL_HOST = 'auth.smtp.1and1.fr'
-EMAIL_HOST_USER = 'contact@linbees.com'
-EMAIL_HOST_PASSWORD = 'pwd'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 TASTYPIE_SWAGGER_API_MODULE = 'service.urls.v1_api'
 
@@ -42,3 +38,5 @@ TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
 TEST_OUTPUT_VERBOSE = True
 TEST_OUTPUT_DESCRIPTIONS = True
 TEST_OUTPUT_DIR = 'xmlrunner'
+
+SITE_ID = 2

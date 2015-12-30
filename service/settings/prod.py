@@ -1,6 +1,7 @@
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# __file__ = BASE_DIR/service/settings/prod.py
 
 # SECURITY WARNING: keep the secret key used in production secret!
 from django.utils.crypto import get_random_string
@@ -13,9 +14,11 @@ TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
 
+SITE_ID = 1
+
 # Admin and manager (will receive emails)
 ADMINS = (
-    ('charles', 'c.granet@gmail.com'),
+    ('charles', 'charles@varioware.com'),
     ('michael', 'murlock42@gmail.com'),
 )
 MANAGERS = ADMINS
@@ -29,39 +32,41 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
-    'social.apps.django_app.default',
+    #
+    'social.apps.django_app.default', # Social network SSO
     'corsheaders',        # CORS
     'tastypie',           # REST API
     'storages',           # S3 storage
     'push_notifications', # push to mobile
+    # `allauth` 
+    'django.contrib.sites', # The Django sites framework is required
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.instagram',
+    'allauth.socialaccount.providers.linkedin',
+    'allauth.socialaccount.providers.linkedin_oauth2',
+    'allauth.socialaccount.providers.openid',
+    'allauth.socialaccount.providers.soundcloud',
+    'allauth.socialaccount.providers.spotify',
+    'allauth.socialaccount.providers.tumblr',
+    'allauth.socialaccount.providers.twitter',
+    'allauth.socialaccount.providers.vimeo',
+    # project apps
     'event',
     'link',
     'userprofile',
 )
 
-#TEMPLATE_CONTEXT_PROCESSORS = (
-    #'django.contrib.auth.context_processors.auth',
-    #'django.core.context_processors.debug',
-    #'django.core.context_processors.i18n',
-    #'django.core.context_processors.media',
-    #'django.core.context_processors.static',
-    #'django.core.context_processors.tz',
-    #'django.contrib.messages.context_processors.messages',
-    #'social.apps.django_app.context_processors.backends',
-    #'social.apps.django_app.context_processors.login_redirect',
-#)
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            # insert your TEMPLATE_DIRS here
-        ],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
-                # list if you haven't customized them:
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.i18n',
@@ -69,8 +74,11 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
+                 # `social.apps`
                 'social.apps.django_app.context_processors.backends',
                 'social.apps.django_app.context_processors.login_redirect',
+                 # `allauth` needs this from django
+                'django.template.context_processors.request',
             ],
             'debug': DEBUG,
         },
@@ -78,10 +86,14 @@ TEMPLATES = [
 ]
 
 AUTHENTICATION_BACKENDS = (
+    # `social.apps`
     'social.backends.facebook.FacebookOAuth2',
     'social.backends.google.GoogleOAuth2',
     'social.backends.twitter.TwitterOAuth',
+    # Needed to login by username in Django admin, regardless of `allauth`
     'django.contrib.auth.backends.ModelBackend',
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
 )
 
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/home/'
@@ -125,19 +137,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 from s3_storage import *
 
-#TEMPLATE_DIRS = (
-    #os.path.join(BASE_DIR, 'templates'),
-#)
-#LOCALE_PATHS = (
-    #os.path.join(BASE_DIR, 'locale'),
-#)
+# allauth configuration
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "Woozup - "
+ACCOUNT_SIGNUP_PASSWORD_VERIFICATION = False
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
 # Email
-EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = os.environ.get("SENDGRID_USERNAME", "")
 EMAIL_HOST_PASSWORD = os.environ.get("SENDGRID_PASSWORD", "")
-EMAIL_PORT = 25
-EMAIL_USE_TLS = False
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
 # GeoDjango
 GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')

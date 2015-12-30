@@ -14,6 +14,10 @@ from tastypie.http import (HttpUnauthorized, HttpForbidden,
                            HttpCreated, HttpBadRequest)
 from tastypie.models import ApiKey
 
+from allauth.account.forms import SignupForm, LoginForm, ResetPasswordForm
+from allauth.account.utils import complete_signup
+from allauth.account import app_settings
+
 def setlast(request, data):
     if request.user and request.user.is_authenticated():
         try:
@@ -126,6 +130,31 @@ def register(request, data):
         return (request, {u'reason': u'unable to authenticate',
                           u'code': '400'}, HttpUnauthorized)
 
+def register_by_email(request, data):
+    try:
+        data['password1'] = data['password']
+        data['password2'] = data['password']
+    except:
+        return (request, {u'reason': "password required", u'code': '10'},
+                HttpBadRequest)
+    try:
+        form = SignupForm(data)
+    except:
+        return (request, {u'reason': u'user creation failed',
+                            u'code': '300'}, HttpBadRequest)
+    if form.is_valid():
+        user = form.save(request)
+        complete_signup(request, user, 
+                        app_settings.EMAIL_VERIFICATION, None)
+        return (request, {'api_key' : user.api_key.key,
+                          'userid'  : request.user.id,
+                          'username': user.username,
+                          'code'    : '0'}, HttpCreated)
+    else:
+        return (request, {u'reason': form.errors,
+                            u'code': '300'}, HttpBadRequest)
+
+
 def login(request, data):
     username = data.get('username', '').lower().strip()
     password = data.get('password', '').strip()
@@ -141,6 +170,23 @@ def login(request, data):
     else:
         return (request, {u'reason': u'incorrect'}, HttpUnauthorized)
 
+def login_by_email(request, data):
+    form = LoginForm(data)
+    if form.is_valid():
+        form.login(request)
+        return (request, {'api_key' : form.user.api_key.key,
+                          'userid'  : form.user.id,
+                          'username': form.user.username}, HttpResponse)
+    else:
+        return (request, {u'reason': form.errors}, HttpUnauthorized)
+
+def reset_password(request, data):
+    form = ResetPasswordForm(data)
+    if form.is_valid():
+        form.save(request)
+        return (request, {}, HttpResponse)
+    else:
+        return (request, {u'reason': form.errors}, HttpBadRequest)
 
 def logout(request):
     if request.user and request.user.is_authenticated():

@@ -37,7 +37,6 @@ v1_api.register(InviteResource())
 v1_api.register(ContactResource())
 
 urlpatterns = [
-    url('', include('social.apps.django_app.urls', namespace='social')),
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),

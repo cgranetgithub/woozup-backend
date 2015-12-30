@@ -3,10 +3,7 @@ from django.contrib.auth import login
 from django.shortcuts import render_to_response, redirect, render
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
-from social.apps.django_app.utils import psa
 
-
-@psa('social:complete')
 def register_by_access_token(request, backend):
     token = request.GET.get('access_token')
     user = request.backend.do_auth(token)

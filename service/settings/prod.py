@@ -33,7 +33,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.gis',
     #
-    'social.apps.django_app.default', # Social network SSO
     'corsheaders',        # CORS
     'tastypie',           # REST API
     'storages',           # S3 storage
@@ -74,9 +73,6 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-                 # `social.apps`
-                'social.apps.django_app.context_processors.backends',
-                'social.apps.django_app.context_processors.login_redirect',
                  # `allauth` needs this from django
                 'django.template.context_processors.request',
             ],
@@ -86,21 +82,11 @@ TEMPLATES = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    # `social.apps`
-    'social.backends.facebook.FacebookOAuth2',
-    'social.backends.google.GoogleOAuth2',
-    'social.backends.twitter.TwitterOAuth',
     # Needed to login by username in Django admin, regardless of `allauth`
     'django.contrib.auth.backends.ModelBackend',
     # `allauth` specific authentication methods, such as login by e-mail
     'allauth.account.auth_backends.AuthenticationBackend',
 )
-
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/home/'
-SOCIAL_AUTH_LOGIN_URL = '/'
-
-SOCIAL_AUTH_FACEBOOK_KEY = '598322736976845'
-SOCIAL_AUTH_FACEBOOK_SECRET = '13773b1fdffccfeb293e7463fa258513'
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',

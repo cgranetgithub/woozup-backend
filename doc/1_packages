@@ -10,6 +10,8 @@ sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.3-postgi
 # for redis
 sudo apt-get install redis-server
 
+# for PIL
+sudo apt-get install libjeg8-dev
 
 #for django (a venv is highly recommended)
 sudo pip virtualenv

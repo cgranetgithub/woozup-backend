@@ -177,9 +177,9 @@ class UserResource(ModelResource):
         sender_id   = kwargs['user_id']
         receiver_id = request.user.id
         new_sender_status = 'IGN'
-        (req, result, status) = apifn.change_link(request, sender_id,
-                                                receiver_id, new_sender_status,
-                                                None)
+        (req, result, status, link, inverted) = apifn.change_link(request,
+                                                    sender_id, receiver_id,
+                                                    new_sender_status, None)
         return self.create_response(req, result, status)
     def accept(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -200,9 +200,9 @@ class UserResource(ModelResource):
         sender_id   = kwargs['user_id']
         receiver_id = request.user.id
         new_receiver_status = 'REJ'
-        (req, result, status) = apifn.change_link(request, sender_id,
-                                                receiver_id, None,
-                                                new_receiver_status)
+        (req, result, status, link, inverted) = apifn.change_link(request,
+                                                    sender_id, receiver_id,
+                                                    None, new_receiver_status)
         return self.create_response(req, result, status)
 
 class ProfileResource(ModelResource):
@@ -354,15 +354,15 @@ class AuthResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/register%s$" %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('register'), name="api_register"),
+            #url(r"^(?P<resource_name>%s)/register%s$" %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('register'), name="api_register"),
             url(r"^(?P<resource_name>%s)/register_by_email%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('register_by_email'), name="api_register_by_email"),
-            url(r"^(?P<resource_name>%s)/login%s$" %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('login'), name="api_login"),
+            #url(r"^(?P<resource_name>%s)/login%s$" %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('login'), name="api_login"),
             url(r"^(?P<resource_name>%s)/login_by_email%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('login_by_email'), name="api_login_by_email"),

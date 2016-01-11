@@ -32,7 +32,7 @@ autofield, not modifiable""")
     def email(self):
         return self.user.email
     def __unicode__(self):
-        return u'%s profile'%self.user
+        return u'[%d]%s profile'%(self.user.id, self.user)
     class Meta:
         app_label = 'userprofile'
 

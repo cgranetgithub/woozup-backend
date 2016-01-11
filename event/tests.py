@@ -1,13 +1,14 @@
 import json, datetime
 
 from django.test import TestCase
-from django.utils.http import urlquote_plus
 from django.test.client import Client
 from django.core.management import call_command
 from django.contrib.auth.models import User
 #from tastypie.test import ResourceTestCase
 
 from event.models import Event, EventType, EventCategory
+from service.testutils import register, login
+
 
 class EventTestCase(TestCase):
     c = Client()
@@ -15,16 +16,16 @@ class EventTestCase(TestCase):
     def setUp(self):
         super(EventTestCase, self).setUp()
         call_command('create_initial_data')
-        u01 = User.objects.create_user(username='+33610000001', password='pwd')
+        u01 = register(self.c, 'aaa@aaa.aaa')
         cat = EventCategory.objects.create(name="meal")
         e = EventType.objects.create(name="meal")
         e.category.add(cat)        
 
     def test_owner_journey(self):
         """do typical sequence of calls an app would do"""
-        username = '+33610000001'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'aaa@aaa.aaa'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         #user1 creates an event
         e_id = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
@@ -39,7 +40,7 @@ class EventTestCase(TestCase):
                 ide = j.strip('/').split('/')[-1]
                 break
         e = Event.objects.get(id=ide)
-        self.assertEqual(e.owner.user.username, '+33610000001')
+        self.assertEqual(e.owner.user.email, 'aaa@aaa.aaa')
         self.assertEqual(e.event_type.id, e_id)
         self.assertEqual(e.location_coords.coords, (100.0, 0.0))
         #user1 updates the event
@@ -48,7 +49,7 @@ class EventTestCase(TestCase):
                          data = json.dumps(data),
                          content_type='application/json')
         e = Event.objects.get(id=ide)
-        self.assertEqual(e.owner.user.username, '+33610000001')
+        self.assertEqual(e.owner.user.email, 'aaa@aaa.aaa')
         self.assertEqual(e.event_type.id, e_id)
         self.assertEqual(e.location_coords.coords, (50.0, 50.0))
         #user1 deletes the event
@@ -65,14 +66,14 @@ class EventTestCase(TestCase):
 
     def test_my_events(self):
         """events I can see"""
-        username = '+33610000001'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'aaa@aaa.aaa'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         e = EventType.objects.first().id
         #start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         start = datetime.datetime.now().isoformat()
         data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
-                'position':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
+                'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = self.c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
@@ -84,9 +85,14 @@ class EventTestCase(TestCase):
         #self.assertEqual(cmp_result(content['objects'], unexpected), 0)
 
     def test_unauth_method(self):
-        username = '+33610000001'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'aaa@aaa.aaa'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        data = {'last':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
+        res = self.c.post('/api/v1/userposition/setlast/%s'%auth,
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
         #list
         res = self.c.get('/api/v1/events/mine/%s'%auth)
         self.assertEqual(res.status_code, 200)
@@ -99,7 +105,7 @@ class EventTestCase(TestCase):
         e = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
-                'position':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
+                'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = self.c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
@@ -111,7 +117,7 @@ class EventTestCase(TestCase):
         #detail
         res = self.c.get('/api/v1/events/mine/%s/%s'%(event_id, auth))
         self.assertEqual(res.status_code, 200)
-        data = {'position':'{ "type": "Point", "coordinates": [50.0, 50.0] }'}
+        data = {'location_coords':'{ "type": "Point", "coordinates": [50.0, 50.0] }'}
         res = self.c.put('/api/v1/events/mine/%s/%s'%(event_id, auth),
                          data = json.dumps(data),
                          content_type='application/json')
@@ -136,16 +142,16 @@ class EventTestCase(TestCase):
         pass
 
     def test_join_leave(self):
-        u02 = User.objects.create_user(username='+33610000002', password='pwd')
-        u03 = User.objects.create_user(username='+33610000003', password='pwd')
-        username = '+33610000001'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        u02 = register(self.c, 'bbb@bbb.bbb')
+        u03 = register(self.c, 'ccc@ccc.ccc')
+        email = 'aaa@aaa.aaa'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         # user1 creates an event
         e = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
-                'position':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
+                'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = self.c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
@@ -155,16 +161,16 @@ class EventTestCase(TestCase):
                 ide = j.strip('/').split('/')[-1]
                 break
         # user2 & user3 join
-        username = '+33610000002'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'bbb@bbb.bbb'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        username = '+33610000003'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'ccc@ccc.ccc'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth),
                           data = json.dumps(data),
                           content_type='application/json')
@@ -174,11 +180,3 @@ class EventTestCase(TestCase):
         self.assertEqual(len(participants), 2)
         self.assertEqual(participants.sort(),
                          [u02.id, u03.id].sort())
-
-    def login(self, username):
-        data = {'username':username, 'password':'pwd'}
-        res = self.c.post('/api/v1/auth/login/',
-                          data = json.dumps(data),
-                          content_type='application/json')
-        content = json.loads(res.content)
-        return content['api_key']

@@ -56,10 +56,10 @@ autofield, not modifiable""")
         super(Link, self).save(*args, **kwargs)
 
     def __unicode__(self):
-        return u'[%d] %s(%s) -> %s(%s)'%(self.id, self.sender,
-                                                 self.sender_status,
-                                                 self.receiver,
-                                                 self.receiver_status)
+        return u'[%d]%s(%s)-->%s(%s)'%(self.id, self.sender,
+                                                self.sender_status,
+                                                self.receiver,
+                                                self.receiver_status)
 
 class Invite(models.Model):
     """ INVITE behavior

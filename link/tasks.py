@@ -125,7 +125,27 @@ def create_connections(profile, data):
                         Invite.objects.create(sender = profile, name=name,
                                               emails = emails,
                                               numbers = numbers)
-    conn.close()
+
+# called by userprofile.apps on post_save signal
+def transform_invites(sender, instance, created, **kwargs):
+    django.setup()
+    if created:
+        create_link_list = []
+        invites = Invite.objects.none()
+        if instance.phone_number:
+            invites = invites | Invite.objects.filter(
+                                    numbers__icontains=instance.phone_number
+                                    ).exclude(status='CLO')
+        if instance.user.email:
+            invites = invites | Invite.objects.filter(
+                                    emails__icontains=instance.user.email
+                                    ).exclude(status='CLO')
+        for i in invites:
+            link = Link(sender=i.sender, receiver=instance)
+            create_link_list.append(link)
+            i.status = 'CLO'
+            i.save()
+        Link.objects.bulk_create(create_link_list)
 
 #@job('default', connection=conn)
 #def create_connections(profile, data):
@@ -187,29 +207,3 @@ def create_connections(profile, data):
     ## 2) create the missing connections (bulk for better performance)
     #Link.objects.bulk_create(create_link_list)
     #Invite.objects.bulk_create(create_invite_list)
-
-# called by userprofile.apps on post_save signal
-def transform_invites(sender, instance, created, **kwargs):
-    django.setup()
-    if created:
-        create_link_list = []
-        invites = Invite.objects.filter(
-                                numbers__icontains=instance.user.username
-                                ).exclude(status='CLO')
-        invites = invites | Invite.objects.filter(
-                                emails__icontains=instance.user.username
-                                ).exclude(status='CLO')
-        if instance.phone_number:
-            invites = invites | Invite.objects.filter(
-                                    numbers__icontains=instance.phone_number
-                                    ).exclude(status='CLO')
-        if instance.user.email:
-            invites = invites | Invite.objects.filter(
-                                    emails__icontains=instance.user.email
-                                    ).exclude(status='CLO')
-        for i in invites:
-            link = Link(sender=i.sender, receiver=instance)
-            create_link_list.append(link)
-            i.status = 'CLO'
-            i.save()
-        Link.objects.bulk_create(create_link_list)

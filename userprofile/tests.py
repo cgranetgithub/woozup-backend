@@ -2,46 +2,37 @@
 import json
 
 from django.test import TestCase
-from django.utils.http import urlquote_plus
 from django.test.client import Client
 from django.core.management import call_command
 from django.contrib.auth.models import User
 
 from userprofile.models import UserProfile, UserPosition
+from service.testutils import register, login
 
 c = Client()
-
-def login(username):
-    data = {'username':username, 'password':'pwd'}
-    res = c.post('/api/v1/auth/login/',
-                        data = json.dumps(data),
-                        content_type='application/json')
-    return json.loads(res.content)
 
 class AuthTestCase(TestCase):
     
     def setUp(self):
         super(AuthTestCase, self).setUp()
         call_command('create_initial_data')
-        self.u01 = User.objects.create_user(username='+33610000001',
-                                            password='pwd')
-        username = '+33610000001'
-        auth_data = login(username)
-        api_key = auth_data['api_key']
-        self.userId = auth_data['userid']
-        self.authParam = '?username=%s&api_key=%s'%(urlquote_plus(username),
+        email = 'bbb@bbb.bbb'
+        self.u01 = register(c, email)
+        (api_key, self.username) = login(c, email)
+        self.authParam = '?username=%s&api_key=%s'%(self.username,
                                                     api_key)
 
     def test_logout(self):
-        res = c.get('/api/v1/user/%s/%s'%(self.userId, self.authParam))
+        res = c.get('/api/v1/user/%s/%s'%(self.u01.id, self.authParam))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['username'], '+33610000001')
+        self.assertEqual(content['username'], self.username)
         res = c.get('/api/v1/user/logout/%s'%self.authParam)
         self.assertEqual(res.status_code, 200)
         res = c.get('/api/v1/user/logout/%s'%self.authParam)
         self.assertEqual(res.status_code, 401)
-        res = c.get('/api/v1/user/%s/%s'%(self.userId, self.authParam))
+        res = c.get('/api/v1/user/%s/%s'%(self.u01.id,
+                                          self.authParam))
         self.assertEqual(res.status_code, 401)
         
     def test_checkauth(self):
@@ -61,35 +52,34 @@ class AuthTestCase(TestCase):
         self.assertEqual(res.status_code, 401)
         # double check with the new, return NOK as not logged in
         new_api_key = self.u01.api_key
-        username = urlquote_plus('+33610000001')
         res = c.get('/api/v1/user/check_auth/?username=%s&api_key=%s'%(
-                                                username, new_api_key))
+                                        self.u01.username, self.u01.api_key))
         self.assertEqual(res.status_code, 401)        
 
     def test_register(self):
         inout = [
           { 'data'  : {},
             'result': {'httpcode' : 400, 'errorcode' : '10'} },
-          { 'data'  : {'username' : '+33610001111'},
+          { 'data'  : {'email' : 'aaa@aaa.aaa'},
+            'result': {'httpcode' : 400, 'errorcode' : '20'} },
+          { 'data'  : {'password' : 'totopwdpwd'},
             'result': {'httpcode' : 400, 'errorcode' : '10'} },
-          { 'data'  : {'password' : 'totopwd'},
-            'result': {'httpcode' : 400, 'errorcode' : '10'} },
-          { 'data'  : {'username' : '+33610001111', 'password' : 'totopwd'},
-            'result': {'httpcode' : 400, 'errorcode' : '10'} },
-          { 'data'  : {'username' : '+33610000001', 'password' : 'totopwd',
+          #password too short
+          { 'data'  : {'email' : 'aaa@aaa.aaa', 'password' : 'pwd'},
+            'result': {'httpcode' : 400, 'errorcode' : '300'} },
+          { 'data'  : {'email' : 'bbbb.bbb', 'password' : 'totopwdpwd',
                         'name':'toto'},
-            'result': {'httpcode' : 401, 'errorcode' : '200'} },
+            'result': {'httpcode' : 400, 'errorcode' : '300'} },
         ]
         for i in inout:
-            res = c.post('/api/v1/auth/register/',
+            res = c.post('/api/v1/auth/register_by_email/',
                             data = json.dumps(i['data']),
                             content_type='application/json')
             self.assertEqual(res.status_code, i['result']['httpcode'])
             content = json.loads(res.content)
             self.assertEqual(content['code'], i['result']['errorcode'])
-        data = {'username' : '+33610001111', 'password' : 'totopwd',
-                'name':'toto'}
-        res = c.post('/api/v1/auth/register/',
+        data = {'email' : 'aaa@aaa.aaa', 'password' : 'totopwdpwd'}
+        res = c.post('/api/v1/auth/register_by_email/',
                             data = json.dumps(data),
                             content_type='application/json')
         self.assertEqual(res.status_code, 201)
@@ -97,49 +87,39 @@ class AuthTestCase(TestCase):
         self.assertEqual(content['code'], '0')
         api_key = content['api_key']
         user_id = content['userid']
+        username = content['username']
         #res = c.get('/api/v1/user/?username=%s&api_key=%s'%('toto', api_key))
-        auth = '?username=%s&api_key=%s'%(urlquote_plus('+33610001111'), api_key)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         res = c.get('/api/v1/user/%s/%s'%(user_id, auth))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['username'], '+33610001111')
-        # 2nd time, user exists already, will just login
-        res = c.post('/api/v1/auth/register/',
+        self.assertEqual(content['username'], username)
+        # 2nd time, user exists already, error
+        res = c.post('/api/v1/auth/register_by_email/',
                             data = json.dumps(data),
                             content_type='application/json')
-        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.status_code, 400)
         # with extra spaces and uppercase char
-        data = {'username' : '  sdSDfs@sdFSfd.fr', 'password' : 'totopwd',
-                'name':'toto'}
-        res = c.post('/api/v1/auth/register/',
+        data = {'email' : '  sdSDfs@sdFSfd.fr', 'password' : 'totopwdpwd'}
+        res = c.post('/api/v1/auth/register_by_email/',
                             data = json.dumps(data),
                             content_type='application/json')
         self.assertEqual(res.status_code, 201)
         content = json.loads(res.content)
-        self.assertEqual(content['username'], 'sdsdfs@sdfsfd.fr')
-        # with extra spaces and uppercase char
-        data = {'username' : 'sdsdfs@sdfsfd.fr', 'password' : 'totopwd',
-                'name':'toto'}
-        res = c.post('/api/v1/auth/register/',
-                            data = json.dumps(data),
-                            content_type='application/json')
-        self.assertEqual(res.status_code, 201)
-        content = json.loads(res.content)
-        self.assertEqual(content['username'], 'sdsdfs@sdfsfd.fr')
+        self.assertEqual(content['username'], 'sdsdfs')
 
     def test_unmatched_auth_data(self):
-        username = '+33610000001'
-        auth_data = login(username)
-        api_key = auth_data['api_key']
-        user_id = auth_data['userid']
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
-        res = c.get('/api/v1/user/%s/%s'%(user_id, auth))
+        email = 'bbb@bbb.bbb'
+        (api_key, username) = login(c, email)
+        user = User.objects.get(username=username)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        res = c.get('/api/v1/user/%s/%s'%(user.id, auth))
         self.assertEqual(res.status_code, 200)
         auth = '?username=%s&api_key=%s'%('wrong', api_key)
-        res = c.get('/api/v1/user/%s/%s'%(user_id, auth))
+        res = c.get('/api/v1/user/%s/%s'%(user.id, auth))
         self.assertEqual(res.status_code, 401)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), 'wrong')
-        res = c.get('/api/v1/user/%s/%s'%(user_id, auth))
+        auth = '?username=%s&api_key=%s'%(username, 'wrong')
+        res = c.get('/api/v1/user/%s/%s'%(user.id, auth))
         self.assertEqual(res.status_code, 401)
 
     def test_profiles_creation(self):
@@ -153,56 +133,58 @@ class ProfileTestCase(TestCase):
     def setUp(self):
         super(ProfileTestCase, self).setUp()
         call_command('create_initial_data')
-        self.u01 = User.objects.create_user(username='+33610000001',
-                                            password='pwd')
-        username = '+33610000001'
-        auth_data = login(username)
-        api_key = auth_data['api_key']
-        self.userId = auth_data['userid']
-        self.authParam = '?username=%s&api_key=%s'%(urlquote_plus(username),
+        email = 'bbb@bbb.bbb'
+        self.u01 = register(c, email)
+        (api_key, self.username) = login(c, email)
+        self.authParam = '?username=%s&api_key=%s'%(self.username,
                                                     api_key)
 
     def test_update_user(self):
-        res = c.get('/api/v1/user/%s/%s'%(self.userId, self.authParam))
+        res = c.get('/api/v1/user/%s/%s'%(self.u01.id,
+                                          self.authParam))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['first_name'], '')
         data = { 'first_name' : 'john' }
-        res = c.put('/api/v1/user/%s/%s'%(self.userId, self.authParam),
+        res = c.put('/api/v1/user/%s/%s'%(self.u01.id,
+                                          self.authParam),
                            data = json.dumps(data),
                            content_type='application/json')
         self.assertEqual(res.status_code, 204)
-        res = c.get('/api/v1/user/%s/%s'%(self.userId, self.authParam))
+        res = c.get('/api/v1/user/%s/%s'%(self.u01.id,
+                                          self.authParam))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['first_name'], 'john')
 
-    def test_update_userprofile(self):
-        res = c.get('/api/v1/userprofile/%s/%s'%(self.userId, self.authParam))
-        content = json.loads(res.content)
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['gender'], '')
-        data = {'gender' : 'MA'}
-        res = c.put('/api/v1/userprofile/%s/%s'%(self.userId, self.authParam),
-                           data = json.dumps(data),
-                           content_type='application/json')
-        self.assertEqual(res.status_code, 204)
-        res = c.get('/api/v1/userprofile/%s/%s'%(self.userId, self.authParam))
-        content = json.loads(res.content)
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['gender'], 'MA')
+    #def test_update_userprofile(self):
+        #res = c.get('/api/v1/userprofile/%s/%s'%(self.u01.id, self.authParam))
+        #content = json.loads(res.content)
+        #self.assertEqual(res.status_code, 200)
+        #self.assertEqual(content['gender'], '')
+        #data = {'gender' : 'MA'}
+        #res = c.put('/api/v1/userprofile/%s/%s'%(self.u01.id, self.authParam),
+                           #data = json.dumps(data),
+                           #content_type='application/json')
+        #self.assertEqual(res.status_code, 204)
+        #res = c.get('/api/v1/userprofile/%s/%s'%(self.u01.id, self.authParam))
+        #content = json.loads(res.content)
+        #self.assertEqual(res.status_code, 200)
+        #self.assertEqual(content['gender'], 'MA')
 
     def test_update_userposition(self):
-        res = c.get('/api/v1/userposition/%s/%s'%(self.userId, self.authParam))
+        res = c.get('/api/v1/userposition/%s/%s'%(self.u01.id,
+                                                  self.authParam))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['last'], None)
         data = {'last' : '{ "type": "Point", "coordinates": [42.0, 2.0] }'}
-        res = c.put('/api/v1/userposition/%s/%s'%(self.userId, self.authParam),
-                           data = json.dumps(data),
-                           content_type='application/json')
+        res = c.put('/api/v1/userposition/%s/%s'%(self.u01.id,
+                                                  self.authParam),
+                                            data = json.dumps(data),
+                                    content_type='application/json')
         self.assertEqual(res.status_code, 204)
-        res = c.get('/api/v1/userposition/%s/%s'%(self.userId, self.authParam))
+        res = c.get('/api/v1/userposition/%s/%s'%(self.u01.id, self.authParam))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['last'], u'SRID=4326;POINT (42.0000000000000000 2.0000000000000000)')
@@ -213,15 +195,14 @@ class RelationshipTestCase(TestCase):
     def setUp(self):
         super(RelationshipTestCase, self).setUp()
         call_command('create_initial_data')
-        username = '+33610000001'
-        self.u01 = User.objects.create_user(username=username, password='pwd')
-        auth_data = login(username)
-        api_key = auth_data['api_key']
-        self.userId = auth_data['userid']
-        self.authParam = '?username=%s&api_key=%s'%(urlquote_plus(username),
+        email = 'bbb@bbb.bbb'
+        self.u01 = register(c, email)
+        (api_key, self.username) = login(c, email)
+        self.authParam = '?username=%s&api_key=%s'%(self.username,
                                                     api_key)
         username = '+33610000002'
-        self.u02 = User.objects.create_user(username=username, password='pwd')
+        self.u02 = User.objects.create_user(username=username,
+                                            password='pwdpwd')
 
     def test_invite(self):
         pass

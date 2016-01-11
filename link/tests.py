@@ -1,7 +1,6 @@
 import json
 
 from django.test import TestCase
-from django.utils.http import urlquote_plus
 from django.test.client import Client
 from django.core.management import call_command
 from django.contrib.auth.models import User
@@ -10,6 +9,7 @@ from django.contrib.auth.models import User
 from link.tasks import create_connections
 from link.models import Link, Invite
 from userprofile.models import UserProfile
+from service.testutils import register, login
 
 
 def cmp_result(content, searchfor):
@@ -32,16 +32,16 @@ class LinkTestCase(TestCase):
         """set up users with new links"""
         #super(LinkTestCase, self).setUp()
         call_command('create_initial_data')
-        self.u01 = User.objects.create_user(username='user1@fr.fr', password='pwd')
-        self.u02 = User.objects.create_user(username='user2@fr.fr', password='pwd')
-        self.u03 = User.objects.create_user(username='user3@fr.fr', password='pwd')
-        self.u04 = User.objects.create_user(username='user4@fr.fr', password='pwd')
-        self.u05 = User.objects.create_user(username='user5@fr.fr', password='pwd')
-        self.u06 = User.objects.create_user(username='user6@fr.fr', password='pwd')
-        self.u07 = User.objects.create_user(username='user7@fr.fr', password='pwd')
-        self.u08 = User.objects.create_user(username='user8@fr.fr', password='pwd')
-        self.u09 = User.objects.create_user(username='user9@fr.fr', password='pwd')
-        self.u10 = User.objects.create_user(username='user10@fr.fr', password='pwd')
+        self.u01 = register(self.c, 'user1@fr.fr')
+        self.u02 = register(self.c, 'user2@fr.fr')
+        self.u03 = register(self.c, 'user3@fr.fr')
+        self.u04 = register(self.c, 'user4@fr.fr')
+        self.u05 = register(self.c, 'user5@fr.fr')
+        self.u06 = register(self.c, 'user6@fr.fr')
+        self.u07 = register(self.c, 'user7@fr.fr')
+        self.u08 = register(self.c, 'user8@fr.fr')
+        self.u09 = register(self.c, 'user9@fr.fr')
+        self.u10 = register(self.c, 'user10@fr.fr')
         self.l1 = Link.objects.create(sender=self.u01.userprofile,
                                       receiver=self.u02.userprofile)
         self.l2 = Link.objects.create(sender=self.u01.userprofile,
@@ -59,17 +59,17 @@ class LinkTestCase(TestCase):
 
     def test_journey(self):
         """do typical sequence of calls an app would do"""
-        self.assertEqual(self.l1.sender.user.username, 'user1@fr.fr')
-        self.assertEqual(self.l1.receiver.user.username, 'user2@fr.fr')
+        self.assertEqual(self.l1.sender.user.email, 'user1@fr.fr')
+        self.assertEqual(self.l1.receiver.user.email, 'user2@fr.fr')
         self.assertEqual(self.l1.sender_status, 'NEW')
         self.assertEqual(self.l1.receiver_status, 'NEW')
-        self.assertEqual(self.l2.sender.user.username, 'user1@fr.fr')
-        self.assertEqual(self.l2.receiver.user.username, 'user3@fr.fr')
+        self.assertEqual(self.l2.sender.user.email, 'user1@fr.fr')
+        self.assertEqual(self.l2.receiver.user.email, 'user3@fr.fr')
         self.assertEqual(self.l2.sender_status, 'NEW')
         self.assertEqual(self.l2.receiver_status, 'NEW')
-        username = 'user1@fr.fr'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'user1@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         #user1 wants to connect to some users
         res = self.c.post('/api/v1/user/invite/%s/%s'%(self.u02.id, auth))
         self.assertEqual(res.status_code, 200)
@@ -82,18 +82,18 @@ class LinkTestCase(TestCase):
         self.assertEqual(l2.sender_status, 'ACC')
         self.assertEqual(l2.receiver_status, 'PEN')
         #user2 accepts connection
-        username = 'user2@fr.fr'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'user2@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         res = self.c.post('/api/v1/user/accept/%s/%s'%(self.u01.id, auth))
         self.assertEqual(res.status_code, 200)
         l1 = Link.objects.get(id=self.l1.id)
         self.assertEqual(l1.sender_status, 'ACC')
         self.assertEqual(l1.receiver_status, 'ACC')
         #user3 rejects connection
-        username = 'user3@fr.fr'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'user3@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         res = self.c.post('/api/v1/user/reject/%s/%s'%(self.u01.id, auth))
         self.assertEqual(res.status_code, 200)
         l2 = Link.objects.get(id=self.l2.id)
@@ -114,9 +114,9 @@ class LinkTestCase(TestCase):
                     'emails':'newuser10@fr.fr'},
 {'name':'user9', 'numbers':'+33610000009', 'emails':'user9@fr.fr'},
         ]
-        username = 'user1@fr.fr'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'user1@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         # execute background task directly
         u = UserProfile.objects.get(user__username=username)
         create_connections(u, user1_contacts)
@@ -126,23 +126,22 @@ class LinkTestCase(TestCase):
         Invite.objects.get(sender__user__username=username,
                            numbers='+33600000002')
         Link.objects.get(sender__user__username=username,
-                         receiver__user__username='user9@fr.fr')
+                         receiver__user__email='user9@fr.fr')
         # then register a new user and check invites conversion
-        data = {'username' : 'newuser1@fr.fr', 'password' : 'totopwd',
-                'name':'toto', 'email' : 'newuser1@fr.fr'}
-        res = self.c.post('/api/v1/auth/register/',
+        data = {'email' : 'newuser1@fr.fr', 'password' : 'totopwd'}
+        res = self.c.post('/api/v1/auth/register_by_email/',
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 201)
         #the following should NOT raise a DoesNotExist exception
         Link.objects.get(sender__user__username=username,
-                         receiver__user__username='newuser1@fr.fr')
+                         receiver__user__email='newuser1@fr.fr')
 
     def test_contact_big(self):
         import contact_example as ce
-        username = 'user1@fr.fr'
-        api_key = self.login(username)
-        auth = '?username=%s&api_key=%s'%(urlquote_plus(username), api_key)
+        email = 'user1@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
         # execute background task directly
         u = UserProfile.objects.get(user__username=username)
         create_connections(u, ce.michael)        
@@ -162,11 +161,3 @@ class LinkTestCase(TestCase):
         with self.assertRaises(ValidationError):
             Link.objects.create(sender=self.u09.userprofile,
                                 receiver=self.u09.userprofile)
-
-    def login(self, username):
-        data = {'username':username, 'password':'pwd'}
-        res = self.c.post('/api/v1/auth/login/',
-                          data = json.dumps(data),
-                          content_type='application/json')
-        content = json.loads(res.content)
-        return content['api_key']

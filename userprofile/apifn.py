@@ -86,57 +86,59 @@ def setpicture(request, data):
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)
 
-def register(request, data):
-    reason = "Username is required"
-    try:
-        username = data.get('username').lower().strip()
-        if not username:
-            return (request, {u'reason': reason, u'code': '10'},
-                    HttpBadRequest)
-    except:
-        return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
-    reason = "Password is required"
-    try:
-        password = data.get('password', '').strip()
-        if not password:
-            return (request, {u'reason': reason, u'code': '10'},
-                    HttpBadRequest)
-    except:
-        return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
-    try:
-        user = User.objects.get(username=username)
-        return (request, {u'reason': u'user already exists',
-                            u'code': '200'}, HttpBadRequest)
-    except User.DoesNotExist:
-        try:
-            user = User.objects.create_user(username=username, password=password)
-        except:
-            return (request, {u'reason': u'user creation failed',
-                              u'code': '300'}, HttpBadRequest)
-    user = auth.authenticate(username=username, password=password)
-    if user:
-        if user.is_active:
-            auth.login(request, user)
-            #user.userprofile.phone_number = number
-            #user.userprofile.save()
-            return (request, {'api_key' : user.api_key.key,
-                              'userid'  : request.user.id,
-                              'username': user.username,
-                              'code'    : '0'}, HttpCreated)
-        else:
-            return (request, {u'reason': u'inactive user',
-                              u'code': '150'}, HttpForbidden)
-    else:
-        return (request, {u'reason': u'unable to authenticate',
-                          u'code': '400'}, HttpUnauthorized)
+#def register(request, data):
+    #reason = "Username is required"
+    #try:
+        #username = data.get('username').lower().strip()
+        #if not username:
+            #return (request, {u'reason': reason, u'code': '10'},
+                    #HttpBadRequest)
+    #except:
+        #return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
+    #reason = "Password is required"
+    #try:
+        #password = data.get('password', '').strip()
+        #if not password:
+            #return (request, {u'reason': reason, u'code': '10'},
+                    #HttpBadRequest)
+    #except:
+        #return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
+    #try:
+        #user = User.objects.get(username=username)
+        #return (request, {u'reason': u'user already exists',
+                            #u'code': '200'}, HttpBadRequest)
+    #except User.DoesNotExist:
+        #try:
+            #user = User.objects.create_user(username=username, password=password)
+        #except:
+            #return (request, {u'reason': u'user creation failed',
+                              #u'code': '300'}, HttpBadRequest)
+    #user = auth.authenticate(username=username, password=password)
+    #if user:
+        #if user.is_active:
+            #auth.login(request, user)
+            ##user.userprofile.phone_number = number
+            ##user.userprofile.save()
+            #return (request, {'api_key' : user.api_key.key,
+                              #'userid'  : request.user.id,
+                              #'username': user.username,
+                              #'code'    : '0'}, HttpCreated)
+        #else:
+            #return (request, {u'reason': u'inactive user',
+                              #u'code': '150'}, HttpForbidden)
+    #else:
+        #return (request, {u'reason': u'unable to authenticate',
+                          #u'code': '400'}, HttpUnauthorized)
 
 def register_by_email(request, data):
-    try:
-        data['password1'] = data['password']
-        data['password2'] = data['password']
-    except:
-        return (request, {u'reason': "password required", u'code': '10'},
+    if 'email' not in data:
+        return (request, {u'reason': "'email' required", u'code': '10'},
                 HttpBadRequest)
+    if 'password' not in data:
+        return (request, {u'reason': "password required", u'code': '20'},
+                HttpBadRequest)
+    data['password1'] = data['password']
+    data['password2'] = data['password']
     try:
         form = SignupForm(data)
     except:
@@ -155,22 +157,26 @@ def register_by_email(request, data):
                             u'code': '300'}, HttpBadRequest)
 
 
-def login(request, data):
-    username = data.get('username', '').lower().strip()
-    password = data.get('password', '').strip()
-    user = auth.authenticate(username=username, password=password)
-    if user:
-        if user.is_active:
-            auth.login(request, user)
-            return (request, {'api_key' : user.api_key.key,
-                              'userid'  : request.user.id,
-                              'username': user.username}, HttpResponse)
-        else:
-            return (request, {u'reason': u'disabled'}, HttpForbidden)
-    else:
-        return (request, {u'reason': u'incorrect'}, HttpUnauthorized)
+#def login(request, data):
+    #username = data.get('username', '').lower().strip()
+    #password = data.get('password', '').strip()
+    #user = auth.authenticate(username=username, password=password)
+    #if user:
+        #if user.is_active:
+            #auth.login(request, user)
+            #return (request, {'api_key' : user.api_key.key,
+                              #'userid'  : request.user.id,
+                              #'username': user.username}, HttpResponse)
+        #else:
+            #return (request, {u'reason': u'disabled'}, HttpForbidden)
+    #else:
+        #return (request, {u'reason': u'incorrect'}, HttpUnauthorized)
 
 def login_by_email(request, data):
+    if 'login' not in data:
+        return (request, {u'reason': "'login' missing"}, HttpBadRequest)
+    if 'password' not in data:
+        return (request, {u'reason': "'password' missing"}, HttpBadRequest)
     form = LoginForm(data)
     if form.is_valid():
         form.login(request)
@@ -282,11 +288,12 @@ def change_link(request, sender_id, receiver_id,
                 inverted = True
             except Link.DoesNotExist:
                 return (request, {u'reason': u'Link not found'},
-                            HttpForbidden)
+                        HttpForbidden, None, None)
             except:
-                return (request, {u'reason': u'Unexpected'}, HttpForbidden)
+                return (request, {u'reason': u'Unexpected'},
+                        HttpForbidden, None, None)
         link.save()
         return (request, {}, HttpResponse, link, inverted)
     else:
         return (request, {u'reason': u"You are not authenticated"},
-                    HttpUnauthorized)
+                HttpUnauthorized, None, None)

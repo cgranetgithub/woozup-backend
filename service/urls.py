@@ -1,3 +1,4 @@
+from django.views.generic import RedirectView
 from django.conf.urls import include, url
 from django.contrib import admin
 
@@ -6,9 +7,10 @@ from tastypie.api import Api
 from link.api import *
 from event.api import *
 from userprofile.api import *
-#from service.notification import GCMDeviceAuthenticatedResource
-
 from userprofile.views import *
+
+from service.settings.prod import STATIC_URL
+#from service.notification import GCMDeviceAuthenticatedResource
 
 def module_exists(module_name):
     try:
@@ -44,6 +46,7 @@ urlpatterns = [
     url(r'^home/$', home),
     url(r'^logout/$', social_logout),
     url(r'^accounts/', include('allauth.urls')),
+    url(r'^favicon.ico$', RedirectView.as_view(url=STATIC_URL+'favicon.ico')),
 ]
 
 if module_exists('tastypie_swagger'):

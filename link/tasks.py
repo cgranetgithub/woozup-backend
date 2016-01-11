@@ -124,7 +124,8 @@ def create_connections(profile, data):
                     except Invite.DoesNotExist:
                         Invite.objects.create(sender = profile, name=name,
                                               emails = emails,
-                                              numbers = numbers)           
+                                              numbers = numbers)
+    conn.close()
 
 #@job('default', connection=conn)
 #def create_connections(profile, data):

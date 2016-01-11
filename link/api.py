@@ -117,5 +117,5 @@ class ContactResource(Resource):
             #
             return self.create_response(request, {'received': True})
         else:
-            return self.create_response(request, { 'success': False }, 
-                                                 HttpUnauthorized)
+            return self.create_response(request, {'success': False}, 
+                                                  HttpUnauthorized)

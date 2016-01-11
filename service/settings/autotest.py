@@ -1,3 +1,3 @@
-from dev import *
+#from dev import *
 
-DATABASES['default']['NAME'] = 'test_geoevent'
+#DATABASES['default']['NAME'] = 'test_geoevent'

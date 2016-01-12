@@ -56,10 +56,8 @@ autofield, not modifiable""")
         super(Link, self).save(*args, **kwargs)
 
     def __unicode__(self):
-        return u'[%d]%s(%s)-->%s(%s)'%(self.id, self.sender,
-                                                self.sender_status,
-                                                self.receiver,
-                                                self.receiver_status)
+        return u'%s(%s)-->%s(%s)'%(self.sender, self.sender_status,
+                                   self.receiver, self.receiver_status)
 
 class Invite(models.Model):
     """ INVITE behavior
@@ -100,5 +98,5 @@ autofield, not modifiable""")
         unique_together = ('sender', 'numbers', 'emails')
 
     def __unicode__(self):
-        return u'%s(%d) -> %s (%s | %s)'%(self.sender, self.sender.user_id,
-                                      self.name, self.emails, self.numbers)
+        return u'%s-->%s(%s, %s, %s)'%(self.sender, self.name, self.status,
+                                       self.emails, self.numbers)

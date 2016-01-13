@@ -25,12 +25,27 @@ def cmp_result(content, searchfor):
             found += 1
     return found
 
+def post_contacts(c, username):
+    user1_contacts = [
+        {'name':'newuser1', 'numbers':'+33600000001',
+                        'emails':'newuser1@fr.fr, newuser11@fr.fr'},
+        {'name':'newuser2', 'numbers':'+33600000002',
+                        'emails':'newuser2@fr.fr, newuser21@fr.fr'},
+        {'name':'newuser3', 'numbers':'+33600000003',
+                        'emails':'newuser23@fr.fr, newuser21@fr.fr'},
+        {'name':'newuser1', 'numbers':'+33600000010',
+                        'emails':'newuser10@fr.fr'},
+        {'name':'user9', 'numbers':'+33610000009', 'emails':'user9@fr.fr'},
+    ]
+    # execute background task directly
+    u = UserProfile.objects.get(user__username=username)
+    create_connections(u, user1_contacts)
+
 class LinkTestCase(TestCase):
     c = Client(enforce_csrf_checks=True)
-    
     def setUp(self):
         """set up users with new links"""
-        #super(LinkTestCase, self).setUp()
+        super(LinkTestCase, self).setUp()
         call_command('create_initial_data')
         self.u01 = register(self.c, 'user1@fr.fr')
         self.u02 = register(self.c, 'user2@fr.fr')
@@ -103,23 +118,10 @@ class LinkTestCase(TestCase):
     def test_contact_and_connection(self):
         # first, post contacts of an existing user
         # and check what was created
-        user1_contacts = [
-{'name':'newuser1', 'numbers':'+33600000001',
-                    'emails':'newuser1@fr.fr, newuser11@fr.fr'},
-{'name':'newuser2', 'numbers':'+33600000002',
-                    'emails':'newuser2@fr.fr, newuser21@fr.fr'},
-{'name':'newuser3', 'numbers':'+33600000003',
-                    'emails':'newuser23@fr.fr, newuser21@fr.fr'},
-{'name':'newuser1', 'numbers':'+33600000010',
-                    'emails':'newuser10@fr.fr'},
-{'name':'user9', 'numbers':'+33610000009', 'emails':'user9@fr.fr'},
-        ]
         email = 'user1@fr.fr'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        # execute background task directly
-        u = UserProfile.objects.get(user__username=username)
-        create_connections(u, user1_contacts)
+        post_contacts(self.c, username)
         # the following should NOT raise a DoesNotExist exception
         Invite.objects.get(sender__user__username=username,
                            numbers='+33600000001')
@@ -161,3 +163,79 @@ class LinkTestCase(TestCase):
         with self.assertRaises(ValidationError):
             Link.objects.create(sender=self.u09.userprofile,
                                 receiver=self.u09.userprofile)
+
+class InviteTestCase(TestCase):
+    c = Client(enforce_csrf_checks=True)
+    def setUp(self):
+        super(InviteTestCase, self).setUp()
+        call_command('create_initial_data')
+        self.u01 = register(self.c, 'user1@fr.fr')
+    def test_invite(self):
+        email = 'user1@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        post_contacts(self.c, username)
+        # check invites are NEW
+        i1 = Invite.objects.get(sender__user__username=username,
+                                numbers='+33600000001')
+        i2 = Invite.objects.get(sender__user__username=username,
+                                numbers='+33600000002')
+        self.assertEqual(i1.status, 'NEW')
+        self.assertEqual(i2.status, 'NEW')
+        # call APIs and check invite status
+        res = self.c.post('/api/v1/invite/send/%d/%s'%(i1.id, auth),
+                          data = json.dumps({}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        res = self.c.post('/api/v1/invite/ignore/%d/%s'%(i2.id, auth),
+                          data = json.dumps({}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        i1 = Invite.objects.get(sender__user__username=username,
+                                numbers='+33600000001')
+        i2 = Invite.objects.get(sender__user__username=username,
+                                numbers='+33600000002')
+        self.assertEqual(i1.status, 'PEN')
+        self.assertEqual(i2.status, 'IGN')
+        # wrong invite id
+        res = self.c.post('/api/v1/invite/send/%d/%s'%(321, auth),
+                          data = json.dumps({}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 403)
+        # no id
+        res = self.c.post('/api/v1/invite/send/%s/%s'%('toto', auth),
+                          data = json.dumps({}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 403)
+        # no auth
+        res = self.c.post('/api/v1/invite/ignore/%d/'%(432),
+                          data = json.dumps({}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 401)
+        
+class ContactTestCase(TestCase):
+    c = Client(enforce_csrf_checks=True)
+    def setUp(self):
+        super(ContactTestCase, self).setUp()
+        call_command('create_initial_data')
+        self.u01 = register(self.c, 'user1@fr.fr')
+    def test_invite(self):
+        # for code coverage, doesn't execute the bacground task
+        email = 'user1@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.post('/api/v1/contact/sort/%s'%auth,
+                          data = json.dumps({}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        # bad data
+        res = self.c.post('/api/v1/contact/sort/%s'%auth,
+                          data = "{'iij'}",
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        # bad auth
+        res = self.c.post('/api/v1/contact/sort/?username=sdf&api_key=sdf',
+                          data = json.dumps({}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 401)
+        

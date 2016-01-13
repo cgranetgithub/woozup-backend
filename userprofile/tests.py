@@ -187,7 +187,121 @@ class ProfileTestCase(TestCase):
         res = c.get('/api/v1/userposition/%s/%s'%(self.u01.id, self.authParam))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['last'], u'SRID=4326;POINT (42.0000000000000000 2.0000000000000000)')
+        self.assertEqual(content['last'],
+                         u'SRID=4326;POINT (42.0000000000000000 2.0000000000000000)')
+
+class PositionTestCase(TestCase):
+    c = Client()
+    
+    def setUp(self):
+        super(PositionTestCase, self).setUp()
+        call_command('create_initial_data')
+        email = 'bbb@bbb.bbb'
+        self.u01 = register(c, email)
+        (api_key, self.username) = login(c, email)
+        self.authParam = '?username=%s&api_key=%s'%(self.username,
+                                                    api_key)
+        
+    def test_setlast(self):
+        # no position
+        res = c.post('/api/v1/userposition/setlast/%s'%self.authParam,
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        # empty position
+        res = c.post('/api/v1/userposition/setlast/%s'%self.authParam,
+                        data = json.dumps({'last':''}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        # no auth
+        res = c.post('/api/v1/userposition/setlast/',
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 401)
+        # 
+        res = c.post('/api/v1/userposition/setlast/%s'%self.authParam,
+                        data = json.dumps({'last':'{ "type": "Point", "coordinates": [42.0, 2.0] }'}),
+                        content_type='application/json')
+        self.assertEqual(self.u01.userposition.last.geojson,
+                         u'{"type": "Point", "coordinates": [42.0, 2.0]}')
+
+    def test_setprofile(self):
+        data = {'first_name':'toto', 'last_name':'tata',
+                'email':'toto@gmail.com', 'number':'+33667890343',
+                'gender':'MA'}
+        res = c.post('/api/v1/userprofile/setprofile/%s'%self.authParam,
+                        data = json.dumps(data),
+                        content_type='application/json')
+        u01 = User.objects.get(username=self.username)
+        self.assertEqual(u01.first_name, 'toto')
+        self.assertEqual(u01.last_name, 'tata')
+        self.assertEqual(u01.email, 'toto@gmail.com')
+        self.assertEqual(u01.userprofile.phone_number, '+33667890343')
+        self.assertEqual(u01.userprofile.gender, 'MA')
+
+    def test_resetpassword(self):
+        # just call the API for code coverage, if no error raised, fine!
+        res = c.post('/api/v1/auth/reset_password/%s'%self.authParam,
+                        data = json.dumps({}),
+                        content_type='application/json')
+
+    def test_pushnotifreg(self):
+        u01 = User.objects.get(username=self.username)
+        data = {'device_id': '16146319360533899348',
+                'platform' : 'android',
+                'name'     : 'SM-N9005'}
+        res = c.post('/api/v1/user/push_notif_reg/%s'%self.authParam,
+                        data = json.dumps(data),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        data = {'registration_id':'fUsO4fSkoik:APA91bHKLLyjWOyKTzlQ1M7KINv30LWLEvP769hNOqNoIWTQdkt4goHc59uYaFz0Bp34ZFZDvwWL7zJeZix_l33ttHZNsyajVLqQbs3plI5dIZHMjL5EpIULLiX1_BXJx-j-cokt_387',
+                'platform' : 'android',
+                'name'     : 'SM-N9005'}
+        res = c.post('/api/v1/user/push_notif_reg/%s'%self.authParam,
+                        data = json.dumps(data),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        data = {'registration_id':'fUsO4fSkoik:APA91bHKLLyjWOyKTzlQ1M7KINv30LWLEvP769hNOqNoIWTQdkt4goHc59uYaFz0Bp34ZFZDvwWL7zJeZix_l33ttHZNsyajVLqQbs3plI5dIZHMjL5EpIULLiX1_BXJx-j-cokt_387',
+                'device_id': '16146319360533899348',
+                'name'     : 'SM-N9005'}
+        res = c.post('/api/v1/user/push_notif_reg/%s'%self.authParam,
+                        data = json.dumps(data),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        data = {'registration_id':'fUsO4fSkoik:APA91bHKLLyjWOyKTzlQ1M7KINv30LWLEvP769hNOqNoIWTQdkt4goHc59uYaFz0Bp34ZFZDvwWL7zJeZix_l33ttHZNsyajVLqQbs3plI5dIZHMjL5EpIULLiX1_BXJx-j-cokt_387',
+                'device_id': '899348',
+                'platform' : 'android'}
+        res = c.post('/api/v1/user/push_notif_reg/%s'%self.authParam,
+                        data = json.dumps(data),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        data = {'registration_id':'fUsO4fSkoik:APA91bHKLLyjWOyKTzlQ1M7KINv30LWLEvP769hNOqNoIWTQdkt4goHc59uYaFz0Bp34ZFZDvwWL7zJeZix_l33ttHZNsyajVLqQbs3plI5dIZHMjL5EpIULLiX1_BXJx-j-cokt_387',
+                'device_id': '60533899348',
+                'platform' : 'android',
+                'name'     : 'SM-N9005'}
+        res = c.post('/api/v1/user/push_notif_reg/%s'%self.authParam,
+                        data = json.dumps(data),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        from push_notifications.models import APNSDevice, GCMDevice
+        gcm = GCMDevice.objects.get(user=u01, device_id='60533899348')
+        self.assertEqual(gcm.registration_id, 'fUsO4fSkoik:APA91bHKLLyjWOyKTzlQ1M7KINv30LWLEvP769hNOqNoIWTQdkt4goHc59uYaFz0Bp34ZFZDvwWL7zJeZix_l33ttHZNsyajVLqQbs3plI5dIZHMjL5EpIULLiX1_BXJx-j-cokt_387')
+        self.assertEqual(gcm.device_id, int('60533899348', 16))
+        self.assertEqual(gcm.name, 'SM-N9005')
+        # iOS
+        data = {'registration_id':'853963aad5c73f1d28efb57e9b89e2db8effe6e34ad9f5424871b76792a40d84',
+                'device_id': '5a1972adee554154800f9d3c84889fda',
+                'platform' : 'ios',
+                'name'     : 'iPad2,5'}
+        res = c.post('/api/v1/user/push_notif_reg/%s'%self.authParam,
+                        data = json.dumps(data),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        from push_notifications.models import APNSDevice, GCMDevice
+        apns = APNSDevice.objects.get(user=u01, device_id='5a1972adee554154800f9d3c84889fda')
+        self.assertEqual(apns.registration_id, '853963aad5c73f1d28efb57e9b89e2db8effe6e34ad9f5424871b76792a40d84')
+        self.assertEqual(apns.device_id.hex, '5a1972adee554154800f9d3c84889fda')
+        self.assertEqual(apns.name, 'iPad2,5')
 
 class RelationshipTestCase(TestCase):
     c = Client()

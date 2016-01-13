@@ -22,7 +22,7 @@ class EventTestCase(TestCase):
         e.category.add(cat)        
 
     def test_owner_journey(self):
-        """do typical sequence of calls an app would do"""
+        ### do typical sequence of calls an app would do
         email = 'aaa@aaa.aaa'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
@@ -65,7 +65,7 @@ class EventTestCase(TestCase):
             
 
     def test_my_events(self):
-        """events I can see"""
+        ### events I can see
         email = 'aaa@aaa.aaa'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
@@ -138,45 +138,100 @@ class EventTestCase(TestCase):
         self.assertEqual(res.status_code, 401)
         
     def test_set_owner(self):
-        """try to create an event for someone else"""
+        ### try to create an event for someone else
         pass
 
     def test_join_leave(self):
-        u02 = register(self.c, 'bbb@bbb.bbb')
-        u03 = register(self.c, 'ccc@ccc.ccc')
         email = 'aaa@aaa.aaa'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         # user1 creates an event
-        e = EventType.objects.first().id
+        etype = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
-        data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
+        data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':start,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = self.c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 201)
-        for (i, j) in res.items():
-            if i == 'Location':
-                ide = j.strip('/').split('/')[-1]
-                break
+        ide = Event.objects.get(owner__user__username=username,
+                                event_type=etype, start=start).id
         # user2 & user3 join
         email = 'bbb@bbb.bbb'
+        u02 = register(self.c, 'bbb@bbb.bbb')
         (api_key, username) = login(self.c, email)
-        auth = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth),
+        auth2 = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth2),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
         email = 'ccc@ccc.ccc'
+        u03 = register(self.c, 'ccc@ccc.ccc')
         (api_key, username) = login(self.c, email)
-        auth = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth),
+        auth3 = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth3),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
         e = Event.objects.get(id=ide)
         participants = [ i['user_id'] for i in e.participants.values() ]
         self.assertEqual(len(participants), 2)
-        self.assertEqual(participants.sort(),
-                         [u02.id, u03.id].sort())
+        self.assertEqual(participants.sort(), [u02.id, u03.id].sort())
+        # user3 leaves
+        res = self.c.post('/api/v1/events/friends/leave/%s/%s'%(ide, auth3),
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        e = Event.objects.get(id=ide)
+        participants = [ i['user_id'] for i in e.participants.values() ]
+        self.assertEqual(len(participants), 1)
+        self.assertEqual(participants.sort(), [u03.id].sort())
+
+    def test_error_cases(self):
+        email = 'aaa@aaa.aaa'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        # user1 creates an event
+        etype = EventType.objects.first().id
+        start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':start,
+                'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
+        res = self.c.post('/api/v1/events/mine/%s'%auth,
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        ide = Event.objects.get(owner__user__username=username,
+                                event_type=etype, start=start).id
+        # try to join it
+        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth),
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 403)
+        # wrong id
+        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(543, auth),
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        # join two times
+        email = 'bbb@bbb.bbb'
+        u02 = register(self.c, 'bbb@bbb.bbb')
+        (api_key, username) = login(self.c, email)
+        auth2 = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth2),
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth2),
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 403)
+        # leave but not participant
+        email = 'ccc@ccc.ccc'
+        u03 = register(self.c, 'ccc@ccc.ccc')
+        (api_key, username) = login(self.c, email)
+        auth3 = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.post('/api/v1/events/friends/leave/%s/%s'%(ide, auth3),
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 403)
+        

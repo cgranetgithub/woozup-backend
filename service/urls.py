@@ -12,13 +12,13 @@ from userprofile.views import *
 from service.settings.prod import STATIC_URL
 #from service.notification import GCMDeviceAuthenticatedResource
 
-def module_exists(module_name):
-    try:
-        __import__(module_name)
-    except ImportError:
-        return False
-    else:
-        return True
+#def module_exists(module_name):
+    #try:
+        #__import__(module_name)
+    #except ImportError:
+        #return False
+    #else:
+        #return True
 
 v1_api = Api(api_name='v1')
 v1_api.register(MyAgendaResource())
@@ -41,21 +41,21 @@ v1_api.register(ContactResource())
 urlpatterns = [
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
-    url(r'^$', social_login),
-    url(r'^home/$', home),
-    url(r'^logout/$', social_logout),
+    #url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
+    #url(r'^$', social_login),
+    #url(r'^home/$', home),
+    #url(r'^logout/$', social_logout),
     url(r'^accounts/', include('allauth.urls')),
     url(r'^favicon.ico$', RedirectView.as_view(url=STATIC_URL+'favicon.ico')),
 ]
 
-if module_exists('tastypie_swagger'):
-    urlpatterns += [
-        url(r'api/doc/', include('tastypie_swagger.urls',
-                                 namespace='v1_api_tastypie_swagger'),
-                         kwargs={
-                            "tastypie_api_module":v1_api,
-                            "namespace":"v1_api_tastypie_swagger",
-                            "version": "0.1"}
-        )
-    ]
+#if module_exists('tastypie_swagger'):
+    #urlpatterns += [
+        #url(r'api/doc/', include('tastypie_swagger.urls',
+                                 #namespace='v1_api_tastypie_swagger'),
+                         #kwargs={
+                            #"tastypie_api_module":v1_api,
+                            #"namespace":"v1_api_tastypie_swagger",
+                            #"version": "0.1"}
+        #)
+    #]

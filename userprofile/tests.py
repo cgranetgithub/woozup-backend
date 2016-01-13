@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 
 from userprofile.models import UserProfile, UserPosition
 from service.testutils import register, login
+from link.models import Link
 
 c = Client()
 
@@ -128,8 +129,6 @@ class AuthTestCase(TestCase):
         UserPosition.objects.get(user=self.u01)
 
 class ProfileTestCase(TestCase):
-    c = Client()
-    
     def setUp(self):
         super(ProfileTestCase, self).setUp()
         call_command('create_initial_data')
@@ -191,8 +190,6 @@ class ProfileTestCase(TestCase):
                          u'SRID=4326;POINT (42.0000000000000000 2.0000000000000000)')
 
 class PositionTestCase(TestCase):
-    c = Client()
-    
     def setUp(self):
         super(PositionTestCase, self).setUp()
         call_command('create_initial_data')
@@ -304,19 +301,309 @@ class PositionTestCase(TestCase):
         self.assertEqual(apns.name, 'iPad2,5')
 
 class RelationshipTestCase(TestCase):
-    c = Client()
-    
     def setUp(self):
         super(RelationshipTestCase, self).setUp()
         call_command('create_initial_data')
+        email = 'aaa@aaa.aaa'
+        self.u1 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth1 = '?username=%s&api_key=%s'%(username, api_key)
         email = 'bbb@bbb.bbb'
-        self.u01 = register(c, email)
-        (api_key, self.username) = login(c, email)
-        self.authParam = '?username=%s&api_key=%s'%(self.username,
-                                                    api_key)
-        username = '+33610000002'
-        self.u02 = User.objects.create_user(username=username,
-                                            password='pwdpwd')
+        self.u2 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth2 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'ccc@ccc.ccc'
+        self.u3 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth3 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'ddd@ddd.ddd'
+        self.u4 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth4 = '?username=%s&api_key=%s'%(username, api_key)
 
-    def test_invite(self):
-        pass
+    def test_oneway(self):
+        l1 = Link.objects.create(sender=self.u1.userprofile,
+                                 receiver=self.u2.userprofile)
+        l2 = Link.objects.create(sender=self.u1.userprofile,
+                                 receiver=self.u3.userprofile)
+        l3 = Link.objects.create(sender=self.u1.userprofile,
+                                 receiver=self.u4.userprofile)
+        self.assertEqual(l1.sender_status, 'NEW')
+        self.assertEqual(l2.sender_status, 'NEW')
+        self.assertEqual(l3.sender_status, 'NEW')
+        self.assertEqual(l1.receiver_status, 'NEW')
+        self.assertEqual(l2.receiver_status, 'NEW')
+        self.assertEqual(l3.receiver_status, 'NEW')
+        # u1 invites u2
+        res = c.post('/api/v1/user/invite/%d/%s'%(self.u2.id, self.auth1),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l1 = Link.objects.get(sender=self.u1.userprofile,
+                              receiver=self.u2.userprofile)
+        self.assertEqual(l1.sender_status, 'ACC')
+        self.assertEqual(l1.receiver_status, 'PEN')
+        # u2 accepts u1
+        res = c.post('/api/v1/user/accept/%d/%s'%(self.u1.id, self.auth2),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l1 = Link.objects.get(sender=self.u1.userprofile,
+                              receiver=self.u2.userprofile)
+        self.assertEqual(l1.sender_status, 'ACC')
+        self.assertEqual(l1.receiver_status, 'ACC')
+        # u1 ignore u3
+        res = c.post('/api/v1/user/ignore/%d/%s'%(self.u3.id, self.auth1),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l2 = Link.objects.get(sender=self.u1.userprofile,
+                              receiver=self.u3.userprofile)
+        self.assertEqual(l2.sender_status, 'IGN')
+        self.assertEqual(l2.receiver_status, 'NEW')
+        # u1 invites u4
+        res = c.post('/api/v1/user/invite/%d/%s'%(self.u4.id, self.auth1),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l3 = Link.objects.get(sender=self.u1.userprofile,
+                              receiver=self.u4.userprofile)
+        self.assertEqual(l3.sender_status, 'ACC')
+        self.assertEqual(l3.receiver_status, 'PEN')
+        # u4 accepts u1
+        res = c.post('/api/v1/user/reject/%d/%s'%(self.u1.id, self.auth4),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l3 = Link.objects.get(sender=self.u1.userprofile,
+                              receiver=self.u4.userprofile)
+        self.assertEqual(l3.sender_status, 'ACC')
+        self.assertEqual(l3.receiver_status, 'REJ')
+        
+    def test_theotherway(self):
+        l1 = Link.objects.create(receiver=self.u1.userprofile,
+                                 sender=self.u2.userprofile)
+        l2 = Link.objects.create(receiver=self.u1.userprofile,
+                                 sender=self.u3.userprofile)
+        l3 = Link.objects.create(receiver=self.u1.userprofile,
+                                 sender=self.u4.userprofile)
+        self.assertEqual(l1.sender_status, 'NEW')
+        self.assertEqual(l2.sender_status, 'NEW')
+        self.assertEqual(l3.sender_status, 'NEW')
+        self.assertEqual(l1.receiver_status, 'NEW')
+        self.assertEqual(l2.receiver_status, 'NEW')
+        self.assertEqual(l3.receiver_status, 'NEW')
+        # u1 invites u2
+        res = c.post('/api/v1/user/invite/%d/%s'%(self.u2.id, self.auth1),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l1 = Link.objects.get(receiver=self.u1.userprofile,
+                              sender=self.u2.userprofile)
+        self.assertEqual(l1.receiver_status, 'ACC')
+        self.assertEqual(l1.sender_status, 'PEN')
+        # u2 accepts u1
+        res = c.post('/api/v1/user/accept/%d/%s'%(self.u1.id, self.auth2),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l1 = Link.objects.get(receiver=self.u1.userprofile,
+                              sender=self.u2.userprofile)
+        self.assertEqual(l1.receiver_status, 'ACC')
+        self.assertEqual(l1.sender_status, 'ACC')
+        # u1 ignore u3
+        res = c.post('/api/v1/user/ignore/%d/%s'%(self.u3.id, self.auth1),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l2 = Link.objects.get(receiver=self.u1.userprofile,
+                              sender=self.u3.userprofile)
+        self.assertEqual(l2.receiver_status, 'IGN')
+        self.assertEqual(l2.sender_status, 'NEW')
+        # u1 invites u4
+        res = c.post('/api/v1/user/invite/%d/%s'%(self.u4.id, self.auth1),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l3 = Link.objects.get(receiver=self.u1.userprofile,
+                              sender=self.u4.userprofile)
+        self.assertEqual(l3.receiver_status, 'ACC')
+        self.assertEqual(l3.sender_status, 'PEN')
+        # u4 accepts u1
+        res = c.post('/api/v1/user/reject/%d/%s'%(self.u1.id, self.auth4),
+                        data = json.dumps({}),
+                        content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        l3 = Link.objects.get(receiver=self.u1.userprofile,
+                              sender=self.u4.userprofile)
+        self.assertEqual(l3.receiver_status, 'ACC')
+        self.assertEqual(l3.sender_status, 'REJ')
+        
+class ResourcesTestCase(TestCase):
+    def setUp(self):
+        super(ResourcesTestCase, self).setUp()
+        call_command('create_initial_data')
+        # create some users
+        email = 'aaa@aaa.aaa'
+        self.u1 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth1 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'bbb@bbb.bbb'
+        self.u2 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth2 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'ccc@ccc.ccc'
+        self.u3 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth3 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'ddd@ddd.ddd'
+        self.u4 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth4 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'eee@eee.eee'
+        self.u5 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth5 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'fff@fff.fff'
+        self.u6 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth6 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'ggg@ggg.ggg'
+        self.u7 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth7 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'hhh@hhh.hhh'
+        self.u8 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth8 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'iii@iii.iii'
+        self.u9 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth9 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'jjj@jjj.jjj'
+        self.u10 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth10 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'kkk@kk.kkk'
+        self.u11 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth11 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'lll@lll.lll'
+        self.u12 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth12 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'mmm@mmm.mmm'
+        self.u13 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth13 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'nnn@nnn.nnn'
+        self.u14 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth14 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'ooo@ooo.ooo'
+        self.u15 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth15 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'ppp@ppp.ppp'
+        self.u16 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth16 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'qqq@qqq.qqq'
+        self.u17 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth17 = '?username=%s&api_key=%s'%(username, api_key)
+        # create relations for u1
+        Link.objects.create(sender=self.u1.userprofile, sender_status='NEW',
+                            receiver=self.u2.userprofile, receiver_status='NEW')
+        Link.objects.create(sender=self.u1.userprofile, sender_status='NEW',
+                            receiver=self.u3.userprofile, receiver_status='IGN')
+        Link.objects.create(sender=self.u1.userprofile, sender_status='IGN',
+                            receiver=self.u4.userprofile, receiver_status='NEW')
+        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
+                            receiver=self.u5.userprofile, receiver_status='PEN')
+        Link.objects.create(sender=self.u1.userprofile, sender_status='PEN',
+                            receiver=self.u6.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
+                            receiver=self.u7.userprofile, receiver_status='REJ')
+        Link.objects.create(sender=self.u1.userprofile, sender_status='REJ',
+                            receiver=self.u8.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
+                            receiver=self.u9.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u10.userprofile, sender_status='NEW',
+                            receiver=self.u1.userprofile, receiver_status='NEW')
+        Link.objects.create(sender=self.u11.userprofile, sender_status='NEW',
+                            receiver=self.u1.userprofile, receiver_status='IGN')
+        Link.objects.create(sender=self.u12.userprofile, sender_status='IGN',
+                            receiver=self.u1.userprofile, receiver_status='NEW')
+        Link.objects.create(sender=self.u13.userprofile, sender_status='ACC',
+                            receiver=self.u1.userprofile, receiver_status='PEN')
+        Link.objects.create(sender=self.u14.userprofile, sender_status='PEN',
+                            receiver=self.u1.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u15.userprofile, sender_status='ACC',
+                            receiver=self.u1.userprofile, receiver_status='REJ')
+        Link.objects.create(sender=self.u16.userprofile, sender_status='REJ',
+                            receiver=self.u1.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u17.userprofile, sender_status='ACC',
+                            receiver=self.u1.userprofile, receiver_status='ACC')
+        # create relations for u2
+        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
+                            receiver=self.u3.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
+                            receiver=self.u5.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
+                            receiver=self.u7.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
+                            receiver=self.u9.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
+                            receiver=self.u10.userprofile, receiver_status='ACC')
+        # create relations for u3
+        Link.objects.create(sender=self.u3.userprofile, sender_status='NEW',
+                            receiver=self.u6.userprofile, receiver_status='NEW')
+        Link.objects.create(sender=self.u3.userprofile, sender_status='NEW',
+                            receiver=self.u8.userprofile, receiver_status='NEW')
+        Link.objects.create(sender=self.u3.userprofile, sender_status='NEW',
+                            receiver=self.u10.userprofile, receiver_status='NEW')
+        Link.objects.create(sender=self.u3.userprofile, sender_status='ACC',
+                            receiver=self.u12.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u3.userprofile, sender_status='ACC',
+                            receiver=self.u14.userprofile, receiver_status='ACC')
+
+    def test_MyFriends(self):
+        res = c.get('/api/v1/friends/mine/%s'%(self.auth1))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 2)
+        res = c.get('/api/v1/friends/mine/%s'%(self.auth2))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 0)
+        res = c.get('/api/v1/friends/mine/%s'%(self.auth3))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 2)
+    def test_PendingFriends(self):
+        res = c.get('/api/v1/friends/pending/%s'%(self.auth1))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 2)
+        res = c.get('/api/v1/friends/pending/%s'%(self.auth2))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 5)
+        res = c.get('/api/v1/friends/pending/%s'%(self.auth3))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 0)
+    def test_NewFriends(self):
+        res = c.get('/api/v1/friends/new/%s'%(self.auth1))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 4)
+        res = c.get('/api/v1/friends/new/%s'%(self.auth2))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 1)
+        res = c.get('/api/v1/friends/new/%s'%(self.auth3))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 3)

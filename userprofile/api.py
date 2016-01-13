@@ -163,10 +163,10 @@ class UserResource(ModelResource):
         receiver_id = kwargs['user_id']
         new_sender_status   = 'ACC'
         new_receiver_status = 'PEN'
-        (req, result, status, link, inverted) = apifn.change_link(request,
-                                                    sender_id, receiver_id,
-                                                    new_sender_status,
-                                                    new_receiver_status)
+        (req, result, status,
+         link, inverted) = apifn.change_link(request, sender_id, receiver_id,
+                                             new_sender_status,
+                                             new_receiver_status)
         push.link_requested(link, inverted)
         return self.create_response(req, result, status)
 
@@ -174,12 +174,12 @@ class UserResource(ModelResource):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        sender_id   = kwargs['user_id']
-        receiver_id = request.user.id
+        sender_id   = request.user.id
+        receiver_id = kwargs['user_id']
         new_sender_status = 'IGN'
-        (req, result, status, link, inverted) = apifn.change_link(request,
-                                                    sender_id, receiver_id,
-                                                    new_sender_status, None)
+        (req, result, status,
+         link, inverted) = apifn.change_link(request, sender_id, receiver_id,
+                                             new_sender_status, None)
         return self.create_response(req, result, status)
     def accept(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -188,9 +188,9 @@ class UserResource(ModelResource):
         sender_id   = kwargs['user_id']
         receiver_id = request.user.id
         new_receiver_status = 'ACC'
-        (req, result, status, link, inverted) = apifn.change_link(request,
-                                                    sender_id, receiver_id,
-                                                    None, new_receiver_status)
+        (req, result, status,
+         link, inverted) = apifn.change_link(request, sender_id, receiver_id,
+                                             None, new_receiver_status)
         push.link_accepted(link, inverted)
         return self.create_response(req, result, status)
     def reject(self, request, **kwargs):
@@ -200,9 +200,9 @@ class UserResource(ModelResource):
         sender_id   = kwargs['user_id']
         receiver_id = request.user.id
         new_receiver_status = 'REJ'
-        (req, result, status, link, inverted) = apifn.change_link(request,
-                                                    sender_id, receiver_id,
-                                                    None, new_receiver_status)
+        (req, result, status,
+         link, inverted) = apifn.change_link(request, sender_id, receiver_id,
+                                             None, new_receiver_status)
         return self.create_response(req, result, status)
 
 class ProfileResource(ModelResource):

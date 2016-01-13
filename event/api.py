@@ -94,7 +94,7 @@ class MyAgendaResource(AbstractEventResource):
         mine = Event.objects.filter(owner__user=request.user)
         participation = request.user.userprofile.events_as_participant.all()
         events = mine | participation
-        return events
+        return events.distinct()
 
 class MyEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):

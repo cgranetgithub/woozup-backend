@@ -19,8 +19,10 @@ class Link(models.Model):
                     (REJECTED, 'rejected'),
                     (IGNORED , 'ignored'),
                     (BLOCKED , 'blocked' ) )
-    sender   = models.ForeignKey('userprofile.UserProfile', related_name='link_as_sender')
-    receiver = models.ForeignKey('userprofile.UserProfile', related_name='link_as_receiver')
+    sender   = models.ForeignKey('userprofile.UserProfile',
+                                 related_name='link_as_sender')
+    receiver = models.ForeignKey('userprofile.UserProfile',
+                                 related_name='link_as_receiver')
     sender_status   = models.CharField(max_length=3, choices=LINK_STATUS,
                                                      default=NEW)
     receiver_status = models.CharField(max_length=3, choices=LINK_STATUS,

@@ -7,16 +7,16 @@ from django.contrib.auth.models import User
 #from tastypie.test import ResourceTestCase
 
 from event.models import Event, EventType, EventCategory
+from link.models import Link
 from service.testutils import register, login
 
+c = Client()
 
 class EventTestCase(TestCase):
-    c = Client()
-    
     def setUp(self):
         super(EventTestCase, self).setUp()
         call_command('create_initial_data')
-        u01 = register(self.c, 'aaa@aaa.aaa')
+        u01 = register(c, 'aaa@aaa.aaa')
         cat = EventCategory.objects.create(name="meal")
         e = EventType.objects.create(name="meal")
         e.category.add(cat)        
@@ -24,14 +24,14 @@ class EventTestCase(TestCase):
     def test_owner_journey(self):
         ### do typical sequence of calls an app would do
         email = 'aaa@aaa.aaa'
-        (api_key, username) = login(self.c, email)
+        (api_key, username) = login(c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         #user1 creates an event
         e_id = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/%d/'%e_id, 'start':start,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
-        res = self.c.post('/api/v1/events/mine/%s'%auth,
+        res = c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 201)
@@ -45,7 +45,7 @@ class EventTestCase(TestCase):
         self.assertEqual(e.location_coords.coords, (100.0, 0.0))
         #user1 updates the event
         data = {'location_coords':'{ "type": "Point", "coordinates": [50.0, 50.0] }'}
-        res = self.c.put('/api/v1/events/mine/%s/%s'%(ide, auth),
+        res = c.put('/api/v1/events/mine/%s/%s'%(ide, auth),
                          data = json.dumps(data),
                          content_type='application/json')
         e = Event.objects.get(id=ide)
@@ -53,8 +53,8 @@ class EventTestCase(TestCase):
         self.assertEqual(e.event_type.id, e_id)
         self.assertEqual(e.location_coords.coords, (50.0, 50.0))
         #user1 deletes the event
-        res = self.c.delete('/api/v1/events/mine/%s/%s'%(ide, auth))
-        res = self.c.get('/api/v1/events/mine/%s/%s'%(ide, auth))
+        res = c.delete('/api/v1/events/mine/%s/%s'%(ide, auth))
+        res = c.get('/api/v1/events/mine/%s/%s'%(ide, auth))
         self.assertEqual(res.status_code, 404)
         exists = True
         try:
@@ -67,18 +67,18 @@ class EventTestCase(TestCase):
     def test_my_events(self):
         ### events I can see
         email = 'aaa@aaa.aaa'
-        (api_key, username) = login(self.c, email)
+        (api_key, username) = login(c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         e = EventType.objects.first().id
         #start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         start = datetime.datetime.now().isoformat()
         data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
-        res = self.c.post('/api/v1/events/mine/%s'%auth,
+        res = c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 201)
-        res = self.c.get('/api/v1/events/mine/%s'%auth)
+        res = c.get('/api/v1/events/mine/%s'%auth)
         content = json.loads(res.content)
         self.assertEqual(content['meta']['total_count'], 1)
         #self.assertEqual(cmp_result(content['objects'], expected), 5)
@@ -86,55 +86,55 @@ class EventTestCase(TestCase):
 
     def test_unauth_method(self):
         email = 'aaa@aaa.aaa'
-        (api_key, username) = login(self.c, email)
+        (api_key, username) = login(c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         data = {'last':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
-        res = self.c.post('/api/v1/userposition/setlast/%s'%auth,
+        res = c.post('/api/v1/userposition/setlast/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
         #list
-        res = self.c.get('/api/v1/events/mine/%s'%auth)
+        res = c.get('/api/v1/events/mine/%s'%auth)
         self.assertEqual(res.status_code, 200)
-        res = self.c.put('/api/v1/events/mine/%s'%auth)
+        res = c.put('/api/v1/events/mine/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.patch('/api/v1/events/mine/%s'%auth)
+        res = c.patch('/api/v1/events/mine/%s'%auth)
         self.assertEqual(res.status_code, 405)
-        res = self.c.delete('/api/v1/events/mine/%s'%auth)
+        res = c.delete('/api/v1/events/mine/%s'%auth)
         self.assertEqual(res.status_code, 405)
         e = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
-        res = self.c.post('/api/v1/events/mine/%s'%auth,
+        res = c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 201)
-        res = self.c.get('/api/v1/events/mine/%s'%auth)
+        res = c.get('/api/v1/events/mine/%s'%auth)
         content = json.loads(res.content)
         self.assertEqual(content['meta']['total_count'], 1)
         event_id = content['objects'][0]['id']
         #detail
-        res = self.c.get('/api/v1/events/mine/%s/%s'%(event_id, auth))
+        res = c.get('/api/v1/events/mine/%s/%s'%(event_id, auth))
         self.assertEqual(res.status_code, 200)
         data = {'location_coords':'{ "type": "Point", "coordinates": [50.0, 50.0] }'}
-        res = self.c.put('/api/v1/events/mine/%s/%s'%(event_id, auth),
+        res = c.put('/api/v1/events/mine/%s/%s'%(event_id, auth),
                          data = json.dumps(data),
                          content_type='application/json')
         self.assertEqual(res.status_code, 204)
-        res = self.c.patch('/api/v1/events/mine/%s/%s'%(event_id, auth),
+        res = c.patch('/api/v1/events/mine/%s/%s'%(event_id, auth),
                          data = json.dumps(data),
                          content_type='application/json')
         self.assertEqual(res.status_code, 405)
-        res = self.c.post('/api/v1/events/mine/%s/%s'%(event_id, auth))
+        res = c.post('/api/v1/events/mine/%s/%s'%(event_id, auth))
         self.assertEqual(res.status_code, 405)
-        res = self.c.delete('/api/v1/events/mine/%s/%s'%(event_id, auth))
+        res = c.delete('/api/v1/events/mine/%s/%s'%(event_id, auth))
         self.assertEqual(res.status_code, 204)
 
     def test_unauth_user(self):
-        res = self.c.get('/api/v1/events/mine/')
+        res = c.get('/api/v1/events/mine/')
         self.assertEqual(res.status_code, 401)
-        res = self.c.get('/api/v1/events/mine/1/')
+        res = c.get('/api/v1/events/mine/1/')
         self.assertEqual(res.status_code, 401)
         
     def test_set_owner(self):
@@ -143,14 +143,14 @@ class EventTestCase(TestCase):
 
     def test_join_leave(self):
         email = 'aaa@aaa.aaa'
-        (api_key, username) = login(self.c, email)
+        (api_key, username) = login(c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         # user1 creates an event
         etype = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':start,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
-        res = self.c.post('/api/v1/events/mine/%s'%auth,
+        res = c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 201)
@@ -158,18 +158,18 @@ class EventTestCase(TestCase):
                                 event_type=etype, start=start).id
         # user2 & user3 join
         email = 'bbb@bbb.bbb'
-        u02 = register(self.c, 'bbb@bbb.bbb')
-        (api_key, username) = login(self.c, email)
+        u02 = register(c, 'bbb@bbb.bbb')
+        (api_key, username) = login(c, email)
         auth2 = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth2),
+        res = c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth2),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
         email = 'ccc@ccc.ccc'
-        u03 = register(self.c, 'ccc@ccc.ccc')
-        (api_key, username) = login(self.c, email)
+        u03 = register(c, 'ccc@ccc.ccc')
+        (api_key, username) = login(c, email)
         auth3 = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth3),
+        res = c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth3),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
@@ -178,7 +178,7 @@ class EventTestCase(TestCase):
         self.assertEqual(len(participants), 2)
         self.assertEqual(participants.sort(), [u02.id, u03.id].sort())
         # user3 leaves
-        res = self.c.post('/api/v1/events/friends/leave/%s/%s'%(ide, auth3),
+        res = c.post('/api/v1/events/friends/leave/%s/%s'%(ide, auth3),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
@@ -189,49 +189,202 @@ class EventTestCase(TestCase):
 
     def test_error_cases(self):
         email = 'aaa@aaa.aaa'
-        (api_key, username) = login(self.c, email)
+        (api_key, username) = login(c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         # user1 creates an event
         etype = EventType.objects.first().id
         start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':start,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
-        res = self.c.post('/api/v1/events/mine/%s'%auth,
+        res = c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 201)
         ide = Event.objects.get(owner__user__username=username,
                                 event_type=etype, start=start).id
         # try to join it
-        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth),
+        res = c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 403)
         # wrong id
-        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(543, auth),
+        res = c.post('/api/v1/events/friends/join/%s/%s'%(543, auth),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 400)
         # join two times
         email = 'bbb@bbb.bbb'
-        u02 = register(self.c, 'bbb@bbb.bbb')
-        (api_key, username) = login(self.c, email)
+        u02 = register(c, 'bbb@bbb.bbb')
+        (api_key, username) = login(c, email)
         auth2 = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth2),
+        res = c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth2),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        res = self.c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth2),
+        res = c.post('/api/v1/events/friends/join/%s/%s'%(ide, auth2),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 403)
         # leave but not participant
         email = 'ccc@ccc.ccc'
-        u03 = register(self.c, 'ccc@ccc.ccc')
-        (api_key, username) = login(self.c, email)
+        u03 = register(c, 'ccc@ccc.ccc')
+        (api_key, username) = login(c, email)
         auth3 = '?username=%s&api_key=%s'%(username, api_key)
-        res = self.c.post('/api/v1/events/friends/leave/%s/%s'%(ide, auth3),
+        res = c.post('/api/v1/events/friends/leave/%s/%s'%(ide, auth3),
                           data = json.dumps(data),
                           content_type='application/json')
         self.assertEqual(res.status_code, 403)
-        
+
+class ResourcesTestCase(TestCase):
+    def setUp(self):
+        super(ResourcesTestCase, self).setUp()
+        call_command('create_initial_data')
+        # create some users
+        email = 'aaa@aaa.aaa'
+        self.u1 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth1 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'bbb@bbb.bbb'
+        self.u2 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth2 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'ccc@ccc.ccc'
+        self.u3 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth3 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'ddd@ddd.ddd'
+        self.u4 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth4 = '?username=%s&api_key=%s'%(username, api_key)
+        # create relations
+        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
+                            receiver=self.u2.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
+                            receiver=self.u3.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.userprofile, sender_status='ACC',
+                            receiver=self.u4.userprofile, receiver_status='ACC')
+        # create categorie & type
+        cat = EventCategory.objects.create(name="meal")
+        etype = EventType.objects.create(name="meal")
+        etype.category.add(cat)        
+        # create some events for u1
+        e1 = Event.objects.create(owner=self.u1.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u1 breakfast",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e2 = Event.objects.create(owner=self.u1.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u1 lunch",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e2.participants.add(self.u2.userprofile)
+        e3 = Event.objects.create(owner=self.u1.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u1 diner",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e3.participants.add(self.u2.userprofile)
+        e3.participants.add(self.u3.userprofile)
+        # create some events for u2
+        e1 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u2 breakfast",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e2 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u2 lunch",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e2.participants.add(self.u1.userprofile)
+        e3 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u2 diner",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e3.participants.add(self.u1.userprofile)
+        e3.participants.add(self.u4.userprofile)
+        # create some events for u3
+        e1 = Event.objects.create(owner=self.u3.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u3 breakfast",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e2 = Event.objects.create(owner=self.u3.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u3 lunch",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e2.participants.add(self.u1.userprofile)
+        # create some events for u4
+        e1 = Event.objects.create(owner=self.u4.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u4 breakfast",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e2 = Event.objects.create(owner=self.u4.userprofile, event_type=etype,
+                                  start=datetime.datetime.now(),
+                                  name="u4 lunch",
+                                  location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e2.participants.add(self.u2.userprofile)
+
+    def test_AllEvents(self):
+        res = c.get('/api/v1/events/all/%s'%(self.auth1))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 8)
+        res = c.get('/api/v1/events/all/%s'%(self.auth2))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 8)
+        res = c.get('/api/v1/events/all/%s'%(self.auth4))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 5)
+        res = c.get('/api/v1/events/all/%s'%(self.auth4))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 5)
+    def test_MyAgenda(self):
+        res = c.get('/api/v1/events/agenda/%s'%(self.auth1))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 6)
+        res = c.get('/api/v1/events/agenda/%s'%(self.auth2))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 6)
+        res = c.get('/api/v1/events/agenda/%s'%(self.auth3))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 3)
+        res = c.get('/api/v1/events/agenda/%s'%(self.auth4))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 3)
+    def test_MyEvents(self):
+        res = c.get('/api/v1/events/mine/%s'%(self.auth1))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 3)
+        res = c.get('/api/v1/events/mine/%s'%(self.auth2))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 3)
+        res = c.get('/api/v1/events/mine/%s'%(self.auth3))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 2)
+        res = c.get('/api/v1/events/mine/%s'%(self.auth4))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 2)
+    def test_FriendsEvents(self):
+        res = c.get('/api/v1/events/friends/%s'%(self.auth1))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 5)
+        res = c.get('/api/v1/events/friends/%s'%(self.auth2))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 5)
+        res = c.get('/api/v1/events/friends/%s'%(self.auth3))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 3)
+        res = c.get('/api/v1/events/friends/%s'%(self.auth4))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 3)

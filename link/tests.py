@@ -25,7 +25,7 @@ def cmp_result(content, searchfor):
             found += 1
     return found
 
-def post_contacts(c, username):
+def sort_contact(c, username):
     user1_contacts = [
         {'name':'newuser1', 'numbers':'+33600000001',
                         'emails':'newuser1@fr.fr, newuser11@fr.fr'},
@@ -36,6 +36,11 @@ def post_contacts(c, username):
         {'name':'newuser1', 'numbers':'+33600000010',
                         'emails':'newuser10@fr.fr'},
         {'name':'user9', 'numbers':'+33610000009', 'emails':'user9@fr.fr'},
+        {'name':'localnumber', 'numbers':'0634567890'},
+        {'name':'intnumber', 'numbers':'+33610077009'},
+        {'name':'wrongnumber', 'numbers':'666'},
+        {'name':'duplnumber', 'numbers':'+33 601 203 003, 06 01 20 30 03'},
+        {'name':'2numbers', 'numbers':'+33602200010, 0675894632'},
     ]
     # execute background task directly
     u = UserProfile.objects.get(user__username=username)
@@ -121,7 +126,7 @@ class LinkTestCase(TestCase):
         email = 'user1@fr.fr'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        post_contacts(self.c, username)
+        sort_contact(self.c, username)
         # the following should NOT raise a DoesNotExist exception
         Invite.objects.get(sender__user__username=username,
                            numbers='+33600000001')
@@ -138,6 +143,27 @@ class LinkTestCase(TestCase):
         #the following should NOT raise a DoesNotExist exception
         Link.objects.get(sender__user__username=username,
                          receiver__user__email='newuser1@fr.fr')
+
+    def test_number_treatment(self):
+        email = 'user1@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        sort_contact(self.c, username)
+        # check invites created (must not throw error)
+        Invite.objects.get(sender__user__username=username,
+                           name='localnumber', numbers='+33634567890')
+        Invite.objects.get(sender__user__username=username,
+                           name='intnumber', numbers='+33610077009')
+        try:
+            Invite.objects.get(sender__user__username=username,
+                               name='wrongnumber', numbers='666'),
+            self.assertEqual(True, False)
+        except Invite.DoesNotExist:
+            pass
+        Invite.objects.get(sender__user__username=username,
+                           name='duplnumber', numbers='+33601203003'),
+        Invite.objects.get(sender__user__username=username,
+                           name='2numbers', numbers='+33602200010, +33675894632'),
 
     def test_contact_big(self):
         import contact_example as ce
@@ -174,7 +200,7 @@ class InviteTestCase(TestCase):
         email = 'user1@fr.fr'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        post_contacts(self.c, username)
+        sort_contact(self.c, username)
         # check invites are NEW
         i1 = Invite.objects.get(sender__user__username=username,
                                 numbers='+33600000001')

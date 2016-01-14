@@ -55,7 +55,9 @@ class EventTestCase(TestCase):
         #user1 deletes the event
         res = c.delete('/api/v1/events/mine/%s/%s'%(ide, auth))
         res = c.get('/api/v1/events/mine/%s/%s'%(ide, auth))
-        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.status_code, 200)
+        e = Event.objects.get(id=ide)
+        self.assertEqual(e.canceled, True)
         exists = True
         try:
             Event.objects.get(id=1)

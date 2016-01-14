@@ -13,10 +13,10 @@ def is_email(email):
 def get_clean_emails(contact):
     try:
         emails = contact.get('emails')
+        emails = emails.strip()
+        if not emails:
+            return []
     except:
-        return []
-    emails = emails.strip()
-    if not emails:
         return []
     raw_email_list = emails.split(',')
     new_email_list = []
@@ -30,19 +30,36 @@ def get_clean_emails(contact):
 def get_clean_numbers(contact):
     try:
         numbers = contact.get('numbers')
+        numbers = numbers.strip()
+        if not numbers:
+            return []
     except:
-        return []
-    numbers = numbers.strip()
-    if not numbers:
         return []
     raw_number_list = numbers.split(',')
     new_number_list = []
+    ### hardcoded, need to fix it
+    country_code = 'FR'
+    ###
     for i in raw_number_list:
-        #if is_email(i):
-        new_number_list.append(i.strip())
-    result = list(set(new_number_list))
-    result.sort()
-    return result
+        # normalize phonenumber and skip if fail
+        ph = None
+        try:
+            ph = phonenumbers.parse(i, None)
+        except phonenumbers.NumberParseException:
+            try:
+                ph = phonenumbers.parse(i, country_code)
+            except:
+                continue
+        # chck if validate num
+        if (phonenumbers and phonenumbers.is_possible_number(ph)
+            and phonenumbers.is_valid_number(ph)):
+                num = phonenumbers.format_number(ph, phonenumbers.PhoneNumberFormat.E164)
+                # skip duplicates
+                if num not in new_number_list:
+                    new_number_list.append(num)
+    #result = list(set(new_number_list))
+    #result.sort()
+    return new_number_list
 
 #def find_users_from_email(email):
     #profiles = []

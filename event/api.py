@@ -107,6 +107,16 @@ class MyEventsResource(AbstractEventResource):
         kwargs['owner'] = bundle.request.user.userprofile
         return super(MyEventsResource, self).obj_create(bundle, **kwargs)
 
+    def obj_delete(self, bundle, **kwargs):
+        if not hasattr(bundle.obj, 'delete'):
+            try:
+                bundle.obj = self.obj_get(bundle=bundle, **kwargs)
+            except ObjectDoesNotExist:
+                raise NotFound("A model instance matching the provided arguments could not be found.")
+        self.authorized_delete_detail(self.get_object_list(bundle.request), bundle)
+        bundle.obj.canceled = True
+        bundle.obj.save()
+
     def get_object_list(self, request):
         # restrict result to my events
         events = Event.objects.filter(owner__user=request.user)

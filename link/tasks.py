@@ -117,6 +117,7 @@ def create_connections(profile, data):
                                                     emails = emails)
                         invite.name = name
                         invite.numbers = numbers
+                        invite.photo = photo
                         invite.save()
                     except Invite.DoesNotExist:
                         if numbers:
@@ -125,6 +126,7 @@ def create_connections(profile, data):
                                                             numbers = numbers)
                                 invite.name = name
                                 invite.emails = emails
+                                invite.photo = photo
                                 invite.save()
                             except Invite.DoesNotExist:
                                 Invite.objects.create(sender = profile,
@@ -137,11 +139,13 @@ def create_connections(profile, data):
                                                     numbers = numbers)
                         invite.name = name
                         invite.emails = emails
+                        invite.photo = photo
                         invite.save()
                     except Invite.DoesNotExist:
                         Invite.objects.create(sender = profile, name=name,
                                               emails = emails,
-                                              numbers = numbers)
+                                              numbers = numbers,
+                                              photo = photo)
 
 # called by userprofile.apps on post_save signal
 def transform_invites(sender, instance, created, **kwargs):

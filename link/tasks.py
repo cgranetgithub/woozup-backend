@@ -1,3 +1,9 @@
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
 from django.db.models import Q
 from rq.decorators import job
 from django.apps import apps as django_apps
@@ -133,12 +139,16 @@ def create_connections(profile, data):
                                                       name=name,
                                                       emails = emails,
                                                       numbers = numbers)
+                            except:
+                                logger.error("""contact has no corresponding \
+profile, name/emails/numbers exist, more than one Invite with same numbers \
+%s %s %s"""%(name, emails, numbers))
                 elif numbers:
                     try:
                         invite = Invite.objects.get(sender = profile,
                                                     numbers = numbers)
                         invite.name = name
-                        invite.emails = emails
+                        #invite.emails = emails #not needed
                         invite.photo = photo
                         invite.save()
                     except Invite.DoesNotExist:
@@ -146,6 +156,10 @@ def create_connections(profile, data):
                                               emails = emails,
                                               numbers = numbers,
                                               photo = photo)
+                    except:
+                        logger.error("""contact has no corresponding profile, \
+no emails, name/numbers exist, more than one Invite with same numbers \
+%s %s"""%(name, numbers))
 
 # called by userprofile.apps on post_save signal
 def transform_invites(sender, instance, created, **kwargs):

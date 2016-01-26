@@ -5,6 +5,7 @@ from tastypie.authorization import DjangoAuthorization
 from tastypie.authentication import ApiKeyAuthentication
 
 #from django.db.models import Q
+from django.http import HttpResponse
 from django.conf.urls import url
 from django.contrib.auth.models import User
 
@@ -369,6 +370,9 @@ class AuthResource(ModelResource):
             url(r"^(?P<resource_name>%s)/reset_password%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('reset_password'), name="api_reset_password"),
+            url(r"^(?P<resource_name>%s)/ping%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('ping'), name="api_ping"),
         ]
 
     def register(self, request, **kwargs):
@@ -435,3 +439,6 @@ class AuthResource(ModelResource):
                                         HttpBadRequest )
         (req, result, status) = apifn.reset_password(request, data)
         return self.create_response(req, result, status)
+
+    def ping(self, request, **kwargs):
+        return self.create_response(request, {}, HttpResponse)

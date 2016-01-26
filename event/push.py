@@ -9,7 +9,7 @@ EVENT_CREATED = u"%s vous invite à %s"
 EVENT_MODIFIED = u"%s a modifié '%s'"
 EVENT_CANCELED = u"%s a annulé '%s'"
 PARTICIPANT_JOINED = u"%s est partant pour '%s'"
-PARTICIPANT_LEFT = u"%s a annulé '%s'"
+PARTICIPANT_LEFT = u"%s ne participe pas '%s'"
 
 def event_saved(sender, instance, created, **kwargs):
     if created:

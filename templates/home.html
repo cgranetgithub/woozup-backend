@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+  <h1>"Le meilleur moyen de voir vos amis"</h1>
+  <br>
+  <br>
+  <br>
+  <p>
+    <a href="mailto:beta@woozup.social?Subject=Je%20veux%20tester%20!" target="_top">
+      <img src="{% static "img/badge_appstore.png" %}"
+           class="badge_store"
+           alt="Bientôt disponible dans l'App Store"></img>
+    </a>
+    <a href="https://play.google.com/apps/testing/com.varioware.woozup">
+      <img src="{% static "img/badge_playstore.png" %}"  class="badge_store"
+           alt="Disponible en beta sur Google Play"></img>
+    </a>
+  </p>
+  <p>Pour obtenir l'app beta pour iPhone, demandez-là par email à
+    <a href="mailto:beta@woozup.social?Subject=Je%20veux%20tester%20!" target="_top">
+      beta@woozup.social
+    </a>
+  </p>
+{% endblock %}

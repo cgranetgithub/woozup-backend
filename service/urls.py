@@ -42,7 +42,7 @@ urlpatterns = [
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
     #url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
-    #url(r'^$', social_login),
+    url(r'^$', home),
     #url(r'^home/$', home),
     #url(r'^logout/$', social_logout),
     url(r'^accounts/', include('allauth.urls')),

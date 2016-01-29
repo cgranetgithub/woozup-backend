@@ -1,0 +1,343 @@
+h1, h2, h3, h4, p {
+  color: white;
+  text-align: center;
+  font-family: "Helvetica Neue","Roboto","Segoe UI",sans-serif;
+}
+h1 {
+  font-size: 24px;
+}
+form {
+  margin: 20px 0;
+  padding: 1px 0;
+}
+form > p {
+  align-items: center;
+  background-color: #FFF;
+  border-color: #DDD;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 2px;
+  display: flex;
+  margin: -1px 0;
+  max-width: 100%;
+  opacity: 0.9;
+  padding-bottom: 5px;
+  padding-left: 16px;
+  padding-right: 0px;
+  padding-top: 6px;
+}
+form > p > label {
+  color: #444;
+  display: table;
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0px;
+  max-width: 200px;
+  padding-bottom: 7px;
+  padding-left: 0px;
+  padding-right: 10px;
+  padding-top: 7px;
+  white-space: nowrap;
+}
+form > p > input {
+  width: 100%;
+}
+form > input {
+  background-color: #33CD5F;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-width: 1px;
+  border-radius: 4px;
+  color: #FFF;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 42px;
+  margin: 10px 0;
+  min-height: 47px;
+  min-width: 52px;
+  overflow: visible;
+  overflow-x: visible;
+  overflow-y: visible;
+  padding: 0px 12px;
+  position: relative;
+  text-align: center;
+}
+.bgim {
+    background: url('../img/splash.png') no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    text-align: center;
+}
+.woozup-green {
+    color: #ACFFC4;
+}
+.bar.bar-dark, .tabs-dark > .tabs, .tabs.tabs-dark, .bar-dark .button {
+    background: transparent;
+    border-color: #FFF;
+}
+.woozup-blue {
+    color: #00129C;
+}
+.woozup-pink {
+    color: #740066;
+}
+.canceled-title {
+    text-decoration:line-through;
+}
+.canceled-message {
+    color: red;
+}
+.item {
+    opacity: 0.8;
+}
+.item-avatar {
+    padding-left: 55px;
+}
+.item-avatar > img:first-child {
+    left: 5px;
+}
+.item-button-right .buttons {
+    right: 5px;
+}
+.item-button-right {
+    padding-right: 110px;
+}
+.event-item .item-content {
+    padding-left: 70px;
+    padding-right: 90px;
+}
+.event-item-icon {
+    background: grey;
+/*     border-radius: 50% 200% 75% 0; */
+    border-radius: 0 80% 0 0;
+    position: absolute;
+    bottom: 0;
+    left: 1px;
+    height: 70%;
+    padding: 15px 10px 5px 5px;
+    z-index: -1;
+    opacity: 0.2;
+}
+.event-item-avatar {
+    border-radius: 50%;
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    right: 5px;
+    height: 85%;
+    margin: auto;
+/*     padding: 20px 10px 20px 5px; */
+    z-index: -1;
+}
+.gallery {
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    text-align: center;
+/*     margin: 3px; */
+}
+.item-tile {
+    border-radius: 50%;
+    color: white;
+    background: #929292;
+    display: inline-block;
+    margin: 2%;
+/*     padding: 15px 0 5px 0; */
+    padding-top: 10px;
+    text-align: center;
+    height: 100px;
+    width: 100px;
+}
+.category-title {
+    color: white;
+}
+.category {
+    height: 50px;
+}
+.button-date {
+    width: 66%;
+    display: block;
+    margin: auto;
+    margin-top: 20px;
+}
+.event-descr {
+    background-color: transparent;
+    border-width: 0;
+/*     border-radius: 0 0 70% 30%; */
+    color: white;
+/*     padding-bottom: 40px; */
+    opacity: 1;
+}
+.event-descr h1 {
+    color: #EEE;
+    white-space: normal;
+}
+.event-descr h2 {
+    color: #FFF;
+    white-space: normal;
+    line-height: 1.2;
+/*     margin-top: 5px; */
+}
+.event-descr img {
+    bottom: 15px;
+}
+.event-participant-title {
+    margin-top: 0px;
+    color: #EEE;
+    text-align: center;
+}
+.centered {
+    text-align: center;
+}
+
+#dtpick {
+    padding: 2px;
+}
+#dtpick table {
+    min-width: 90%;
+    margin: auto;
+}
+#dtpick table tr, th, td {
+    padding: 1px;
+    vertical-align: middle;
+}
+#tmpick {
+    margin: 0 auto -5px auto;
+}
+.map {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+}
+.map-input {
+    position: absolute;
+    top: 4px;
+    left: 2%;
+    width: 96%;
+    right: 2%;
+    z-index: 1;
+}
+.full button span {
+    background-color: limegreen;
+    border-radius: 32px;
+    color: black;
+}
+.partially button span {
+    background-color: orange;
+    border-radius: 32px;
+    color: black;
+}
+input[type="text"].controls {
+    padding-left: 10px;
+}
+.controls {
+    background-color: #fff;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+    font-family: Roboto;
+    font-size: 15px;
+    font-weight: 300;
+    height: 30px;
+/*     margin-left: 17px; */
+    margin-top: 1px;
+    outline: none;
+    padding: 0 11px 0 13px;
+    text-overflow: ellipsis;
+}
+
+.controls:focus {
+    border-color: #4d90fe;
+}
+.button-down {
+    left: 2%;
+    width: 96%;
+    bottom: 1%;
+    position: absolute;
+}
+.roundbutton {
+    border-radius: 50%;
+    height: 50px;
+    width: 50px;
+}
+.bottom-right-button {
+    border-radius: 100% 0 0 0;
+    bottom: 0px;
+    box-shadow: 2px 2px 20px #545454;
+    height: 100px;
+    opacity: 0.7;
+    padding: 20px 0 0 30px;
+    position: absolute;
+    right: 0px;
+    width: 110px;
+    z-index: 500;
+}
+.bottom-right-button .icon::before {
+    font-size: 80px;
+}
+.cropArea {
+    background: url('../img/round58.png') no-repeat center center;
+    background-color: #EEE;
+    background-size: 70% auto;
+    border-radius: 5%;
+    margin: auto;
+/*     width:300px; */
+/*     min-height: 300px; */
+    height:50%;
+    padding: 2px;
+    overflow: hidden;
+    text-align: center;
+}
+.photoButton{
+    margin: -10px 10px 10px 10px;
+}
+.scroll {
+    height: 100%;
+}
+.blue-bgim {
+    background: url('../img/splash-blue.png') no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+.withBg {
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+}
+.logocontainer {
+    text-align: center;
+    margin: 30px;
+}
+.logo {
+    width: 60%;
+    margin: 30px;
+}
+.profilePicture {
+    margin: 10px auto;
+    text-align: center;
+}
+.profilePicture img {
+    border-radius: 50%;
+    width: 50%;
+}
+#myform {
+    padding: 16px;
+}
+.note {
+    color: white;
+    text-align: center;
+}
+
+input.ng-invalid-pattern {
+    color: red;
+}
+.icon {
+    width: 30%;
+    margin: auto;
+}

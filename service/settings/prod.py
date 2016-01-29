@@ -36,7 +36,7 @@ INSTALLED_APPS = (
     'tastypie',           # REST API
     'storages',           # S3 storage
     'push_notifications', # push to mobile
-    # `allauth` 
+    # `allauth`
     'django.contrib.sites', # The Django sites framework is required
     'allauth',
     'allauth.account',
@@ -112,7 +112,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True

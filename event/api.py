@@ -9,7 +9,7 @@ from tastypie.authentication import ApiKeyAuthentication
 
 from django.db.models import Q
 from django.conf.urls import url
-from django.utils.timezone import is_naive 
+from django.utils.timezone import is_naive
 from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
 from event.models import EventCategory, EventType, Event
@@ -28,7 +28,7 @@ class MyDateSerializer(Serializer):
         if is_naive(data) or self.datetime_formatting == 'rfc-2822':
             return super(MyDateSerializer, self).format_datetime(data)
         return data.isoformat()
- 
+
 class EventCategoryResource(ModelResource):
     class Meta:
         resource_name = 'category'
@@ -75,7 +75,7 @@ class AbstractEventResource(ModelResource):
 class AllEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
         resource_name = 'events/all'
-    
+
     def get_object_list(self, request):
         user = request.user
         # restrict result to my events + my friends' events
@@ -88,7 +88,7 @@ class AllEventsResource(AbstractEventResource):
 class MyAgendaResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
         resource_name = 'events/agenda'
-    
+
     def get_object_list(self, request):
         # restrict result to my events + the events I go to
         mine = Event.objects.filter(owner__user=request.user)
@@ -115,7 +115,7 @@ class MyEventsResource(AbstractEventResource):
                 raise NotFound("A model instance matching the provided arguments could not be found.")
         self.authorized_delete_detail(self.get_object_list(bundle.request), bundle)
         bundle.obj.canceled = True
-        bundle.obj.save()
+        bundle.obj.save(update_fields=['canceled'])
 
     def get_object_list(self, request):
         # restrict result to my events
@@ -126,7 +126,7 @@ class FriendsEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
         resource_name = 'events/friends'
         # for the doc:
-        extra_actions = [ 
+        extra_actions = [
             {   u"name": u"join",
                 u"http_method": u"POST",
                 #"resource_type": "list",
@@ -167,7 +167,7 @@ User leaves an event, that is, is removed from the participant list.""",
     def join(self, request, **kwargs):
         """ Join an event.
         Note: we need this API for security reason (instead of doing a PUT),
-        to avoid someone to manipulate events directly with a PUT        
+        to avoid someone to manipulate events directly with a PUT
         """
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
@@ -175,11 +175,11 @@ User leaves an event, that is, is removed from the participant list.""",
         event_id = kwargs['event_id']
         (req, data, status) = apifn.join(request, event_id)
         return self.create_response(req, data, status)
-    
+
     def leave(self, request, **kwargs):
         """ Leave an event.
         Note: we need this API for security reason (instead of doing a PUT),
-        to avoid someone to manipulate events directly with a PUT        
+        to avoid someone to manipulate events directly with a PUT
         """
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)

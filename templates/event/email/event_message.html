@@ -1,0 +1,21 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+    <h2 style="text-align: center;">
+        {% block message %}
+        {% endblock %}
+    </h2>
+    <br>
+    <table bgcolor="#eeeeee" style="width: 100%;">
+        <tr>
+            <td>
+                <img src={{icon}}></img>
+            </td>
+            <td>
+                <p>{{title}}</p>
+                <p>{{when}}</p>
+                <p>{{address}}</p>
+            </td>
+        </tr>
+    </table>
+{% endblock %}

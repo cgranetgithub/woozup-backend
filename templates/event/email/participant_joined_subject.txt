@@ -1,4 +1,4 @@
 {% load i18n %}
 {% autoescape off %}
-{% blocktrans %}Nouveau participant !{% endblocktrans %}
+{% blocktrans %}Woozup - Nouveau participant !{% endblocktrans %}
 {% endautoescape %}

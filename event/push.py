@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 
+from django.conf import settings
 from service.utils import send_mail
 from userprofile.utils import get_user_friends
 from service.notification import send_notification
 #from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
-EVENT_CREATED = u"%s vous invite à %s"
-EVENT_MODIFIED = u"%s a modifié '%s'"
-EVENT_CANCELED = u"%s a annulé '%s'"
-PARTICIPANT_JOINED = u"%s est partant pour '%s'"
-PARTICIPANT_LEFT = u"%s ne participe pas '%s'"
+EVENT_CREATED = u"%s t'invite à : %s"
+EVENT_MODIFIED = u"%s a modifié : %s"
+EVENT_CANCELED = u"%s a annulé : %s"
+PARTICIPANT_JOINED = u"%s est partant pour : %s"
+PARTICIPANT_LEFT = u"%s ne participe pas à : %s"
 
 def get_event_context(instance):
-    return {"type":instance.event_type.name,
-            "title":instance.name,
-            "when":instance.start,
-            "icon":instance.event_type.icon,
-            "address":instance.location_address}
+    return {"type"   : instance.event_type.name,
+            "title"  : instance.name,
+            "when"   : instance.start,
+            "icon"   : settings.STATIC_URL + instance.event_type.icon.url,
+            "address": instance.location_address}
 
 # def event_modified(sender, instance, **kwargs):
 #     # notify only participants

@@ -1,4 +1,4 @@
 {% load i18n %}
 {% autoescape off %}
-{% blocktrans %}Changement de programme{% endblocktrans %}
+{% blocktrans %}Woozup - Changement de programme{% endblocktrans %}
 {% endautoescape %}

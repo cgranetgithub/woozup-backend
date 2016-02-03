@@ -2,8 +2,8 @@
 
 from service.notification import send_notification
 
-REQUEST_LINK = u"%s souhaite se connecter avec vous"
-ACCEPT_LINK = u"%s a accepté votre demande de contact"
+REQUEST_LINK = u"%s souhaite se connecter avec toi"
+ACCEPT_LINK = u"%s a accepté ta demande de contact"
 
 def link_requested(link, inverted, **kwargs):
     if inverted:

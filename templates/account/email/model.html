@@ -136,20 +136,12 @@ body, td { font-family: HelveticaNeue, sans-serif; }
                             <p class="article-title" align="left"><singleline label="Title">Add a title</singleline></p>
                               <div class="article-content" align="left">
                                 <multiline label="Description">
-
-                                  {% load i18n %}{% blocktrans with site_name=site.name site_domain=site.domain %}
-
-                                  Vous avez demandé à changer de mot de passe.
-                                  Veuillez cliquer sur le lien suivant pour créer un nouveau mot de passe : {% endblocktrans %}
-                                  {{ password_reset_url }}
-
-                                  Si ce n'est pas vous qui avez fait la demande de changement de mot de passe, vous pouvez ignorer cet email.
-
-                                  {% blocktrans with site_name=site.name site_domain=site.domain %}L'équipe {{ site_name }}
-                                  {% endblocktrans %}
-
-
-
+                                    <p>Tu as demandé à changer de mot de passe.</p>
+                                    <p>Clique sur ce lien pour créer un nouveau mot de passe :
+                                        <a href="{{ password_reset_url }}">{{ password_reset_url }}</a>
+                                    </p>
+                                    <br>
+                                    <p>Si ce n'est pas toi qui as fait cette demande, tu peux ignorer cet email.</p>
                                 </multiline>
                               </div>
                           </td>

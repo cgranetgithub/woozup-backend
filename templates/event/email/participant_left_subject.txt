@@ -1,4 +1,4 @@
 {% load i18n %}
 {% autoescape off %}
-{% blocktrans %}Ne viendra pas...{% endblocktrans %}
+{% blocktrans %}Woozup - Ne viendra pas...{% endblocktrans %}
 {% endautoescape %}

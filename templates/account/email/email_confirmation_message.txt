@@ -1,10 +1,14 @@
-{% load account %}{% user_display user as user_display %}{% load i18n %}{% autoescape off %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}
+{% load account %}
+{% user_display user as user_display %}
+{% load i18n %}
+{% autoescape off %}
+{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}
 
-Bienvenue sur {{ site_domain }} !
+Bienvenue sur Woozup !
 
-Pour confirmer votre adresse email, cliquez sur ce lien : 
+Pour confirmer ton adresse email, clique sur ce lien :
 {{ activate_url }}
 
-{% endblocktrans %}{% endautoescape %}
-{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}L'équipe {{ site_name }}
 {% endblocktrans %}
+{% endautoescape %}
+- Woozup -

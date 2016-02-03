@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from django.conf import settings
 from service.utils import send_mail
 from userprofile.utils import get_user_friends
 from service.notification import send_notification
@@ -20,7 +19,7 @@ def get_event_context(instance):
                "icon"   : u"",
                "address": instance.location_address}
     if instance.event_type.icon:
-        context["icon"] = settings.STATIC_URL + instance.event_type.icon.url
+        context["icon"] = instance.event_type.icon.url
     return context
 
 # def event_modified(sender, instance, **kwargs):

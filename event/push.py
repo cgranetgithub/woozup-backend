@@ -14,11 +14,14 @@ PARTICIPANT_JOINED = u"%s est partant pour : %s"
 PARTICIPANT_LEFT = u"%s ne participe pas à : %s"
 
 def get_event_context(instance):
-    return {"type"   : instance.event_type.name,
-            "title"  : instance.name,
-            "when"   : instance.start,
-            "icon"   : settings.STATIC_URL + instance.event_type.icon.url,
-            "address": instance.location_address}
+    context = {"type"   : instance.event_type.name,
+               "title"  : instance.name,
+               "when"   : instance.start,
+               "icon"   : u"",
+               "address": instance.location_address}
+    if instance.event_type.icon:
+        context["icon"] = settings.STATIC_URL + instance.event_type.icon.url
+    return context
 
 # def event_modified(sender, instance, **kwargs):
 #     # notify only participants

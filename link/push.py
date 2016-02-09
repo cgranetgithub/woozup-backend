@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from service.utils import send_mail
 from service.notification import send_notification
 
 REQUEST_LINK = u"%s souhaite se connecter avec toi"
@@ -28,3 +29,21 @@ def link_accepted(link, inverted, **kwargs):
         send_notification([link.receiver], data)
     else:
         send_notification([link.sender], data)
+
+def send_invitation(invite):
+    # email
+    if invite.emails:
+        template_prefix = "link/email/personal_invite"
+        emails = invite.emails.split(',')
+        context = {"user_name" : invite.sender.name}
+        if invite.sender.image:
+            context["image"] = invite.sender.image.url
+        send_mail(template_prefix, emails, context)
+
+def invite_ignored(invite):
+    # email
+    if invite.emails:
+        template_prefix = "link/email/generic_invite"
+        emails = invite.emails.split(',')
+        context = {}
+        send_mail(template_prefix, emails, context)

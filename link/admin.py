@@ -1,5 +1,11 @@
 from django.contrib import admin
-from link.models import Link, Invite
+from .models import Link, Invite
 
-admin.site.register(Link)
-admin.site.register(Invite)
+@admin.register(Link)
+class LinkAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(Invite)
+class InviteAdmin(admin.ModelAdmin):
+    list_filter = ('sender', 'status')
+    ordering = ['sender', 'name']

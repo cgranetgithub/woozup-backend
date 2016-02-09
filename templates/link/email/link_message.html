@@ -1,0 +1,39 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+    <h2 style="text-align: center;">
+        {% block message %}
+        {% endblock %}
+    </h2>
+    <br>
+    <table style="width: 100%;">
+        <tr>
+            <td>
+                <a href="mailto:beta@woozup.social?Subject=Je%20veux%20tester%20!">
+                  <img src="http://geoevent-static.s3.amazonaws.com/img/badge_appstore.png"
+                       alt="Bientôt disponible dans l'App Store"
+                       class="store-badge-icon"></img>
+                </a>
+            </td>
+            <td>
+                <a href="https://play.google.com/apps/testing/com.varioware.woozup">
+                  <img src="http://geoevent-static.s3.amazonaws.com/img/badge_playstore.png"
+                       alt="Disponible en beta sur Google Play"
+                       class="store-badge-icon"></img>
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td class="store-badge-text">
+                <a href="mailto:beta@woozup.social?Subject=Je%20veux%20tester%20!">
+                  Pour obtenir l'application iOS (iphone, ipad) en beta, envoie un email à beta@woozup.social.
+                </a>
+            </td>
+            <td class="store-badge-text">
+                <a href="https://play.google.com/apps/testing/com.varioware.woozup">
+                    Pour participer à la beta pour Android, clique sur ce lien et deviens testeur officiel.
+                </a>
+            </td>
+        </tr>
+    </table>
+{% endblock %}

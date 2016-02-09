@@ -1,0 +1,4 @@
+{% load i18n %}
+{% autoescape off %}
+{% blocktrans %}Découvre Woozup, l'application pour passer du temps avec ses amis{% endblocktrans %}
+{% endautoescape %}

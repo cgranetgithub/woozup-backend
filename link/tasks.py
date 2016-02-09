@@ -14,7 +14,7 @@ from userprofile.models import UserProfile
 from link.models import Link, Invite
 
 def is_email(email):
-    return True
+    return ( '@' in email )
 
 def get_clean_emails(contact):
     try:
@@ -56,7 +56,7 @@ def get_clean_numbers(contact):
                 ph = phonenumbers.parse(i, country_code)
             except:
                 continue
-        # chck if validate num
+        # check if validate num
         if (phonenumbers and phonenumbers.is_possible_number(ph)
             and phonenumbers.is_valid_number(ph)):
                 num = phonenumbers.format_number(ph, phonenumbers.PhoneNumberFormat.E164)
@@ -64,29 +64,18 @@ def get_clean_numbers(contact):
                 if num not in new_number_list:
                     new_number_list.append(num)
     #result = list(set(new_number_list))
-    #result.sort()
+    new_number_list.sort()
     return new_number_list
 
-#def find_users_from_email(email):
-    #profiles = []
-    #try:
-        #contact = UserProfile.objects.get(user__username=email)
-        #profiles.append(contact)
-    #except UserProfile.DoesNotExist:
-        #pass
-    #contacts = UserProfile.objects.filter(user__email=email)
-    #for c in contacts:
-        #profiles.append(c)
-    #return set(profiles)
-
 def find_users_from_email_list(email_list):
-    #profiles = []
-    #for email in email_list:
-        #profiles += find_users_from_email(email)
     l1 = UserProfile.objects.filter(user__username__in=email_list)
     l2 = UserProfile.objects.filter(user__email__in=email_list)
     return l1 | l2
 
+def find_users_from_number_list(number_list):
+    l1 = UserProfile.objects.filter(user__username__in=number_list)
+    l2 = UserProfile.objects.filter(phone_number__in=number_list)
+    return l1 | l2
 
 @job('default', connection=conn)
 def create_connections(profile, data):
@@ -97,6 +86,7 @@ def create_connections(profile, data):
         number_list = get_clean_numbers(contact)
         # find corresponding users
         profiles = find_users_from_email_list(email_list)
+        profiles = profiles | find_users_from_number_list(number_list)
         # exist => check links
         for p in profiles:
             if profile != p:
@@ -116,7 +106,7 @@ def create_connections(profile, data):
             emails = ', '.join(email_list)
             numbers = ', '.join(number_list)
             photo = contact.get('photo', '')
-            if name:
+            if name and not name.startswith('.'):
                 if emails:
                     try:
                         invite = Invite.objects.get(sender = profile,
@@ -181,64 +171,3 @@ def transform_invites(sender, instance, created, **kwargs):
             i.status = 'CLO'
             i.save()
         Link.objects.bulk_create(create_link_list)
-
-#@job('default', connection=conn)
-#def create_connections(profile, data):
-    #django.setup()
-    ##UserProfile = django_apps.get_model('userprofile', 'UserProfile')
-    ##Link        = django_apps.get_model('link', 'Link')
-    ##Invite      = django_apps.get_model('link', 'Invite')
-    #country_code = phonenumbers.parse(profile.user.username,
-                                      #None).country_code
-    ## 1) determine the existing connections
-    #number_list=[]
-    #create_link_list = []
-    #create_invite_list = []
-    #for i in data.iterkeys():
-        ## normalize phonenumber and skip if fail
-        #ph = None
-        #try:
-            #ph = phonenumbers.parse(i, None)
-        #except phonenumbers.NumberParseException:
-            #try:
-                #ph = phonenumbers.parse(i, country_code)
-            #except:
-                #pass
-        #ph = phonenumbers.format_number(ph, phonenumbers.PhoneNumberFormat.E164)
-        #if ph is None:
-            #continue
-        ## skip duplicates
-        #if ph in number_list:
-            #continue
-        #else:
-            #number_list.append(ph)
-        ## Existing UserProfile?
-        #try:
-            #contact = UserProfile.objects.get(user__username=ph)
-            ## YES => existing Link?
-            #try:
-                #Link.objects.get(
-                    #( Q(sender=profile) & Q(receiver=contact) )
-                    #| ( Q(sender=contact) & Q(receiver=profile) )
-                                #)
-                ## YES => nothing to do
-            #except Link.DoesNotExist:
-                ## NO => create a new Link
-                #link = Link(sender=profile, receiver=contact)
-                #create_link_list.append(link)
-        #except UserProfile.DoesNotExist:
-            ## NO => existing Invite?
-            #try:
-                #Invite.objects.get(sender=profile, number=ph)
-                ## YES => nothing to do
-            #except Invite.DoesNotExist:
-                ## NO => create a new Invite
-                #invite = Invite(sender=profile, number=ph,
-                                #email=data[i]['email'],
-                                #name=data[i]['name'])
-                #if 'photo' in data[i]:
-                    #invite.photo = data[i]['photo']
-                #create_invite_list.append(invite)
-    ## 2) create the missing connections (bulk for better performance)
-    #Link.objects.bulk_create(create_link_list)
-    #Invite.objects.bulk_create(create_invite_list)

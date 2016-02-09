@@ -11,6 +11,7 @@ from django.conf.urls import url
 from doc import authdoc
 from link.tasks import create_connections
 from link.models import Invite
+from link.push import send_invitation, invite_ignored
 
 import apidoc as doc
 
@@ -20,7 +21,7 @@ def change_invite_status(request, invite_id, new_status):
             invite = Invite.objects.get(id=invite_id)
             invite.status = new_status
             invite.save()
-            return (request, {}, HttpResponse)
+            return (request, {'invite': invite}, HttpResponse)
         except Invite.DoesNotExist:
             return (request, {u'reason': u'Invite not found'}, HttpForbidden)
         except:
@@ -63,8 +64,11 @@ class InviteResource(ModelResource):
         self.is_authenticated(request)
         self.throttle_check(request)
         invite_id = kwargs['invite_id']
-        # send invititation
         (req, result, status) = change_invite_status(request, invite_id, 'PEN')
+        # send invitation
+        invite = result.get('invite', False)
+        if invite:
+            send_invitation(invite)
         return self.create_response(req, result, status)
 
     def ignore(self, request, **kwargs):
@@ -73,9 +77,13 @@ class InviteResource(ModelResource):
         self.throttle_check(request)
         invite_id = kwargs['invite_id']
         (req, result, status) = change_invite_status(request, invite_id, 'IGN')
+        # send invitation
+        invite = result.get('invite', False)
+        if invite:
+            invite_ignored(invite)
         return self.create_response(req, result, status)
-    
-    
+
+
 class ContactResource(Resource):
     class Meta:
         resource_name = 'contact'
@@ -83,7 +91,7 @@ class ContactResource(Resource):
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
         # for the doc:
-        extra_actions = [ 
+        extra_actions = [
             {   u"name": u"sort",
                 u"http_method": u"POST",
                 "resource_type": "list",
@@ -104,7 +112,7 @@ class ContactResource(Resource):
         user = request.user
         if user and user.is_authenticated():
             try:
-                data = self.deserialize(request, request.body, 
+                data = self.deserialize(request, request.body,
                                         format=request.META.get(
                                         'CONTENT_TYPE', 'application/json'))
             except:
@@ -117,5 +125,5 @@ class ContactResource(Resource):
             #
             return self.create_response(request, {'received': True})
         else:
-            return self.create_response(request, {'success': False}, 
+            return self.create_response(request, {'success': False},
                                                   HttpUnauthorized)

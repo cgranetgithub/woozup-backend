@@ -47,6 +47,9 @@ urlpatterns = [
     #url(r'^logout/$', social_logout),
     url(r'^accounts/', include('allauth.urls')),
     url(r'^favicon.ico$', RedirectView.as_view(url=STATIC_URL+'favicon.ico')),
+    url(r'^apple-touch-icon-precomposed.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),
+    url(r'^apple-touch-icon.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),
+    url(r'^robots.txt$', RedirectView.as_view(url=STATIC_URL+'robots.txt')),
 ]
 
 #if module_exists('tastypie_swagger'):

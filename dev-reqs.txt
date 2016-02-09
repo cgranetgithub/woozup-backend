@@ -4,4 +4,4 @@ django-tastypie-swagger==0.1.4
 django-toolbelt==0.0.1
 docutils==0.12
 heroku==0.1.4
-unittest-xml-reporting==1.13.0
+unittest-xml-reporting==1.14.0

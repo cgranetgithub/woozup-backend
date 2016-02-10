@@ -1,34 +1,47 @@
 # -*- coding: utf-8 -*-
 
-from service.utils import send_mail
-from service.notification import send_notification
+from service.notification import send_notification, send_mail
 
 REQUEST_LINK = u"%s souhaite se connecter avec toi"
-ACCEPT_LINK = u"%s a accepté ta demande de contact"
+ACCEPT_LINK = u"%s a accepté ton invitation"
 
 def link_requested(link, inverted, **kwargs):
-    if inverted:
-        msg = REQUEST_LINK%(link.receiver.name)
-    else:
-        msg = REQUEST_LINK%(link.sender.name)
-    data = {u"title":u"Woozup : demande de contact", u"message":msg,
+    # push notif
+    data = {u"title":u"Woozup : demande de contact",
             u"reason":u"friendrequest", u"id":link.sender.user.id}
     if inverted:
-        send_notification([link.sender], data)
+        recipient = link.sender
+        sender_name = link.receiver.name
     else:
-        send_notification([link.receiver], data)
+        recipient = link.receiver
+        sender_name = link.sender.name
+    data[u"message"] = REQUEST_LINK%(sender_name)
+    send_notification([recipient], data)
+    # email
+    if recipient.user.email:
+        template_prefix = "link/email/request"
+        emails = [recipient.user.email]
+        context = {"user_name" : sender_name}
+        send_mail(template_prefix, emails, context)
 
 def link_accepted(link, inverted, **kwargs):
-    if inverted:
-        msg = ACCEPT_LINK%(link.sender.name)
-    else:
-        msg = ACCEPT_LINK%(link.receiver.name)
-    data = {u"title":u"Woozup : nouveau contact", u"message":msg,
+    # push notif
+    data = {u"title":u"Woozup : nouveau contact",
             u"reason":u"friendaccept", u"id":link.receiver.user.id}
     if inverted:
-        send_notification([link.receiver], data)
+        recipient = link.receiver
+        sender_name = link.sender.name
     else:
-        send_notification([link.sender], data)
+        recipient = link.sender
+        sender_name = link.receiver.name
+    data[u"message"] = ACCEPT_LINK%(sender_name)
+    send_notification([recipient], data)
+    # email
+    if recipient.user.email:
+        template_prefix = "link/email/accept"
+        emails = [recipient.user.email]
+        context = {"user_name" : sender_name}
+        send_mail(template_prefix, emails, context)
 
 def send_invitation(invite):
     # email

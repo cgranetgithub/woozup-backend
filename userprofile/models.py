@@ -5,7 +5,6 @@ from django.db.models.signals import post_save
 from django.contrib.auth.models import Group
 from tastypie.models import create_api_key
 from phonenumber_field.modelfields import PhoneNumberField
-#from service.utils import image_path
 #from link.tasks import transform_invites
 
 MALE   = 'MA'

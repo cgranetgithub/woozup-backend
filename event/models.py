@@ -1,5 +1,4 @@
 from django.contrib.gis.db import models
-#from service.utils import image_path
 
 class EventCategory(models.Model):
     name        = models.CharField(max_length=50)
@@ -52,7 +51,7 @@ class Event(models.Model):
     location_address = models.CharField(max_length=255, blank=True)
     location_id = models.CharField(max_length=255, blank=True)
     location_coords = models.GeometryField(null=True, blank=True,
-                    help_text=u"""Type: Geometry, Entry format: GeoJson 
+                    help_text=u"""Type: Geometry, Entry format: GeoJson
 (example: "{ 'type':'Point', 'coordinates':[125.6, 10.1] }")<br>""")
     #image      = models.ImageField(upload_to=image_path,
                                    #blank=True, null=True)

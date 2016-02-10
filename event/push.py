@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from service.utils import send_mail
 from userprofile.utils import get_user_friends
-from service.notification import send_notification
+from service.notification import send_notification, send_mail
 #from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 

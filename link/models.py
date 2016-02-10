@@ -1,6 +1,5 @@
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
-#from service.utils import image_path
 
 # state is independent of the notification sending
 NEW      = 'NEW' # default state after automatic creation
@@ -34,7 +33,7 @@ autofield, not modifiable""")
 autofield, not modifiable""")
     class Meta:
         unique_together = (("sender", "receiver"), )
-        
+
     def validate_unique(self, **kwargs):
         # check don't link the same person
         if self.sender == self.receiver:

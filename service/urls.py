@@ -7,7 +7,7 @@ from tastypie.api import Api
 from link.api import *
 from event.api import *
 from userprofile.api import *
-from userprofile.views import *
+from web.views import home, profile
 
 from service.settings.prod import STATIC_URL
 #from service.notification import GCMDeviceAuthenticatedResource
@@ -43,6 +43,8 @@ urlpatterns = [
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include('allauth.urls')),
+    url(r'^accounts/profile/', profile),
+    url(r'^web/', include('web.urls')),
     # usual web static files
     url(r'^favicon.ico$', RedirectView.as_view(url=STATIC_URL+'favicon.ico')),
     url(r'^apple-touch-icon-precomposed.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),

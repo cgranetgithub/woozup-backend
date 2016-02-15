@@ -75,10 +75,6 @@ def event_canceled(sender, instance, **kwargs):
     emails = friends.values_list('user__email', flat=True)
     context = get_event_context(instance)
     context["user"] = instance.owner
-    if instance.owner.image:
-        context["user_image"] = instance.owner.image.url
-    else:
-        context["user_image"] = ""
     send_mail(template_prefix, emails, context)
 
 def event_saved(sender, instance, created, update_fields, **kwargs):
@@ -107,10 +103,6 @@ def participant_joined(userprofile, event):
     emails = [r.user.email for r in recepients]
     context = get_event_context(event)
     context["user"] = userprofile
-    if instance.owner.image:
-        context["user_image"] = instance.owner.image.url
-    else:
-        context["user_image"] = ""
     send_mail(template_prefix, emails, context)
 
 def participant_left(userprofile, event):
@@ -127,8 +119,4 @@ def participant_left(userprofile, event):
     emails = [r.user.email for r in recepients]
     context = get_event_context(event)
     context["user"] = userprofile
-    if instance.owner.image:
-        context["user_image"] = instance.owner.image.url
-    else:
-        context["user_image"] = ""
     send_mail(template_prefix, emails, context)

@@ -1,0 +1,72 @@
+{% extends "base_email.html" %}
+
+{% block message %}
+  <td align="center" style="padding:40px 0 32px 0;-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;">
+    <table border="0" cellpadding="0" cellspacing="0" style=
+    "-webkit-text-size-adjust:100%;mso-table-rspace:0pt;font-weight:200;mso-table-lspace:0pt;-ms-text-size-adjust:100%;font-family:Helvetica,Arial,sans-serif;" width=
+    "100%">
+      <tbody>
+        <tr>
+          <td align="center" style="-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;">
+              {% if user.image %}
+              <img border="0" height="96" width="96" src="{{ user.image.url }}"
+                   style="border-radius:50%;outline:none;-ms-interpolation-mode:bicubic;color:#FFFFFF;display:block;text-decoration:none;font-size:12px;border-color:#ECECEC;border-width:1px;border-style:solid;">
+              {% endif %}
+           </td>
+        </tr>
+        <tr>
+          <td align="center" style="-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;" width="100%">
+            <h4 style="padding:0;margin:12px 24px 20px 24px;color:#4C4C4C;font-weight:200;font-size:16px;line-height:24px;">
+                {% block info %}{% endblock %}
+            </h4>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </td>
+{% endblock %}
+
+{% block information %}
+<td style="border-top:1px solid #D9D9D9;padding:40px 20px 50px 20px;-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;"
+    width="100%">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%"
+           style="-webkit-text-size-adjust:100%;mso-table-rspace:0pt;font-weight:200;mso-table-lspace:0pt;-ms-text-size-adjust:100%;font-family:Helvetica,Arial,sans-serif;">
+      <tbody>
+          <tr>
+              <td style="text-align:center;-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;" valign="middle" width="40">
+                  <a style="color:#4C4C4C;white-space:normal;-webkit-text-size-adjust:100%;display:inline-block;text-decoration:none;-ms-text-size-adjust:100%;"
+                     href="mailto:beta@woozup.social?Subject=Je%20veux%20tester%20!">
+                     <img border="0" width="200"
+                          src="http://geoevent-static.s3.amazonaws.com/img/badge_appstore.png"
+                          alt="Bientôt disponible dans l'App Store"
+                          style="outline:none;-ms-interpolation-mode:bicubic;display:block;">
+                  </a>
+              </td>
+              <td style="text-align:center;-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;" valign="middle" width="40">
+                  <a style="color:#4C4C4C;white-space:normal;-webkit-text-size-adjust:100%;display:inline-block;text-decoration:none;-ms-text-size-adjust:100%;"
+                     href="https://play.google.com/apps/testing/com.varioware.woozup">
+                     <img border="0" width="200"
+                          src="http://geoevent-static.s3.amazonaws.com/img/badge_playstore.png"
+                          alt="Bientôt disponible dans l'App Store"
+                          style="outline:none;-ms-interpolation-mode:bicubic;display:block;">
+                  </a>
+              </td>
+          </tr>
+          <tr>
+              <td style="text-align:center;-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;" valign="middle" width="40">
+                  <a href="mailto:beta@woozup.social?Subject=Je%20veux%20tester%20!"
+                  style="cursor:pointer;color:#008CC9;-webkit-text-size-adjust:100%;display:block;text-decoration:none;-ms-text-size-adjust:100%;">
+                  Pour obtenir l'application iOS (iphone, ipad) en beta, envoie un email à beta@woozup.social.
+                  </a>
+              </td>
+              <td style="text-align:center;-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;" valign="middle" width="40">
+                  <a href="https://play.google.com/apps/testing/com.varioware.woozup"
+                  style="cursor:pointer;color:#008CC9;-webkit-text-size-adjust:100%;display:block;text-decoration:none;-ms-text-size-adjust:100%;">
+                  Pour participer à la beta pour Android, clique sur ce lien et deviens testeur officiel.
+                  </a>
+              </td>
+          </tr>
+      </tbody>
+    </table>
+</td>
+{% endblock %}

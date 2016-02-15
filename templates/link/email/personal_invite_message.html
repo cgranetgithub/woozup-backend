@@ -1,5 +1,5 @@
-{% extends "link/email/link_message.html" %}
+{% extends "link/email/invite_message.html" %}
 
-{% block message %}
-    {{ user_name }} t'invite à le rejoindre sur Woozup !
+{% block info %}
+    {{ user.name }} t'invite à le rejoindre sur Woozup !
 {% endblock %}

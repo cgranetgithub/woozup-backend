@@ -11,17 +11,17 @@ def link_requested(link, inverted, **kwargs):
             u"reason":u"friendrequest", u"id":link.sender.user.id}
     if inverted:
         recipient = link.sender
-        sender_name = link.receiver.name
+        sender = link.receiver
     else:
         recipient = link.receiver
-        sender_name = link.sender.name
-    data[u"message"] = REQUEST_LINK%(sender_name)
+        sender = link.sender
+    data[u"message"] = REQUEST_LINK%(sender.name)
     send_notification([recipient], data)
     # email
     if recipient.user.email:
         template_prefix = "link/email/request"
         emails = [recipient.user.email]
-        context = {"user_name" : sender_name}
+        context = {"user" : sender}
         send_mail(template_prefix, emails, context)
 
 def link_accepted(link, inverted, **kwargs):
@@ -30,17 +30,17 @@ def link_accepted(link, inverted, **kwargs):
             u"reason":u"friendaccept", u"id":link.receiver.user.id}
     if inverted:
         recipient = link.receiver
-        sender_name = link.sender.name
+        sender = link.sender
     else:
         recipient = link.sender
-        sender_name = link.receiver.name
-    data[u"message"] = ACCEPT_LINK%(sender_name)
+        sender = link.receiver
+    data[u"message"] = ACCEPT_LINK%(sender.name)
     send_notification([recipient], data)
     # email
     if recipient.user.email:
         template_prefix = "link/email/accept"
         emails = [recipient.user.email]
-        context = {"user_name" : sender_name}
+        context = {"user" : sender}
         send_mail(template_prefix, emails, context)
 
 def send_invitation(invite):
@@ -48,7 +48,7 @@ def send_invitation(invite):
     if invite.emails:
         template_prefix = "link/email/personal_invite"
         emails = invite.emails.split(',')
-        context = {"user_name" : invite.sender.name}
+        context = {"user" : invite.sender}
         if invite.sender.image:
             context["image"] = invite.sender.image.url
         send_mail(template_prefix, emails, context)

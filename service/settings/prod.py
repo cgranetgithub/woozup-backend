@@ -56,6 +56,7 @@ INSTALLED_APPS = (
     'event',
     'link',
     'userprofile',
+    'web'
 )
 
 TEMPLATES = [

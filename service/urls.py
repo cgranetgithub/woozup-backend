@@ -39,17 +39,18 @@ v1_api.register(InviteResource())
 v1_api.register(ContactResource())
 
 urlpatterns = [
+    url(r'^$', home),
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
-    #url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
-    url(r'^$', home),
-    #url(r'^home/$', home),
-    #url(r'^logout/$', social_logout),
     url(r'^accounts/', include('allauth.urls')),
+    # usual web static files
     url(r'^favicon.ico$', RedirectView.as_view(url=STATIC_URL+'favicon.ico')),
     url(r'^apple-touch-icon-precomposed.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),
     url(r'^apple-touch-icon.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),
     url(r'^robots.txt$', RedirectView.as_view(url=STATIC_URL+'robots.txt')),
+    #url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
+    #url(r'^home/$', home),
+    #url(r'^logout/$', social_logout),
 ]
 
 #if module_exists('tastypie_swagger'):

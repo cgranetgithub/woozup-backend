@@ -1,8 +1,7 @@
-{% extends "base_email.html" %}
+{% extends "account/email/email_with_link.html" %}
 
-{% block content %}
-    <p>Bienvenue sur Woozup !</p>
-    <br>
-    <p>Pour confirmer ton adresse email, clique sur ce lien :
-    <a href="{{ activate_url }}">{{ activate_url }}</a></p>
-{% endblock %}
+{% block title %}BIENVENUE SUR WOOZUP !{% endblock %}
+{% block instruction %}Pour confirmer ton adresse email, clique sur ce lien :{% endblock %}
+{% block href-url-1 %}href="{{ activate_url }}"{% endblock %}
+{% block href-url-2 %}href="{{ activate_url }}"{% endblock %}
+{% block button %}Je confirme mon email{% endblock %}

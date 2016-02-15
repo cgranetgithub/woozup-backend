@@ -1,5 +1,5 @@
 {% extends "event/email/event_message.html" %}
 
-{% block message %}
-    {{ user_name }} a annulé {{ type }}
+{% block info %}
+    {{ user.name }} a annulé {{ type }}
 {% endblock %}

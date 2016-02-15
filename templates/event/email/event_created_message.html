@@ -1,5 +1,5 @@
 {% extends "event/email/event_message.html" %}
 
-{% block message %}
-    {{ user_name }} t'invite à {{ type }}
+{% block info %}
+    {{ user.name }} t'invite à {{ type }}
 {% endblock %}

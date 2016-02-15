@@ -1,5 +1,5 @@
 {% extends "event/email/event_message.html" %}
 
-{% block message %}
-    {{ user_name }} ne participe pas {{ type }}</p>
+{% block info %}
+    {{ user.name }} ne participe plus à {{ type }}</p>
 {% endblock %}

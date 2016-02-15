@@ -1,0 +1,54 @@
+{% extends "base_email.html" %}
+
+{% block message %}
+<td align="center" style="padding:20px 0 32px 0;-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%"
+         style="-webkit-text-size-adjust:100%;mso-table-rspace:0pt;font-weight:200;mso-table-lspace:0pt;-ms-text-size-adjust:100%;font-family:Helvetica,Arial,sans-serif;">
+    <tbody>
+        <tr>
+          <td style="padding:0 0 8px 0;-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;" width="100%">
+            <h3 style="padding:0;margin:0;color:#737373;font-weight:200;font-size:16px;line-height:24px;text-align:center;">
+                {% block title %}
+                {% endblock %}
+            </h3>
+          </td>
+        </tr>
+        <tr>
+            <td align="center" style="-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;-ms-text-size-adjust:100%;" width="100%">
+              <h4 style="padding:0;margin:12px 24px 20px 24px;color:#4C4C4C;font-weight:200;font-size:16px;line-height:24px;">
+                  {% block instruction %}
+                  {% endblock %}
+              </h4>
+              <table align="center" border="0" cellpadding="0" cellspacing="0" style=
+              "-webkit-text-size-adjust:100%;mso-table-rspace:0pt;font-weight:200;mso-table-lspace:0pt;-ms-text-size-adjust:100%;">
+                <tbody>
+                  <tr>
+                    <td align="center" style="-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;font-size:16px;-ms-text-size-adjust:100%;" valign=
+                    "middle">
+                      <a {% block href-url-1 %}{% endblock %}
+                      style="cursor:pointer;color:#4C4C4C;white-space:nowrap;-webkit-text-size-adjust:100%;display:block;text-decoration:none;-ms-text-size-adjust:100%;"></a>
+                      <table border="0" cellpadding="0" cellspacing="0" style=
+                      "-webkit-text-size-adjust:100%;mso-table-rspace:0pt;font-weight:200;mso-table-lspace:0pt;-ms-text-size-adjust:100%;font-family:Helvetica,Arial,sans-serif;"
+                      width="100%">
+                        <tbody>
+                          <tr>
+                            <td bgcolor="#33CD5F" style=
+                            "cursor:pointer;border-radius:2px;background-color:#33CD5F;padding:6px 16px;-webkit-text-size-adjust:100%;mso-table-rspace:0pt;mso-table-lspace:0pt;font-size:16px;-ms-text-size-adjust:100%;border-color:#33CD5F;border-width:1px;border-style:solid;">
+                            <a {% block href-url-2 %}{% endblock %}
+                            style="cursor:pointer;color:#FFFFFF;white-space:nowrap;-webkit-text-size-adjust:100%;display:block;text-decoration:none;-ms-text-size-adjust:100%;">
+                                {% block button %}
+                                {% endblock %}
+                            </a></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+</td>
+{% endblock %}

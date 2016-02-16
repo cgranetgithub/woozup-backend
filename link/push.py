@@ -21,7 +21,7 @@ def link_requested(link, inverted, **kwargs):
     if recipient.user.email:
         template_prefix = "link/email/request"
         emails = [recipient.user.email]
-        context = {"user" : sender}
+        context = {"other" : sender, "user" : recipient}
         send_mail(template_prefix, emails, context)
 
 def link_accepted(link, inverted, **kwargs):
@@ -40,7 +40,7 @@ def link_accepted(link, inverted, **kwargs):
     if recipient.user.email:
         template_prefix = "link/email/accept"
         emails = [recipient.user.email]
-        context = {"user" : sender}
+        context = {"other" : sender, "user" : recipient}
         send_mail(template_prefix, emails, context)
 
 def send_invitation(invite):
@@ -48,9 +48,7 @@ def send_invitation(invite):
     if invite.emails:
         template_prefix = "link/email/personal_invite"
         emails = invite.emails.split(',')
-        context = {"user" : invite.sender}
-        if invite.sender.image:
-            context["image"] = invite.sender.image.url
+        context = {"other" : invite.sender}
         send_mail(template_prefix, emails, context)
 
 def invite_ignored(invite):

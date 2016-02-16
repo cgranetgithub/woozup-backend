@@ -30,7 +30,7 @@ def join(request, event_id):
         if profile not in event.participants.all():
             event.participants.add(profile)
             event.save()
-            push.participant_joined(profile, event)
+            push.participant_joined(request, profile, event)
             return (request, {}, HttpResponse)
         else:
             return (request, {u'reason': u'You are already a participant'},
@@ -45,7 +45,7 @@ def leave(request, event_id):
         if profile in event.participants.all():
             event.participants.remove(profile)
             event.save()
-            push.participant_left(profile, event)
+            push.participant_left(request, profile, event)
             return (request, {}, HttpResponse)
         else:
             return (request, {u'reason': u'You are not a participant'},

@@ -54,11 +54,8 @@ def event_created(sender, instance, **kwargs):
     template_prefix = "event/email/event_created"
     emails = close_friends.values_list('user__email', flat=True)
     context = get_event_context(instance)
-    context["user"] = instance.owner
-    if instance.owner.image:
-        context["user_image"] = instance.owner.image.url
-    else:
-        context["user_image"] = ""
+    # context["user"] = request.user.userprofile
+    context["other"] = instance.owner
     send_mail(template_prefix, emails, context)
 
 def event_canceled(sender, instance, **kwargs):
@@ -74,7 +71,8 @@ def event_canceled(sender, instance, **kwargs):
     template_prefix = "event/email/event_canceled"
     emails = friends.values_list('user__email', flat=True)
     context = get_event_context(instance)
-    context["user"] = instance.owner
+    # context["user"] = request.user.userprofile
+    context["other"] = instance.owner
     send_mail(template_prefix, emails, context)
 
 def event_saved(sender, instance, created, update_fields, **kwargs):
@@ -88,7 +86,7 @@ def event_saved(sender, instance, created, update_fields, **kwargs):
     # else:
     #     event_modified(sender, instance, **kwargs)
 
-def participant_joined(userprofile, event):
+def participant_joined(request, userprofile, event):
     msg = PARTICIPANT_JOINED%(userprofile.name, event.name)
     #recepients = [ i[u"id"] for i in event.participants.values() ]
     recepients = [ i for i in event.participants.all() ]
@@ -102,10 +100,11 @@ def participant_joined(userprofile, event):
     template_prefix = "event/email/participant_joined"
     emails = [r.user.email for r in recepients]
     context = get_event_context(event)
-    context["user"] = userprofile
+    context["user"] = request.user.userprofile
+    context["other"] = userprofile
     send_mail(template_prefix, emails, context)
 
-def participant_left(userprofile, event):
+def participant_left(request, userprofile, event):
     msg = PARTICIPANT_LEFT%(userprofile.name, event.name)
     #recepients = [ i[u"id"] for i in event.participants.values() ]
     recepients = [ i for i in event.participants.all() ]
@@ -118,5 +117,5 @@ def participant_left(userprofile, event):
     template_prefix = "event/email/participant_left"
     emails = [r.user.email for r in recepients]
     context = get_event_context(event)
-    context["user"] = userprofile
+    context["other"] = userprofile
     send_mail(template_prefix, emails, context)

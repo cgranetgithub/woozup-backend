@@ -1,4 +1,4 @@
 {% load i18n %}
 {% autoescape off %}
-{% blocktrans %}{{ other.name }} t'invite sur Woozup{% endblocktrans %}
+{% blocktrans %}Invitation Woozup{% endblocktrans %}
 {% endautoescape %}

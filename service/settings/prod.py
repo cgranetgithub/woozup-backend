@@ -141,9 +141,18 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "contact@woozup.social"
 
 # GeoDjango
-GEOS_LIBRARY_PATH = "{}/libgeos_c.so".format(os.environ.get('GEOS_LIBRARY_PATH'))
-GDAL_LIBRARY_PATH = "{}/libgdal.so".format(os.environ.get('GDAL_LIBRARY_PATH'))
-PROJ4_LIBRARY_PATH = "{}/libproj.so".format(os.environ.get('PROJ4_LIBRARY_PATH'))
+
+def path_helper(var, lib):
+    var = os.environ.get(var, "/usr/lib")
+    if os.path.isfile(var):
+        return var
+    var = "{}/{}".format(var, lib)
+    assert os.path.isfile(var), "Missing {}".format(lib)
+    return var
+
+GEOS_LIBRARY_PATH = path_helper('GEOS_LIBRARY_PATH', 'libgeos_c.so"')
+GDAL_LIBRARY_PATH = path_helper('GDAL_LIBRARY_PATH', 'libgdal.so')
+PROJ4_LIBRARY_PATH = path_helper('PROJ4_LIBRARY_PATH', 'libproj.so')
 
 # PUSH NOTIFICATIONS
 PUSH_NOTIFICATIONS_SETTINGS = {

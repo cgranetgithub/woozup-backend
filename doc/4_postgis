@@ -21,5 +21,4 @@ heroku pg:psql  (connect to the DB)
 
 
 # add buildpack:
-heroku config:add BUILDPACK_URL=http://github.com/dulaccc/heroku-buildpack-geodjango/
-
+heroku config:add BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git

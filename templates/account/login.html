@@ -1,19 +1,7 @@
 {% extends "account/base.html" %}
-{% load i18n %}
 
-{% block head_title %}{% trans "Sign In" %}{% endblock %}
+{% block head_title %}Woozup{% endblock %}
 
 {% block content %}
-
-<h1>{% trans "Sign In" %}</h1>
-
-<form class="login" method="POST" action="{% url 'account_login' %}">
-  {% csrf_token %}
-  {{ form.as_p }}
-  {% if redirect_field_value %}
-  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-  {% endif %}
-  <button class="primaryAction" type="submit">{% trans "Sign In" %}</button>
-</form>
-
+    <h1>Retourne dans l'app pour commencer à gérer tes sorties avec tes amis !</h1>
 {% endblock %}

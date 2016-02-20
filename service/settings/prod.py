@@ -150,7 +150,7 @@ def path_helper(var, lib):
     assert os.path.isfile(var), "Missing {}".format(lib)
     return var
 
-GEOS_LIBRARY_PATH = path_helper('GEOS_LIBRARY_PATH', 'libgeos_c.so"')
+GEOS_LIBRARY_PATH = path_helper('GEOS_LIBRARY_PATH', 'libgeos_c.so')
 GDAL_LIBRARY_PATH = path_helper('GDAL_LIBRARY_PATH', 'libgdal.so')
 PROJ4_LIBRARY_PATH = path_helper('PROJ4_LIBRARY_PATH', 'libproj.so')
 

@@ -11,7 +11,7 @@ from django.conf.urls import url
 from doc import authdoc
 from link.tasks import create_connections
 from link.models import Invite
-from link.push import send_invitation, invite_ignored
+from link.push import invite_validated, invite_ignored
 
 import apidoc as doc
 
@@ -68,7 +68,7 @@ class InviteResource(ModelResource):
         # send invitation
         invite = result.get('invite', False)
         if invite:
-            send_invitation(invite)
+            invite_validated(invite)
         return self.create_response(req, result, status)
 
     def ignore(self, request, **kwargs):

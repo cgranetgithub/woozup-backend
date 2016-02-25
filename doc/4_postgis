@@ -21,4 +21,6 @@ heroku pg:psql  (connect to the DB)
 
 
 # add buildpack:
-heroku config:add BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+heroku buildpacks:clear
+heroku buildpacks:set heroku/python
+heroku buildpacks:add https://github.com/cyberdelia/heroku-geo-buildpack.git#1.3 (check last release version on github)

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from service.notification import send_notification, send_mail
+from service.notification import send_notification, send_mail, send_sms
 from django.utils import timezone
 
 REQUEST_LINK = u"%s souhaite se connecter avec toi"
 ACCEPT_LINK = u"%s a accepté ton invitation"
+SMS_INVITE = u"%s t'invite sur Woozup ! Télécharge l'appli dans l'AppStore ou le PlayStore."
 
 def link_requested(link, inverted, **kwargs):
     # push notif
@@ -44,19 +45,19 @@ def link_accepted(link, inverted, **kwargs):
         context = {"other" : sender, "user" : recipient}
         send_mail(template_prefix, emails, context)
 
-def send_invitation(invite, template_prefix, context, send_sms=False):
+def send_invitation(invite, template_prefix, context, sms=False):
     ret = {'emails':0, 'sms':0}
     # email
     if invite.emails:
-        emails = invite.emails.split(',')
+        emails = [x.strip() for x in invite.emails.split(',')]
         send_mail(template_prefix, emails, context)
         ret['emails'] += len(emails)
         invite.sent_at = timezone.now()
         invite.save()
     # SMS
-    elif invite.numbers:
-        numbers = invite.numbers.split(',')
-        #check if mobile?
+    elif (invite.numbers and sms):
+        numbers = [x.strip() for x in invite.numbers.split(',')]
+        send_sms(SMS_INVITE%invite.sender.name, numbers)
         ret['sms'] += len(numbers)
         invite.sent_at = timezone.now()
         invite.save()

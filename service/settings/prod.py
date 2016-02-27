@@ -132,7 +132,7 @@ ACCOUNT_EMAIL_SUBJECT_PREFIX = "Woozup - "
 ACCOUNT_SIGNUP_PASSWORD_VERIFICATION = False
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
-# Email
+# Email (sendgrid)
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = os.environ.get("SENDGRID_USERNAME", "")
 EMAIL_HOST_PASSWORD = os.environ.get("SENDGRID_PASSWORD", "")
@@ -140,8 +140,18 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "contact@woozup.social"
 
-# GeoDjango
+# SMS (plivo)
+SMS_AUTH_ID = os.environ.get("PLIVO_AUTH_ID", "")
+SMS_AUTH_TOKEN = os.environ.get("PLIVO_AUTH_TOKEN", "")
+SMS_SENDER_PHONE = os.environ.get("PLIVO_SENDER_PHONE", "")
 
+# PUSH NOTIFICATIONS
+PUSH_NOTIFICATIONS_SETTINGS = {
+    "GCM_API_KEY": os.environ.get("GCM_API_KEY", ""),
+    "APNS_CERTIFICATE": os.path.join(BASE_DIR, "pushcert.pem")
+}
+
+# GeoDjango
 def path_helper(var, lib):
     var = os.environ.get(var, "/usr/lib")
     if os.path.isfile(var):
@@ -153,12 +163,6 @@ def path_helper(var, lib):
 GEOS_LIBRARY_PATH = path_helper('GEOS_LIBRARY_PATH', 'libgeos_c.so')
 GDAL_LIBRARY_PATH = path_helper('GDAL_LIBRARY_PATH', 'libgdal.so')
 PROJ4_LIBRARY_PATH = path_helper('PROJ4_LIBRARY_PATH', 'libproj.so')
-
-# PUSH NOTIFICATIONS
-PUSH_NOTIFICATIONS_SETTINGS = {
-    "GCM_API_KEY": os.environ.get("GCM_API_KEY", ""),
-    "APNS_CERTIFICATE": os.path.join(BASE_DIR, "pushcert.pem")
-}
 
 # Cache settings.
 CACHES = {

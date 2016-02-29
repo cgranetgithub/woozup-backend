@@ -100,7 +100,7 @@ def participant_joined(request, userprofile, event):
     template_prefix = "event/email/participant_joined"
     emails = [r.user.email for r in recepients]
     context = get_event_context(event)
-    context["user"] = request.user.userprofile
+    # context["user"] = request.user.userprofile
     context["other"] = userprofile
     send_mail(template_prefix, emails, context)
 

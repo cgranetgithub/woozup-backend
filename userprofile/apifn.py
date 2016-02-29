@@ -1,6 +1,7 @@
 from base64 import b64decode
 
 from link.models import Link
+from service.utils import get_clean_number
 
 from django.http import HttpResponse
 from django.contrib import auth
@@ -59,7 +60,11 @@ def setprofile(request, data):
         try:
             number = data.get('number').strip()
             if number:
-                request.user.userprofile.phone_number = number
+                num = get_clean_number(number)
+                if num is not None:
+                    request.user.userprofile.phone_number = num
+            else: # user can set empty number
+                request.user.userprofile.phone_number = ''
         except:
             pass
         try:
@@ -146,7 +151,7 @@ def register_by_email(request, data):
                             u'code': '300'}, HttpBadRequest)
     if form.is_valid():
         user = form.save(request)
-        complete_signup(request, user, 
+        complete_signup(request, user,
                         app_settings.EMAIL_VERIFICATION, None)
         return (request, {'api_key' : user.api_key.key,
                           'userid'  : request.user.id,

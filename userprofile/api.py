@@ -1,4 +1,5 @@
 from tastypie import fields
+from tastypie.http import HttpBadRequest
 from tastypie.utils import trailing_slash
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authorization import DjangoAuthorization

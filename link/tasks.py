@@ -1,17 +1,17 @@
 # import the logging library
 import logging
-
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+from django.contrib.auth.models import User
 from django.db.models import Q
 from rq.decorators import job
 from django.apps import apps as django_apps
 from worker import conn
-import phonenumbers
 import django
-from userprofile.models import UserProfile
 from link.models import Link, Invite
+from service.utils import get_clean_number
+from userprofile.models import UserProfile
 
 def is_email(email):
     return ( '@' in email )
@@ -43,27 +43,11 @@ def get_clean_numbers(contact):
         return []
     raw_number_list = numbers.split(',')
     new_number_list = []
-    ### hardcoded, need to fix it
-    country_code = 'FR'
-    ###
     for i in raw_number_list:
-        # normalize phonenumber and skip if fail
-        ph = None
-        try:
-            ph = phonenumbers.parse(i, None)
-        except phonenumbers.NumberParseException:
-            try:
-                ph = phonenumbers.parse(i, country_code)
-            except:
-                continue
-        # check if validate num
-        if (phonenumbers and phonenumbers.is_possible_number(ph)
-            and phonenumbers.is_valid_number(ph)):
-                num = phonenumbers.format_number(ph, phonenumbers.PhoneNumberFormat.E164)
-                # skip duplicates
-                if num not in new_number_list:
-                    new_number_list.append(num)
-    #result = list(set(new_number_list))
+        num = get_clean_number(i)
+        # skip duplicates
+        if num not in new_number_list:
+            new_number_list.append(num)
     new_number_list.sort()
     return new_number_list
 
@@ -152,22 +136,49 @@ no emails, name/numbers exist, more than one Invite with same numbers \
 %s %s"""%(name, numbers))
 
 # called by userprofile.apps on post_save signal
-def transform_invites(sender, instance, created, **kwargs):
-    django.setup()
-    if created:
-        create_link_list = []
-        invites = Invite.objects.none()
-        if instance.phone_number:
-            invites = invites | Invite.objects.filter(
-                                    numbers__icontains=instance.phone_number
+def transform_invites_from_profile(sender, instance, **kwargs):
+    assert type(instance) is UserProfile
+    userprofile = instance
+    if not userprofile.phone_number:
+        return 0
+    cnt = 0
+    invites = Invite.objects.filter(numbers__icontains=userprofile.phone_number
                                     ).exclude(status='CLO')
-        if instance.user.email:
-            invites = invites | Invite.objects.filter(
-                                    emails__icontains=instance.user.email
+    for i in invites:
+        if userprofile != i.sender:
+            try:
+                Link.objects.get(sender=userprofile, receiver=i.sender)
+            except Link.DoesNotExist:
+                try:
+                    Link.objects.get(sender=i.sender, receiver=userprofile)
+                except Link.DoesNotExist:
+                    Link.objects.create(sender=i.sender, receiver=userprofile)
+                    i.status = 'CLO'
+                    i.save()
+                    cnt += 1
+    return cnt
+
+# called by userprofile.apps on post_save signal
+def transform_invites_from_user(sender, instance, **kwarg):
+    assert type(instance) is User
+    user = instance
+    if not user.email:
+        return 0
+    cnt = 0
+    invites = Invite.objects.filter(emails__icontains=user.email
                                     ).exclude(status='CLO')
-        for i in invites:
-            link = Link(sender=i.sender, receiver=instance)
-            create_link_list.append(link)
-            i.status = 'CLO'
-            i.save()
-        Link.objects.bulk_create(create_link_list)
+    for i in invites:
+        if user.userprofile != i.sender:
+            try:
+                Link.objects.get(sender=user.userprofile, receiver=i.sender)
+            except Link.DoesNotExist:
+                try:
+                    Link.objects.get(sender=i.sender,
+                                     receiver=user.userprofile)
+                except Link.DoesNotExist:
+                    Link.objects.create(sender=i.sender,
+                                        receiver=user.userprofile)
+                    i.status = 'CLO'
+                    i.save()
+                    cnt += 1
+    return cnt

@@ -62,4 +62,3 @@ def create_profiles(sender, instance, created, **kwargs):
 
 post_save.connect(create_profiles  , sender=settings.AUTH_USER_MODEL)
 post_save.connect(create_api_key   , sender=settings.AUTH_USER_MODEL)
-#post_save.connect(transform_invites, sender=settings.AUTH_USER_MODEL)

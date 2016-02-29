@@ -1,4 +1,5 @@
-import json, datetime
+import json
+from django.utils import timezone
 
 from django.test import TestCase
 from django.test.client import Client
@@ -19,7 +20,7 @@ class EventTestCase(TestCase):
         u01 = register(c, 'aaa@aaa.aaa')
         cat = EventCategory.objects.create(name="meal")
         e = EventType.objects.create(name="meal")
-        e.category.add(cat)        
+        e.category.add(cat)
 
     def test_owner_journey(self):
         ### do typical sequence of calls an app would do
@@ -28,7 +29,7 @@ class EventTestCase(TestCase):
         auth = '?username=%s&api_key=%s'%(username, api_key)
         #user1 creates an event
         e_id = EventType.objects.first().id
-        start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        start = timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/%d/'%e_id, 'start':start,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = c.post('/api/v1/events/mine/%s'%auth,
@@ -64,7 +65,7 @@ class EventTestCase(TestCase):
         except Event.DoesNotExist:
             exists = False
         self.assertFalse(exists)
-            
+
 
     def test_my_events(self):
         ### events I can see
@@ -72,8 +73,8 @@ class EventTestCase(TestCase):
         (api_key, username) = login(c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         e = EventType.objects.first().id
-        #start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
-        start = datetime.datetime.now().isoformat()
+        #start = timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        start = timezone.now().isoformat()
         data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = c.post('/api/v1/events/mine/%s'%auth,
@@ -105,7 +106,7 @@ class EventTestCase(TestCase):
         res = c.delete('/api/v1/events/mine/%s'%auth)
         self.assertEqual(res.status_code, 405)
         e = EventType.objects.first().id
-        start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        start = timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
         data = {'event_type':'/api/v1/event_type/%d/'%e, 'start':start,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = c.post('/api/v1/events/mine/%s'%auth,
@@ -138,7 +139,7 @@ class EventTestCase(TestCase):
         self.assertEqual(res.status_code, 401)
         res = c.get('/api/v1/events/mine/1/')
         self.assertEqual(res.status_code, 401)
-        
+
     def test_set_owner(self):
         ### try to create an event for someone else
         pass
@@ -149,8 +150,9 @@ class EventTestCase(TestCase):
         auth = '?username=%s&api_key=%s'%(username, api_key)
         # user1 creates an event
         etype = EventType.objects.first().id
-        start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
-        data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':start,
+        start = timezone.now().replace(microsecond=0)
+        strstart = start.strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':strstart,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
@@ -195,8 +197,9 @@ class EventTestCase(TestCase):
         auth = '?username=%s&api_key=%s'%(username, api_key)
         # user1 creates an event
         etype = EventType.objects.first().id
-        start = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ%Z")
-        data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':start,
+        start = timezone.now().replace(microsecond=0)
+        strstart = start.strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':strstart,
                 'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
         res = c.post('/api/v1/events/mine/%s'%auth,
                           data = json.dumps(data),
@@ -268,56 +271,56 @@ class ResourcesTestCase(TestCase):
         # create categorie & type
         cat = EventCategory.objects.create(name="meal")
         etype = EventType.objects.create(name="meal")
-        etype.category.add(cat)        
+        etype.category.add(cat)
         # create some events for u1
         e1 = Event.objects.create(owner=self.u1.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u1 breakfast",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e2 = Event.objects.create(owner=self.u1.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u1 lunch",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e2.participants.add(self.u2.userprofile)
         e3 = Event.objects.create(owner=self.u1.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u1 diner",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e3.participants.add(self.u2.userprofile)
         e3.participants.add(self.u3.userprofile)
         # create some events for u2
         e1 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u2 breakfast",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e2 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u2 lunch",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e2.participants.add(self.u1.userprofile)
         e3 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u2 diner",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e3.participants.add(self.u1.userprofile)
         e3.participants.add(self.u4.userprofile)
         # create some events for u3
         e1 = Event.objects.create(owner=self.u3.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u3 breakfast",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e2 = Event.objects.create(owner=self.u3.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u3 lunch",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e2.participants.add(self.u1.userprofile)
         # create some events for u4
         e1 = Event.objects.create(owner=self.u4.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u4 breakfast",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e2 = Event.objects.create(owner=self.u4.userprofile, event_type=etype,
-                                  start=datetime.datetime.now(),
+                                  start=timezone.now(),
                                   name="u4 lunch",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
         e2.participants.add(self.u2.userprofile)

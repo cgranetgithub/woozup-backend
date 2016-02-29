@@ -2,8 +2,10 @@
 #from django.contrib.auth import login
 #from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from service.notification import send_mail
 from django.shortcuts import render_to_response, redirect, render
+from django.db.models import Count
 from event.models import Event
 from event.push import get_event_context
 
@@ -49,7 +51,15 @@ def emails(request):
     return render(request, 'web/emails.html')
 
 def users(request):
-    return render_to_response('home.html')
+    data = User.objects.extra(
+                # get specific dates (not hours for example)
+                {'date':"date(date_joined)"}
+                # get a values list of only "joined" defined earlier
+                ).values('date'
+                ).order_by('-date'
+                # annotate each day by Count of Guidoism objects
+                ).annotate(number=Count('id'))
+    return render(request, 'web/users.html', {'data': data})
 
 def events(request):
     return render_to_response('home.html')

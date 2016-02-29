@@ -172,7 +172,7 @@ class LinkTestCase(TestCase):
         auth = '?username=%s&api_key=%s'%(username, api_key)
         # execute background task directly
         u = UserProfile.objects.get(user__username=username)
-        create_connections(u, ce.michael)        
+        create_connections(u, ce.michael)
         create_connections(u, ce.charles)
         create_connections(u, ce.caroline)
 
@@ -238,7 +238,7 @@ class InviteTestCase(TestCase):
                           data = json.dumps({}),
                           content_type='application/json')
         self.assertEqual(res.status_code, 401)
-        
+
 class ContactTestCase(TestCase):
     c = Client(enforce_csrf_checks=True)
     def setUp(self):
@@ -246,7 +246,7 @@ class ContactTestCase(TestCase):
         call_command('create_initial_data')
         self.u01 = register(self.c, 'user1@fr.fr')
     def test_invite(self):
-        # for code coverage, doesn't execute the bacground task
+        # for code coverage purpose, doesn't execute the bacground task
         email = 'user1@fr.fr'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
@@ -264,4 +264,80 @@ class ContactTestCase(TestCase):
                           data = json.dumps({}),
                           content_type='application/json')
         self.assertEqual(res.status_code, 401)
-        
+
+class TransformTestCase(TestCase):
+    c = Client(enforce_csrf_checks=True)
+    def setUp(self):
+        super(TransformTestCase, self).setUp()
+        call_command('create_initial_data')
+        email = 'user1@fr.fr'
+        self.u01 = register(self.c, email)
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        sort_contact(self.c, username)
+    def test_creating_user(self):
+        self.assertEqual(Link.objects.count(), 0)
+        self.assertEqual(Invite.objects.count(), 9)
+        # new user whom email is in an invite
+        register(self.c, 'newuser1@fr.fr')
+        # must NOT throw any error:
+        self.assertEqual(Link.objects.count(), 1)
+        Link.objects.get(sender__user__email='user1@fr.fr',
+                         receiver__user__email='newuser1@fr.fr')
+    def test_changing_email(self):
+        # new user, email unknown (not in any invite)
+        email = 'unknown@bidon.com'
+        register(self.c, email)
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        self.assertEqual(Link.objects.count(), 0)
+        self.assertEqual(Invite.objects.count(), 9)
+        # change email into something known
+        res = self.c.post('/api/v1/userprofile/setprofile/%s'%auth,
+                          data = json.dumps({'email':'newuser21@fr.fr'}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        # must NOT throw any error:
+        self.assertEqual(Link.objects.count(), 1)
+        Link.objects.get(sender__user__email='user1@fr.fr',
+                         receiver__user__email='newuser21@fr.fr')
+        # change email into something known, but still the same user
+        res = self.c.post('/api/v1/userprofile/setprofile/%s'%auth,
+                          data = json.dumps({'email':'newuser2@fr.fr'}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        # must NOT throw any error:
+        self.assertEqual(Link.objects.count(), 1) # not change, same user
+        Link.objects.get(sender__user__email='user1@fr.fr',
+                         receiver__user__email='newuser2@fr.fr')
+    def test_changing_number(self):
+        self.assertEqual(Link.objects.count(), 0)
+        self.assertEqual(Invite.objects.count(), 9)
+        # new user, email unknown (not in any invite)
+        email = 'unknown2@bidon2.com'
+        register(self.c, email)
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        # change number into something known
+        res = self.c.post('/api/v1/userprofile/setprofile/%s'%auth,
+                          data = json.dumps({'number':'+33610077009'}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        # must NOT throw any error:
+        self.assertEqual(Link.objects.count(), 1)
+        Link.objects.get(sender__user__email='user1@fr.fr',
+                         receiver__phone_number='+33610077009')
+        # new user, email unknown (not in any invite)
+        email = 'unknown3@bidon3.com'
+        register(self.c, email)
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        # change number into something known
+        res = self.c.post('/api/v1/userprofile/setprofile/%s'%auth,
+                          data = json.dumps({'number':'0675894632'}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        # must NOT throw any error:
+        self.assertEqual(Link.objects.count(), 2)
+        Link.objects.get(sender__user__email='user1@fr.fr',
+                         receiver__phone_number='+33675894632')

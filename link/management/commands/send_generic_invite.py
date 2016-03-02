@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from service.notification import send_mail
+from userprofile.models import UserProfile
 from django.db.models import Q
 from django.utils import timezone
 from link.models import Invite
@@ -33,13 +34,16 @@ class Command(BaseCommand):
             invite.save()
         emails = list(set(emails))
         self.stdout.write('Sending %d emails'%(len(emails)))
-        for invite in without_email[:700]:
+        for invite in without_email[:500]:
             n = [x.strip() for x in invite.numbers.split(',')]
             numbers += n
             invite.sent_at = timezone.now()
             invite.save()
-        numbers = list(set(numbers))
-        ### hack
+        # remove phone numbers of users already registered
+        user_numbers = set(UserProfile.objects.values_list('phone_number',
+                                                            flat=True))
+        numbers = set(numbers) - user_numbers
+        ### hack for French mobile only
         french_filtered = [x for x in numbers if ( x.startswith('+336')
                                                 or x.startswith('+337') )]
         ###

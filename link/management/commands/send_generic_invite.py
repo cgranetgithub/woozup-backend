@@ -14,17 +14,6 @@ class Command(BaseCommand):
         self.send_generic_invite()
 
     def send_generic_invite(self):
-        ### revert sent_at if sent before 2016-03-02 18:04:30+01:00
-        import datetime
-        dt = datetime.datetime.strptime("2016-03-02 18:04:30", "%Y-%m-%d %H:%M:%S")
-        revert = Invite.objects.filter(status='NEW', emails='', sent_at__lt=dt
-                              ).exclude(numbers='')
-        self.stdout.write('revert invites: %d'%revert.count())
-        for r in revert:
-            r.sent_at = None
-            r.save()
-        ###
-
         cnt = {'emails':0, 'sms':0}
         self.stdout.write('Total invites: %d'%(Invite.objects.count()))
         invites = Invite.objects.filter( Q(status='IGN') | Q(status='NEW')

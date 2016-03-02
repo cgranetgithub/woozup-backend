@@ -14,14 +14,6 @@ class Command(BaseCommand):
         self.send_generic_invite()
 
     def send_generic_invite(self):
-        ##revert mistake
-        revert = Invite.objects.filter(status='NEW', emails=''
-                              ).exclude(numbers='')
-        self.stdout.write('revert invites: %d'%revert.count())
-        for r in revert:
-            r.sent_at = None
-            r.save()
-        ##
         cnt = {'emails':0, 'sms':0}
         self.stdout.write('Total invites: %d'%(Invite.objects.count()))
         invites = Invite.objects.filter( Q(status='IGN') | Q(status='NEW')
@@ -41,7 +33,7 @@ class Command(BaseCommand):
             invite.save()
         emails = list(set(emails))
         self.stdout.write('Sending %d emails'%(len(emails)))
-        for invite in without_email[:200]:
+        for invite in without_email[:700]:
             n = [x.strip() for x in invite.numbers.split(',')]
             numbers += n
             invite.sent_at = timezone.now()

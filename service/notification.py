@@ -63,7 +63,6 @@ def send_notification(userprofile_list, data):
 def send_sms(message, number_list):
     assert type(number_list) is list
     numbers = '<'.join(number_list)
-    print numbers
     auth_id = settings.SMS_AUTH_ID
     auth_token = settings.SMS_AUTH_TOKEN
     sender_phone = settings.SMS_SENDER_PHONE

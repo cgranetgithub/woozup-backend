@@ -46,20 +46,26 @@ def get_clean_numbers(contact):
     for i in raw_number_list:
         num = get_clean_number(i)
         # skip duplicates
-        if num not in new_number_list:
+        if num and num not in new_number_list:
             new_number_list.append(num)
     new_number_list.sort()
     return new_number_list
 
 def find_users_from_email_list(email_list):
-    l1 = UserProfile.objects.filter(user__username__in=email_list)
-    l2 = UserProfile.objects.filter(user__email__in=email_list)
-    return l1 | l2
+    if email_list:
+        l1 = UserProfile.objects.filter(user__username__in=email_list)
+        l2 = UserProfile.objects.filter(user__email__in=email_list)
+        return l1 | l2
+    else:
+        return UserProfile.objects.none()
 
 def find_users_from_number_list(number_list):
-    l1 = UserProfile.objects.filter(user__username__in=number_list)
-    l2 = UserProfile.objects.filter(phone_number__in=number_list)
-    return l1 | l2
+    if number_list:
+        l1 = UserProfile.objects.filter(user__username__in=number_list)
+        l2 = UserProfile.objects.filter(phone_number__in=number_list)
+        return l1 | l2
+    else:
+        return UserProfile.objects.none()
 
 @job('default', connection=conn)
 def create_connections(profile, data):

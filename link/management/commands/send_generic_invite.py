@@ -14,6 +14,14 @@ class Command(BaseCommand):
         self.send_generic_invite()
 
     def send_generic_invite(self):
+        ##revert mistake
+        revert = Invite.objects.filter(status='NEW', emails=''
+                              ).exclude(numbers='')
+        self.stdout.write('revert invites: %d'%revert.count())
+        for r in revert:
+            r.sent_at = None
+            r.save()
+        ##
         cnt = {'emails':0, 'sms':0}
         self.stdout.write('Total invites: %d'%(Invite.objects.count()))
         invites = Invite.objects.filter( Q(status='IGN') | Q(status='NEW')
@@ -29,15 +37,19 @@ class Command(BaseCommand):
         for invite in with_email:
             e = [x.strip() for x in invite.emails.split(',')]
             emails += e
+            invite.sent_at = timezone.now()
+            invite.save()
         emails = list(set(emails))
         self.stdout.write('Sending %d emails'%(len(emails)))
-        for invite in without_email:
+        for invite in without_email[:200]:
             n = [x.strip() for x in invite.numbers.split(',')]
             numbers += n
+            invite.sent_at = timezone.now()
+            invite.save()
         numbers = list(set(numbers))
         ### hack
         french_filtered = [x for x in numbers if ( x.startswith('+336')
-                                                or x.startswith('+337') )][:500]
+                                                or x.startswith('+337') )]
         ###
         self.stdout.write('Sending %d sms'%(len(french_filtered)))
         send_bulk_generic_invitation(french_filtered, emails)

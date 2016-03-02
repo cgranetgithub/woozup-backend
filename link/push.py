@@ -5,7 +5,8 @@ from django.utils import timezone
 
 REQUEST_LINK = u"%s souhaite se connecter avec toi"
 ACCEPT_LINK = u"%s a accepté ton invitation"
-SMS_INVITE = u"%s t'invite sur Woozup ! Télécharge l'appli dans l'AppStore ou le PlayStore."
+SMS_PERSONAL = u"%s t'invite sur Woozup ! Télécharge l'appli dans l'AppStore ou le PlayStore."
+SMS_GENERIC = u"Découvre Woozup, l'appli pour passer du temps avec ses amis ! Télécharge Woozup dans l'AppStore ou le PlayStore."
 
 def link_requested(link, inverted, **kwargs):
     # push notif
@@ -45,7 +46,7 @@ def link_accepted(link, inverted, **kwargs):
         context = {"other" : sender, "user" : recipient}
         send_mail(template_prefix, emails, context)
 
-def send_invitation(invite, template_prefix, context, sms=False):
+def send_invitation(invite, message, template_prefix, context, sms=False):
     ret = {'emails':0, 'sms':0}
     # email
     if invite.emails:
@@ -57,7 +58,7 @@ def send_invitation(invite, template_prefix, context, sms=False):
     # SMS
     elif (invite.numbers and sms):
         numbers = [x.strip() for x in invite.numbers.split(',')]
-        send_sms(SMS_INVITE%invite.sender.name, numbers)
+        send_sms(message, numbers)
         ret['sms'] += len(numbers)
         invite.sent_at = timezone.now()
         invite.save()
@@ -66,9 +67,20 @@ def send_invitation(invite, template_prefix, context, sms=False):
 def invite_validated(invite):
     template_prefix = "link/email/personal_invite"
     context = {"other" : invite.sender}
-    return send_invitation(invite, template_prefix, context, True)
+    message = SMS_PERSONAL%invite.sender.name
+    return send_invitation(invite, message, template_prefix, context, True)
 
 def invite_ignored(invite):
     template_prefix = "link/email/generic_invite"
     context = {}
-    return send_invitation(invite, template_prefix, context, False)
+    return send_invitation(invite, SMS_GENERIC, template_prefix, context, True)
+
+def send_bulk_generic_invitation(numbers, emails):
+    assert type(numbers) is list
+    assert type(emails) is list
+    emails = list(set(emails)) # remove duplicates
+    template_prefix = "link/email/generic_invite"
+    context = {}
+    send_mail(template_prefix, emails, context)
+    numbers = list(set(numbers)) # remove duplicates
+    send_sms(SMS_GENERIC, numbers)

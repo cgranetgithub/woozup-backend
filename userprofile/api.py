@@ -72,6 +72,7 @@ class UserResource(ModelResource):
         includes = ['first_name', 'last_name']
         filtering = {
                     'username': ALL,
+                    'first_name': ALL,
                     }
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
@@ -275,7 +276,7 @@ class MyFriendsResource(ModelResource):
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['user']
-        #filtering = {'user' : ALL_WITH_RELATIONS}
+        filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
@@ -292,7 +293,7 @@ class PendingFriendsResource(ModelResource):
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['user']
-        #filtering = {'user' : ALL_WITH_RELATIONS}
+        filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
@@ -315,7 +316,7 @@ class NewFriendsResource(ModelResource):
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['user']
-        #filtering = {'user' : ALL_WITH_RELATIONS}
+        filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 

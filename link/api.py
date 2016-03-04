@@ -40,6 +40,7 @@ class InviteResource(ModelResource):
         ordering = ['name']
         filtering = {
                     #'sender': ALL_WITH_RELATIONS,
+                    'name': ALL,
                     'number': ALL,
                     'status': ALL,
                     }

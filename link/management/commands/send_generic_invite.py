@@ -34,7 +34,7 @@ class Command(BaseCommand):
             invite.save()
         emails = list(set(emails))
         self.stdout.write('Sending %d emails'%(len(emails)))
-        for invite in without_email[:500]:
+        for invite in without_email[:100]:
             n = [x.strip() for x in invite.numbers.split(',')]
             numbers += n
             invite.sent_at = timezone.now()

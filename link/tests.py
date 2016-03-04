@@ -1,8 +1,10 @@
 import json
 
+from django.db import IntegrityError
 from django.test import TestCase
 from django.test.client import Client
 from django.core.management import call_command
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 #from tastypie.test import ResourceTestCase
 
@@ -25,26 +27,50 @@ def cmp_result(content, searchfor):
             found += 1
     return found
 
-def sort_contact(c, username):
-    user1_contacts = [
-        {'name':'newuser1', 'numbers':'+33600000001',
-                        'emails':'newuser1@fr.fr, newuser11@fr.fr'},
-        {'name':'newuser2', 'numbers':'+33600000002',
-                        'emails':'newuser2@fr.fr, newuser21@fr.fr'},
-        {'name':'newuser3', 'numbers':'+33600000003',
-                        'emails':'newuser23@fr.fr, newuser21@fr.fr'},
-        {'name':'newuser1', 'numbers':'+33600000010',
-                        'emails':'newuser10@fr.fr'},
-        {'name':'user9', 'numbers':'+33610000009', 'emails':'user9@fr.fr'},
-        {'name':'localnumber', 'numbers':'0634567890'},
-        {'name':'intnumber', 'numbers':'+33610077009'},
-        {'name':'wrongnumber', 'numbers':'666'},
-        {'name':'duplnumber', 'numbers':'+33 601 203 003, 06 01 20 30 03'},
-        {'name':'2numbers', 'numbers':'+33602200010, 0675894632'},
-    ]
+user1_contacts = [
+    {'name':'newuser1', 'numbers':'+33600000001',
+                                'emails':'newuser1@fr.fr, newuser11@fr.fr'},
+    {'name':'newuser2', 'numbers':'+33600000002',
+                                'emails':'newuser2@fr.fr, newuser21@fr.fr'},
+    {'name':'newuser3', 'numbers':'+33600000003',
+                                'emails':'newuser23@fr.fr, newuser21@fr.fr'},
+    {'name':'newuser1', 'numbers':'+33600000010',
+                        'emails':'newuser10@fr.fr'},  #existing user
+    {'name':'user9', 'numbers':'+33610000009',
+                     'emails':'user9@fr.fr'},  #existing user
+    {'name':'localnumber', 'numbers':'0634567890'},
+    {'name':'intnumber', 'numbers':'+33610077009'},
+    {'name':'wrongnumber', 'numbers':'666'},
+    {'name':'duplnumber', 'numbers':'+33 601 203 003, 06 01 20 30 03'},
+    {'name':'2numbers', 'numbers':'+33602200010, 0675894632'},
+    {'name':'common-1&2&3', 'numbers':'+33612312300'},
+]
+user2_contacts = [
+    {'name':'only-2(1)', 'numbers':'+33621212121'},
+    {'name':'only-2(2)', 'emails':'only22@fr.fr'}, #no number => rejected
+    {'name':'only-2(3)', 'numbers':'+33623232323', 'emails':'only23@fr.fr'},
+    {'name':'common-1&2(1)', 'numbers':'+33610077009'},
+    {'name':'common-1&2(2)', 'emails':'user9@fr.fr'}, #existing user
+    {'name':'common-1&2(3)', 'numbers':'+33600000001',
+                'emails':'newuser1@fr.fr, newuser11@fr.fr'},  #existing user
+    {'name':'common-2&3', 'numbers':'+33623323300',
+                                                'emails':'common23@fr.fr'},
+    {'name':'common-1&2&3', 'numbers':'+33612312300'},
+]
+user3_contacts = [
+    {'name':'only-3(1)', 'numbers':'+33631313131'},
+    {'name':'only-3(2)', 'emails':'only32@fr.fr'}, #no number => rejected
+    {'name':'only-3(3)', 'numbers':'+33633333333', 'emails':'only33@fr.fr'},
+    {'name':'common-1&3(1)', 'numbers':'+33 601 203 003'},
+    {'name':'common-2&3', 'numbers':'+33623323300',
+                                                'emails':'common23@fr.fr'},
+    {'name':'common-1&2&3', 'numbers':'+33612312300'},
+]
+
+def sort_contact(c, username, contacts):
     # execute background task directly
     u = UserProfile.objects.get(user__username=username)
-    create_connections(u, user1_contacts)
+    create_connections(u, contacts)
 
 class LinkTestCase(TestCase):
     c = Client(enforce_csrf_checks=True)
@@ -62,6 +88,8 @@ class LinkTestCase(TestCase):
         self.u08 = register(self.c, 'user8@fr.fr')
         self.u09 = register(self.c, 'user9@fr.fr')
         self.u10 = register(self.c, 'user10@fr.fr')
+        self.u11 = register(self.c, 'user11@fr.fr')
+        self.u12 = register(self.c, 'user12@fr.fr')
         self.l1 = Link.objects.create(sender=self.u01.userprofile,
                                       receiver=self.u02.userprofile)
         self.l2 = Link.objects.create(sender=self.u01.userprofile,
@@ -126,7 +154,9 @@ class LinkTestCase(TestCase):
         email = 'user1@fr.fr'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        sort_contact(self.c, username)
+        sort_contact(self.c, username, user1_contacts)
+        self.assertEqual(Link.objects.count(), 8) #7initial+user9
+        self.assertEqual(Invite.objects.count(), 9)
         # the following should NOT raise a DoesNotExist exception
         Invite.objects.get(sender__user__username=username,
                            numbers='+33600000001')
@@ -143,27 +173,69 @@ class LinkTestCase(TestCase):
         #the following should NOT raise a DoesNotExist exception
         Link.objects.get(sender__user__username=username,
                          receiver__user__email='newuser1@fr.fr')
+        self.assertEqual(Link.objects.count(), 9) #+newuser1
+        #the following MUST raise a DoesNotExist exception
+        with self.assertRaises(Link.DoesNotExist):
+            Link.objects.get(sender=self.u01.userprofile,
+                             receiver=self.u11.userprofile)
+            Link.objects.get(sender=self.u01.userprofile,
+                             receiver=self.u12.userprofile)
+        # Now post a second user
+        email = 'user2@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        sort_contact(self.c, username, user2_contacts)
+        self.assertEqual(Link.objects.count(), 11) #+user9 +newuser1
+        self.assertEqual(Invite.objects.count(), 14)
+        #the following MUST raise a DoesNotExist exception
+        with self.assertRaises(Link.DoesNotExist):
+            Link.objects.get(sender=self.u02.userprofile,
+                             receiver=self.u11.userprofile)
+            Link.objects.get(sender=self.u02.userprofile,
+                             receiver=self.u12.userprofile)
+        # And for a third user
+        email = 'user3@fr.fr'
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        sort_contact(self.c, username, user3_contacts)
+        self.assertEqual(Link.objects.count(), 11)
+        self.assertEqual(Invite.objects.count(), 19)
+        #the following MUST raise a DoesNotExist exception
+        with self.assertRaises(Link.DoesNotExist):
+            Link.objects.get(sender=self.u03.userprofile,
+                             receiver=self.u11.userprofile)
+            Link.objects.get(sender=self.u03.userprofile,
+                             receiver=self.u12.userprofile)
+        # register the common friend, should create 3 links
+        email = 'common@fr.fr'
+        register(self.c, email)
+        (api_key, username) = login(self.c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        res = self.c.post('/api/v1/userprofile/setprofile/%s'%auth,
+                          data = json.dumps({'number':'+33612312300'}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(Link.objects.count(), 14)
 
     def test_number_treatment(self):
         email = 'user1@fr.fr'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        sort_contact(self.c, username)
+        sort_contact(self.c, username, user1_contacts)
+        self.assertEqual(Link.objects.count(), 8)
+        self.assertEqual(Invite.objects.count(), 9)
         # check invites created (must not throw error)
         Invite.objects.get(sender__user__username=username,
                            name='localnumber', numbers='+33634567890')
         Invite.objects.get(sender__user__username=username,
                            name='intnumber', numbers='+33610077009')
-        try:
+        with self.assertRaises(Invite.DoesNotExist):
             Invite.objects.get(sender__user__username=username,
                                name='wrongnumber', numbers='666'),
-            self.assertEqual(True, False)
-        except Invite.DoesNotExist:
-            pass
         Invite.objects.get(sender__user__username=username,
                            name='duplnumber', numbers='+33601203003'),
-        Invite.objects.get(sender__user__username=username,
-                           name='2numbers', numbers='+33602200010, +33675894632'),
+        Invite.objects.get(sender__user__username=username, name='2numbers',
+                           numbers='+33602200010, +33675894632'),
 
     def test_contact_big(self):
         import contact_example as ce
@@ -177,8 +249,6 @@ class LinkTestCase(TestCase):
         create_connections(u, ce.caroline)
 
     def test_uniqueness(self):
-        from django.db import IntegrityError
-        from django.core.exceptions import ValidationError
         with self.assertRaises(ValidationError):
             with self.assertRaises(IntegrityError):
                 Link.objects.create(sender=self.u09.userprofile,
@@ -186,7 +256,6 @@ class LinkTestCase(TestCase):
         with self.assertRaises(ValidationError):
             Link.objects.create(sender=self.u10.userprofile,
                                 receiver=self.u09.userprofile)
-        with self.assertRaises(ValidationError):
             Link.objects.create(sender=self.u09.userprofile,
                                 receiver=self.u09.userprofile)
 
@@ -200,7 +269,9 @@ class InviteTestCase(TestCase):
         email = 'user1@fr.fr'
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        sort_contact(self.c, username)
+        sort_contact(self.c, username, user1_contacts)
+        self.assertEqual(Link.objects.count(), 0)
+        self.assertEqual(Invite.objects.count(), 10)
         # check invites are NEW
         i1 = Invite.objects.get(sender__user__username=username,
                                 numbers='+33600000001')
@@ -274,10 +345,10 @@ class TransformTestCase(TestCase):
         self.u01 = register(self.c, email)
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
-        sort_contact(self.c, username)
+        sort_contact(self.c, username, user1_contacts)
     def test_creating_user(self):
         self.assertEqual(Link.objects.count(), 0)
-        self.assertEqual(Invite.objects.count(), 9)
+        self.assertEqual(Invite.objects.count(), 10)
         # new user whom email is in an invite
         register(self.c, 'newuser1@fr.fr')
         # must NOT throw any error:
@@ -291,7 +362,7 @@ class TransformTestCase(TestCase):
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         self.assertEqual(Link.objects.count(), 0)
-        self.assertEqual(Invite.objects.count(), 9)
+        self.assertEqual(Invite.objects.count(), 10)
         # change email into something known
         res = self.c.post('/api/v1/userprofile/setprofile/%s'%auth,
                           data = json.dumps({'email':'newuser21@fr.fr'}),
@@ -312,7 +383,7 @@ class TransformTestCase(TestCase):
                          receiver__user__email='newuser2@fr.fr')
     def test_changing_number(self):
         self.assertEqual(Link.objects.count(), 0)
-        self.assertEqual(Invite.objects.count(), 9)
+        self.assertEqual(Invite.objects.count(), 10)
         # new user, email unknown (not in any invite)
         email = 'unknown2@bidon2.com'
         register(self.c, email)

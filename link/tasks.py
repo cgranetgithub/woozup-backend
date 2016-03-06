@@ -10,6 +10,7 @@ import django
 from link.models import Link, Invite
 from service.utils import get_clean_number
 from userprofile.models import UserProfile
+from django.contrib.auth.models import User
 
 def is_email(email):
     return ( '@' in email )

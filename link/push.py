@@ -50,14 +50,14 @@ def send_invitation(invite, message, template_prefix, context, sms=False):
     ret = {'emails':0, 'sms':0}
     # email
     if invite.emails:
-        emails = [x.strip() for x in invite.emails.split(',')]
+        emails = set([x.strip() for x in invite.emails.split(',')])
         send_mail(template_prefix, emails, context)
         ret['emails'] += len(emails)
         invite.sent_at = timezone.now()
         invite.save()
     # SMS
     elif (invite.numbers and sms):
-        numbers = [x.strip() for x in invite.numbers.split(',')]
+        numbers = set([x.strip() for x in invite.numbers.split(',')])
         send_sms(message, numbers)
         ret['sms'] += len(numbers)
         invite.sent_at = timezone.now()
@@ -76,11 +76,9 @@ def invite_ignored(invite):
     return send_invitation(invite, SMS_GENERIC, template_prefix, context, True)
 
 def send_bulk_generic_invitation(numbers, emails):
-    assert type(numbers) is list
-    assert type(emails) is list
-    emails = list(set(emails)) # remove duplicates
+    assert type(numbers) is set
+    assert type(emails) is set
     template_prefix = "link/email/generic_invite"
     context = {}
     send_mail(template_prefix, emails, context)
-    numbers = list(set(numbers)) # remove duplicates
     send_sms(SMS_GENERIC, numbers)

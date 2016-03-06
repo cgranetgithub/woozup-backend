@@ -3,10 +3,8 @@ import logging
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-from django.contrib.auth.models import User
 from django.db.models import Q
 from rq.decorators import job
-from django.apps import apps as django_apps
 from worker import conn
 import django
 from link.models import Link, Invite

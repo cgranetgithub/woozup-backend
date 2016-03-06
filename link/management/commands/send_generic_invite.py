@@ -1,7 +1,8 @@
 from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
 from service.notification import send_mail
 from userprofile.models import UserProfile
-from django.db.models import Q
+from service.utils import is_personal_email, is_mobile_number
 from django.utils import timezone
 from link.models import Invite
 from link.push import send_bulk_generic_invitation
@@ -15,38 +16,55 @@ class Command(BaseCommand):
         self.send_generic_invite()
 
     def send_generic_invite(self):
-        cnt = {'emails':0, 'sms':0}
-        self.stdout.write('Total invites: %d'%(Invite.objects.count()))
-        invites = Invite.objects.filter( Q(status='IGN') | Q(status='NEW')
-                               ).filter( sent_at=None )
-        self.stdout.write('Invites with criteria: %d'%(invites.count()))
+        # get invites
+        self.stdout.write('%d invites total'%(Invite.objects.count()))
+        already_sent = Invite.objects.exclude( sent_at=None )
+        self.stdout.write('%d already sent'%(already_sent.count()))
+        invites = Invite.objects.filter(sent_at=None).exclude(status='CLO'
+                                                    ).exclude(status='PEN'
+                                                    ).exclude(status='ACC')
+        self.stdout.write('%d invites IGN or NEW never sent'%(invites.count()))
         with_email = invites.exclude(emails='')
-        self.stdout.write('Invites with emails: %d'%(with_email.count()))
+        self.stdout.write('%d with emails'%(with_email.count()))
         without_email = invites.filter(emails='').exclude(numbers='')
-        self.stdout.write('Invites with without emails: %d'%(
+        self.stdout.write('%d without emails (=> numbers)'%(
                                                         without_email.count()))
+        # compute emails and numbers that should not be sent
+        sent_emails = []
+        sent_numbers = []
+        for invite in already_sent:
+            e = [x.strip() for x in invite.emails.split(',')]
+            sent_emails += e
+            n = [x.strip() for x in invite.numbers.split(',')]
+            sent_numbers += n
+        self.stdout.write('%d emails / %d numbers from sent invites'%(
+                                len(set(sent_emails)), len(set(sent_numbers))))
+        user_emails = User.objects.values_list('email', flat=True)
+        user_numbers = UserProfile.objects.values_list('phone_number',
+                                                       flat=True)
+        self.stdout.write('%d emails / %d numbers from users'%(
+                                len(set(user_emails)), len(set(user_numbers))))
+        sent_emails += user_emails
+        sent_numbers += user_numbers
+        # filter emails
         emails = []
-        numbers = []
         for invite in with_email:
+            invite.sent_at = timezone.now()
+            invite.save()
             e = [x.strip() for x in invite.emails.split(',')]
             emails += e
-            invite.sent_at = timezone.now()
-            invite.save()
-        emails = list(set(emails))
-        self.stdout.write('Sending %d emails'%(len(emails)))
+        self.stdout.write('%d emails from new invites'%(len(set(emails))))
+        emails = set(emails) - set(sent_emails)
+        self.stdout.write('%d emails candidates'%(len(emails)))
+        # filter numbers
+        numbers = []
         for invite in without_email[:100]:
-            n = [x.strip() for x in invite.numbers.split(',')]
-            numbers += n
             invite.sent_at = timezone.now()
             invite.save()
-        # remove phone numbers of users already registered
-        user_numbers = set(UserProfile.objects.values_list('phone_number',
-                                                            flat=True))
-        numbers = set(numbers) - user_numbers
-        ### hack for French mobile only
-        french_filtered = [x for x in numbers if ( x.startswith('+336')
-                                                or x.startswith('+337') )]
-        ###
-        self.stdout.write('Sending %d sms'%(len(french_filtered)))
-        send_bulk_generic_invitation(french_filtered, emails)
+            s = [x.strip() for x in invite.numbers.split(',')]
+            numbers += s
+        self.stdout.write('%d numbers from new invites'%(len(set(numbers))))
+        numbers = set(numbers) - set(sent_numbers)
+        self.stdout.write('%d sms candidates'%(len(numbers)))
+        send_bulk_generic_invitation(numbers, emails)
         self.stdout.write('done')

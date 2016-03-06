@@ -79,9 +79,9 @@ class InviteResource(ModelResource):
         invite_id = kwargs['invite_id']
         (req, result, status) = change_invite_status(request, invite_id, 'IGN')
         # send invitation
-        invite = result.get('invite', False)
-        if invite:
-            invite_ignored(invite)
+        # invite = result.get('invite', False)
+        # if invite:
+        #     invite_ignored(invite)
         return self.create_response(req, result, status)
 
 

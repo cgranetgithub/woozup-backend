@@ -1,12 +1,19 @@
 import phonenumbers
 
-def is_mobile(number):
+def is_mobile_number(number):
     ### hack for French mobile only
     if ( number.startswith('+336') or number.startswith('+337') ):
         return True
     return False
     ###
 
+def is_personal_email(email):
+    if '@' in email:
+        for i in ['gmail', 'hotmail', 'orange', 'numericable', 'bbox', 'live',
+                  'free', 'yahoo', 'outlook', 'aol']:
+            if i in email:
+                return True
+    return False
 
 def get_clean_number(i):
     ### hardcoded, need to fix it
@@ -26,14 +33,6 @@ def get_clean_number(i):
         and phonenumbers.is_valid_number(ph)    ):
             number = phonenumbers.format_number(ph,
                                         phonenumbers.PhoneNumberFormat.E164)
-            if is_mobile(number):
+            if is_mobile_number(number):
                 return number
     return None
-
-def is_personal_email(email):
-    if '@' in email:
-        for i in ['gmail', 'hotmail', 'orange', 'numericable', 'bbox', 'live',
-                  'free', 'yahoo', 'outlook', 'aol']:
-            if i in email:
-                return True
-    return False

@@ -1,4 +1,4 @@
-import json
+import json, datetime
 from django.utils import timezone
 
 from django.test import TestCase
@@ -17,7 +17,7 @@ class EventTestCase(TestCase):
     def setUp(self):
         super(EventTestCase, self).setUp()
         call_command('create_initial_data')
-        u01 = register(c, 'aaa@aaa.aaa')
+        self.u01 = register(c, 'aaa@aaa.aaa')
         cat = EventCategory.objects.create(name="meal")
         e = EventType.objects.create(name="meal")
         e.category.add(cat)
@@ -65,7 +65,6 @@ class EventTestCase(TestCase):
         except Event.DoesNotExist:
             exists = False
         self.assertFalse(exists)
-
 
     def test_my_events(self):
         ### events I can see
@@ -240,6 +239,57 @@ class EventTestCase(TestCase):
                           content_type='application/json')
         self.assertEqual(res.status_code, 403)
 
+    def test_invitees(self):
+        email = 'aaa@aaa.aaa'
+        (api_key, username) = login(c, email)
+        auth = '?username=%s&api_key=%s'%(username, api_key)
+        # create some friends
+        emails_list = ['friend1@ccc.ccc', 'friend2@ccc.ccc', 'friend3@ccc.ccc']
+        friends_list = []
+        for i in emails_list:
+            u = register(c, i)
+            friends_list.append(u)
+            Link.objects.create(sender=self.u01.userprofile,
+                                receiver=u.userprofile,
+                                sender_status="ACC", receiver_status="ACC")
+        # create an event for all friends
+        etype = EventType.objects.first().id
+        start = timezone.now().replace(microsecond=0)
+        strstart = start.strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':strstart,
+                'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }'}
+        res = c.post('/api/v1/events/mine/%s'%auth,
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        ide = Event.objects.get(owner__user__username=username,
+                                event_type=etype, start=start)
+        emails = []
+        for i in ide.get_invitees():
+            emails.append(i.user.email)
+        emails.sort()
+        self.assertEqual(emails, emails_list)
+        # create an event with selected invitees
+        etype = EventType.objects.first().id
+        start += datetime.timedelta(1)
+        strstart = start.strftime("%Y-%m-%dT%H:%M:%SZ%Z")
+        data = {'event_type':'/api/v1/event_type/%d/'%etype, 'start':strstart,
+                'location_coords':'{ "type": "Point", "coordinates": [100.0, 0.0] }',
+                'invitees':['/api/v1/userprofile/%d/'%friends_list[0].id,
+                            '/api/v1/userprofile/%d/'%friends_list[1].id]}
+        res = c.post('/api/v1/events/mine/%s'%auth,
+                          data = json.dumps(data),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        ide = Event.objects.get(owner__user__username=username,
+                                event_type=etype, start=start)
+        emails = []
+        for i in ide.get_invitees():
+            emails.append(i.user.email)
+        emails.sort()
+        self.assertEqual(emails, ['friend1@ccc.ccc', 'friend2@ccc.ccc'])
+
+
 class ResourcesTestCase(TestCase):
     def setUp(self):
         super(ResourcesTestCase, self).setUp()
@@ -261,6 +311,10 @@ class ResourcesTestCase(TestCase):
         self.u4 = register(c, email)
         (api_key, username) = login(c, email)
         self.auth4 = '?username=%s&api_key=%s'%(username, api_key)
+        email = 'eee@eee.eee'
+        self.u5 = register(c, email)
+        (api_key, username) = login(c, email)
+        self.auth5 = '?username=%s&api_key=%s'%(username, api_key)
         # create relations
         Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
                             receiver=self.u2.userprofile, receiver_status='ACC')
@@ -297,12 +351,13 @@ class ResourcesTestCase(TestCase):
                                   start=timezone.now(),
                                   name="u2 lunch",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
+        e2.invitees.add(self.u1.userprofile)
         e2.participants.add(self.u1.userprofile)
         e3 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
                                   start=timezone.now(),
                                   name="u2 diner",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e3.participants.add(self.u1.userprofile)
+        e3.invitees.add(self.u4.userprofile)
         e3.participants.add(self.u4.userprofile)
         # create some events for u3
         e1 = Event.objects.create(owner=self.u3.userprofile, event_type=etype,
@@ -342,11 +397,15 @@ class ResourcesTestCase(TestCase):
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['meta']['total_count'], 5)
+        res = c.get('/api/v1/events/all/%s'%(self.auth5))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 0)
     def test_MyAgenda(self):
         res = c.get('/api/v1/events/agenda/%s'%(self.auth1))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['meta']['total_count'], 6)
+        self.assertEqual(content['meta']['total_count'], 5)
         res = c.get('/api/v1/events/agenda/%s'%(self.auth2))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
@@ -359,6 +418,10 @@ class ResourcesTestCase(TestCase):
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['meta']['total_count'], 3)
+        res = c.get('/api/v1/events/agenda/%s'%(self.auth5))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 0)
     def test_MyEvents(self):
         res = c.get('/api/v1/events/mine/%s'%(self.auth1))
         content = json.loads(res.content)
@@ -376,11 +439,15 @@ class ResourcesTestCase(TestCase):
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['meta']['total_count'], 2)
+        res = c.get('/api/v1/events/mine/%s'%(self.auth5))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 0)
     def test_FriendsEvents(self):
         res = c.get('/api/v1/events/friends/%s'%(self.auth1))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['meta']['total_count'], 5)
+        self.assertEqual(content['meta']['total_count'], 4)
         res = c.get('/api/v1/events/friends/%s'%(self.auth2))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
@@ -392,4 +459,8 @@ class ResourcesTestCase(TestCase):
         res = c.get('/api/v1/events/friends/%s'%(self.auth4))
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(content['meta']['total_count'], 3)
+        self.assertEqual(content['meta']['total_count'], 2)
+        res = c.get('/api/v1/events/friends/%s'%(self.auth5))
+        content = json.loads(res.content)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(content['meta']['total_count'], 0)

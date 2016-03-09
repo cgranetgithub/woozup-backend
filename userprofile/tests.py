@@ -13,7 +13,7 @@ from link.models import Link
 c = Client()
 
 class AuthTestCase(TestCase):
-    
+
     def setUp(self):
         super(AuthTestCase, self).setUp()
         call_command('create_initial_data')
@@ -35,7 +35,7 @@ class AuthTestCase(TestCase):
         res = c.get('/api/v1/user/%s/%s'%(self.u01.id,
                                           self.authParam))
         self.assertEqual(res.status_code, 401)
-        
+
     def test_checkauth(self):
         # auth OK
         res = c.get('/api/v1/user/check_auth/%s'%self.authParam)
@@ -55,7 +55,7 @@ class AuthTestCase(TestCase):
         new_api_key = self.u01.api_key
         res = c.get('/api/v1/user/check_auth/?username=%s&api_key=%s'%(
                                         self.u01.username, self.u01.api_key))
-        self.assertEqual(res.status_code, 401)        
+        self.assertEqual(res.status_code, 401)
 
     def test_register(self):
         inout = [
@@ -198,7 +198,7 @@ class PositionTestCase(TestCase):
         (api_key, self.username) = login(c, email)
         self.authParam = '?username=%s&api_key=%s'%(self.username,
                                                     api_key)
-        
+
     def test_setlast(self):
         # no position
         res = c.post('/api/v1/userposition/setlast/%s'%self.authParam,
@@ -215,7 +215,7 @@ class PositionTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 401)
-        # 
+        #
         res = c.post('/api/v1/userposition/setlast/%s'%self.authParam,
                         data = json.dumps({'last':'{ "type": "Point", "coordinates": [42.0, 2.0] }'}),
                         content_type='application/json')
@@ -379,7 +379,7 @@ class RelationshipTestCase(TestCase):
                               receiver=self.u4.userprofile)
         self.assertEqual(l3.sender_status, 'ACC')
         self.assertEqual(l3.receiver_status, 'REJ')
-        
+
     def test_theotherway(self):
         l1 = Link.objects.create(receiver=self.u1.userprofile,
                                  sender=self.u2.userprofile)
@@ -438,7 +438,7 @@ class RelationshipTestCase(TestCase):
                               sender=self.u4.userprofile)
         self.assertEqual(l3.receiver_status, 'ACC')
         self.assertEqual(l3.sender_status, 'REJ')
-        
+
 class ResourcesTestCase(TestCase):
     def setUp(self):
         super(ResourcesTestCase, self).setUp()
@@ -607,3 +607,14 @@ class ResourcesTestCase(TestCase):
         content = json.loads(res.content)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(content['meta']['total_count'], 3)
+    def test_profile_access(self):
+        res = c.get('/api/v1/userprofile/%d/%s'%(self.u1.id, self.auth1))
+        self.assertEqual(res.status_code, 200)
+        res = c.get('/api/v1/userprofile/%d/%s'%(self.u9.id, self.auth1))
+        self.assertEqual(res.status_code, 200)
+        res = c.get('/api/v1/userprofile/%d/%s'%(self.u17.id, self.auth1))
+        self.assertEqual(res.status_code, 200)
+        res = c.get('/api/v1/userprofile/%d/%s'%(self.u4.id, self.auth1))
+        self.assertEqual(res.status_code, 404)
+        res = c.get('/api/v1/userprofile/%d/%s'%(self.u5.id, self.auth1))
+        self.assertEqual(res.status_code, 404)

@@ -59,7 +59,8 @@ def users(request):
                 ).order_by('-date'
                 # annotate each day by Count of Guidoism objects
                 ).annotate(number=Count('id'))
-    return render(request, 'web/users.html', {'data': data})
+    return render(request, 'web/users.html',
+                  {'data': data, 'total': User.objects.count()})
 
 def events(request):
     return render_to_response('home.html')

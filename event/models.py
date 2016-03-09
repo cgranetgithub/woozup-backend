@@ -60,6 +60,9 @@ class Event(models.Model):
     participants = models.ManyToManyField('userprofile.UserProfile',
                                           blank=True,
                                           related_name='events_as_participant')
+    invitees = models.ManyToManyField('userprofile.UserProfile',
+                                          blank=True,
+                                          related_name='events_as_invitee')
     created_at = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
     updated_at = models.DateTimeField(auto_now=True, help_text=u"""
@@ -69,3 +72,8 @@ autofield, not modifiable""")
         return u"%s (%s)"%(self.name, self.event_type)
     class Meta:
         unique_together = ('start', 'event_type', 'owner')
+    def get_invitees(self):
+        if self.invitees.all():
+            return self.invitees.all()
+        else:
+            return self.owner.get_friends()

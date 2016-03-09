@@ -270,8 +270,14 @@ class InviteTestCase(TestCase):
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         sort_contact(self.c, username, user1_contacts)
+        # check number is correct
         self.assertEqual(Link.objects.count(), 0)
         self.assertEqual(Invite.objects.count(), 10)
+        # check number is correct, with API
+        res = self.c.get('/api/v1/invite/%s'%auth)
+        self.assertEqual(res.status_code, 200)
+        content = json.loads(res.content)
+        self.assertEqual(content['meta']['total_count'], 10)
         # check invites are NEW
         i1 = Invite.objects.get(sender__user__username=username,
                                 numbers='+33600000001')

@@ -14,7 +14,7 @@ from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
 from event.models import EventCategory, EventType, Event
 from userprofile.api import ProfileResource
-from userprofile.utils import get_user_friends
+from userprofile.models import UserProfile
 
 import apifn
 
@@ -50,11 +50,12 @@ class EventTypeResource(ModelResource):
 
 class AbstractEventResource(ModelResource):
     event_type = fields.ToOneField(EventTypeResource, 'event_type',
-                                   full=True)
+                                      full=True)
     participants = fields.ToManyField(ProfileResource, 'participants',
                                       full=True, null=True)
-    owner = fields.ToOneField(ProfileResource, 'owner',
+    invitees = fields.ManyToManyField(ProfileResource, 'invitees',
                                       full=True, null=True)
+    owner = fields.ToOneField(ProfileResource, 'owner', full=True, null=True)
     class Meta:
         abstract = True
         serializer = MyDateSerializer()
@@ -79,9 +80,11 @@ class AllEventsResource(AbstractEventResource):
     def get_object_list(self, request):
         user = request.user
         # restrict result to my events + my friends' events
-        mine = Event.objects.filter(owner__user=user)
-        myfriends = get_user_friends(user.userprofile)
-        owners = list(myfriends.values_list('user_id', flat=True)) + [user.id]
+        me = UserProfile.objects.filter(user=user)
+        # mine = Event.objects.filter(owner__user=user)
+        myfriends = user.userprofile.get_friends()
+        # owners = list(myfriends.values_list('user_id', flat=True)) + [user.id]
+        owners = me | myfriends
         events = Event.objects.filter(owner__in=owners).distinct()
         return events
 
@@ -146,8 +149,11 @@ User leaves an event, that is, is removed from the participant list.""",
     def get_object_list(self, request):
         user = request.user
         # restrict result to my friends' events
-        myfriends = get_user_friends(user.userprofile)
-        events = Event.objects.filter(owner__in=myfriends).distinct()
+        myfriends = user.userprofile.get_friends()
+        events = Event.objects.filter(owner__in=myfriends
+                             ).filter( Q(invitees=None)
+                                     | Q(invitees__in=[user.userprofile])
+                             ).distinct()
         # filter by distance
         if user.userposition.last:
             events = events.filter(location_coords__distance_lte=(

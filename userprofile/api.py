@@ -13,7 +13,6 @@ from django.contrib.auth.models import User
 import apidoc as doc
 from doc import authdoc
 from userprofile.models import UserProfile, UserPosition
-from userprofile.utils import get_user_friends
 from service.b64field import Base64FileField
 from link import push
 
@@ -224,8 +223,11 @@ class ProfileResource(ModelResource):
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
+    ### WARNING: must not restrict only to user because access is required
+    ### when creating event with invitees => restrict to self+friends
     def get_object_list(self, request):
-        return UserProfile.objects.filter(user=request.user)
+        return ( request.user.userprofile.get_friends()
+               | UserProfile.objects.filter(user=request.user) )
 
     def prepend_urls(self):
         return [
@@ -282,7 +284,7 @@ class MyFriendsResource(ModelResource):
 
     def get_object_list(self, request):
         userprofile = request.user.userprofile
-        return get_user_friends(userprofile)
+        return userprofile.get_friends()
 
 class PendingFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)

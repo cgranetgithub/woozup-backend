@@ -94,7 +94,7 @@ def leave(request, event_id):
     #self.log_throttled_access(request)
     #if request.user and request.user.is_authenticated():
         #try:
-            #myfriends = get_user_friends(profile)
+            #myfriends = profile.get_friends()
             #events = Event.objects.filter(owner__in=myfriends
                                     #).exclude(
                                         #Q( owner__user=request.user )

@@ -1,4 +1,4 @@
-from tastypie import fields
+# from tastypie import fields
 from tastypie.http import HttpUnauthorized, HttpForbidden, HttpBadRequest
 from tastypie.utils import trailing_slash
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS

@@ -12,13 +12,13 @@ from web.views import home, profile
 from service.settings.prod import STATIC_URL
 #from service.notification import GCMDeviceAuthenticatedResource
 
-#def module_exists(module_name):
-    #try:
-        #__import__(module_name)
-    #except ImportError:
-        #return False
-    #else:
-        #return True
+def module_exists(module_name):
+    try:
+        __import__(module_name)
+    except ImportError:
+        return False
+    else:
+        return True
 
 v1_api = Api(api_name='v1')
 v1_api.register(MyAgendaResource())
@@ -34,9 +34,9 @@ v1_api.register(MyFriendsResource())
 v1_api.register(PendingFriendsResource())
 v1_api.register(NewFriendsResource())
 v1_api.register(AuthResource())
-#v1_api.register(GCMDeviceAuthenticatedResource())
 v1_api.register(InviteResource())
 v1_api.register(ContactResource())
+#v1_api.register(GCMDeviceAuthenticatedResource())
 
 urlpatterns = [
     url(r'^$', home),
@@ -55,13 +55,13 @@ urlpatterns = [
     #url(r'^logout/$', social_logout),
 ]
 
-#if module_exists('tastypie_swagger'):
-    #urlpatterns += [
-        #url(r'api/doc/', include('tastypie_swagger.urls',
-                                 #namespace='v1_api_tastypie_swagger'),
-                         #kwargs={
-                            #"tastypie_api_module":v1_api,
-                            #"namespace":"v1_api_tastypie_swagger",
-                            #"version": "0.1"}
-        #)
-    #]
+if module_exists('tastypie_swagger'):
+    urlpatterns += [
+        url(r'api/doc/', include('tastypie_swagger.urls',
+                                 namespace='v1_api_tastypie_swagger'),
+                         kwargs={
+                            "tastypie_api_module":v1_api,
+                            "namespace":"v1_api_tastypie_swagger",
+                            "version": "0.1"}
+        )
+    ]

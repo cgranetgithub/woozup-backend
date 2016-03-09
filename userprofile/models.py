@@ -5,7 +5,6 @@ from django.db.models.signals import post_save
 from django.contrib.auth.models import Group
 from tastypie.models import create_api_key
 from phonenumber_field.modelfields import PhoneNumberField
-#from link.tasks import transform_invites
 
 MALE   = 'MA'
 FEMALE = 'FE'
@@ -36,6 +35,19 @@ autofield, not modifiable""")
     class Meta:
         app_label = 'userprofile'
 
+    def get_friends(self):
+        link_as_sender = self.link_as_sender.filter(
+                                sender_status='ACC',
+                                receiver_status='ACC')
+        receivers = UserProfile.objects.filter(
+                                user_id__in=link_as_sender.values('receiver_id'))
+        link_as_receiver = self.link_as_receiver.filter(
+                                sender_status='ACC',
+                                receiver_status='ACC')
+        senders = UserProfile.objects.filter(
+                                user_id__in=link_as_receiver.values('sender_id'))
+        return senders | receivers
+
 class UserPosition(models.Model):
     user   = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True)
     last   = models.GeometryField(null=True, blank=True, help_text=u"""
@@ -61,5 +73,5 @@ def create_profiles(sender, instance, created, **kwargs):
         UserPosition.objects.create(user=instance)
         instance.groups.add(Group.objects.get(name='std'))
 
-post_save.connect(create_profiles  , sender=settings.AUTH_USER_MODEL)
-post_save.connect(create_api_key   , sender=settings.AUTH_USER_MODEL)
+post_save.connect(create_profiles, sender=settings.AUTH_USER_MODEL)
+post_save.connect(create_api_key,  sender=settings.AUTH_USER_MODEL)

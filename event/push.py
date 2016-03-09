@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from userprofile.utils import get_user_friends
 from service.notification import send_notification, send_mail
 #from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
@@ -38,21 +37,24 @@ def get_event_context(instance):
 #     send_mail(template_prefix, emails, context)
 
 def event_created(sender, instance, **kwargs):
-    # notify owner's friends who are close enough to the event
-    friends = get_user_friends(instance.owner)
-    ###WARNING filter based on distance
-    close_friends = friends.filter(
-                user__userposition__last__distance_lte=(
-                            instance.location_coords, D(km=100)))
+    # # notify owner's friends who are close enough to the event
+    # friends = instance.owner.get_friends()
+    # ###WARNING filter based on distance
+    # close_friends = friends.filter(
+    #             user__userposition__last__distance_lte=(
+    #                         instance.location_coords, D(km=100)))
+
     # push notification
     msg = EVENT_CREATED%(instance.owner.name,
                          instance.event_type.name)
     data = {u"title":u"Invitation Woozup", u"message":msg,
             u"reason":u"newevent", u"id":instance.id}
-    send_notification(close_friends, data)
+    # send_notification(close_friends, data)
+    send_notification(instance.get_invitees(), data)
     # email
     template_prefix = "event/email/event_created"
-    emails = close_friends.values_list('user__email', flat=True)
+    # emails = close_friends.values_list('user__email', flat=True)
+    emails = instance.get_invitees().values_list('user__email', flat=True)
     context = get_event_context(instance)
     # context["user"] = request.user.userprofile
     context["other"] = instance.owner

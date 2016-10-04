@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from service.notification import send_notification, send_mail
+from service.notification import send_notification
 #from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
@@ -54,11 +54,11 @@ def event_created(sender, instance, **kwargs):
     # email
     template_prefix = "event/email/event_created"
     # emails = close_friends.values_list('user__email', flat=True)
-    emails = instance.get_invitees().values_list('user__email', flat=True)
-    context = get_event_context(instance)
-    # context["user"] = request.user.userprofile
-    context["other"] = instance.owner
-    send_mail(template_prefix, emails, context)
+    #emails = instance.get_invitees().values_list('user__email', flat=True)
+    #context = get_event_context(instance)
+    ## context["user"] = request.user.userprofile
+    #context["other"] = instance.owner
+    #send_mail(template_prefix, emails, context)
 
 def event_canceled(sender, instance, **kwargs):
     # notify only participants
@@ -70,12 +70,12 @@ def event_canceled(sender, instance, **kwargs):
             u"reason":u"eventcanceled", u"id":instance.id}
     send_notification(friends, data)
     # email
-    template_prefix = "event/email/event_canceled"
-    emails = friends.values_list('user__email', flat=True)
-    context = get_event_context(instance)
-    # context["user"] = request.user.userprofile
-    context["other"] = instance.owner
-    send_mail(template_prefix, emails, context)
+    #template_prefix = "event/email/event_canceled"
+    #emails = friends.values_list('user__email', flat=True)
+    #context = get_event_context(instance)
+    ## context["user"] = request.user.userprofile
+    #context["other"] = instance.owner
+    #send_mail(template_prefix, emails, context)
 
 def event_saved(sender, instance, created, update_fields, **kwargs):
     if created:
@@ -99,12 +99,12 @@ def participant_joined(request, userprofile, event):
             u"id":event.id}
     send_notification(recepients, data)
     # email
-    template_prefix = "event/email/participant_joined"
-    emails = [r.user.email for r in recepients]
-    context = get_event_context(event)
-    # context["user"] = request.user.userprofile
-    context["other"] = userprofile
-    send_mail(template_prefix, emails, context)
+    #template_prefix = "event/email/participant_joined"
+    #emails = [r.user.email for r in recepients]
+    #context = get_event_context(event)
+    ## context["user"] = request.user.userprofile
+    #context["other"] = userprofile
+    #send_mail(template_prefix, emails, context)
 
 def participant_left(request, userprofile, event):
     msg = PARTICIPANT_LEFT%(userprofile.name, event.name)
@@ -116,8 +116,8 @@ def participant_left(request, userprofile, event):
             u"id":event.id}
     send_notification(recepients, data)
     # email
-    template_prefix = "event/email/participant_left"
-    emails = [r.user.email for r in recepients]
-    context = get_event_context(event)
-    context["other"] = userprofile
-    send_mail(template_prefix, emails, context)
+    #template_prefix = "event/email/participant_left"
+    #emails = [r.user.email for r in recepients]
+    #context = get_event_context(event)
+    #context["other"] = userprofile
+    #send_mail(template_prefix, emails, context)

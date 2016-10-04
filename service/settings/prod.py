@@ -36,22 +36,20 @@ INSTALLED_APPS = (
     'tastypie',           # REST API
     'storages',           # S3 storage
     'push_notifications', # push to mobile
+    'rest_framework',     # REST API
+    'rest_framework.authtoken',
+    'rest_auth',
     # `allauth`
     'django.contrib.sites', # The Django sites framework is required
     'allauth',
     'allauth.account',
+    'rest_auth.registration',
+    #
     'allauth.socialaccount',
     'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.twitter',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.instagram',
-    'allauth.socialaccount.providers.linkedin',
-    'allauth.socialaccount.providers.linkedin_oauth2',
-    'allauth.socialaccount.providers.openid',
-    'allauth.socialaccount.providers.soundcloud',
-    'allauth.socialaccount.providers.spotify',
-    'allauth.socialaccount.providers.tumblr',
-    'allauth.socialaccount.providers.twitter',
-    'allauth.socialaccount.providers.vimeo',
     # project apps
     'event',
     'link',
@@ -81,12 +79,12 @@ TEMPLATES = [
     },
 ]
 
-AUTHENTICATION_BACKENDS = (
-    # Needed to login by username in Django admin, regardless of `allauth`
-    'django.contrib.auth.backends.ModelBackend',
-    # `allauth` specific authentication methods, such as login by e-mail
-    'allauth.account.auth_backends.AuthenticationBackend',
-)
+#AUTHENTICATION_BACKENDS = (
+    ## Needed to login by username in Django admin, regardless of `allauth`
+    #'django.contrib.auth.backends.ModelBackend',
+    ## `allauth` specific authentication methods, such as login by e-mail
+    #'allauth.account.auth_backends.AuthenticationBackend',
+#)
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -124,21 +122,21 @@ USE_TZ = True
 from s3_storage import *
 
 # allauth configuration
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
-ACCOUNT_EMAIL_SUBJECT_PREFIX = "Woozup - "
-ACCOUNT_SIGNUP_PASSWORD_VERIFICATION = False
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+#ACCOUNT_AUTHENTICATION_METHOD = "email"
+#ACCOUNT_EMAIL_REQUIRED = True
+#ACCOUNT_USERNAME_REQUIRED = False
+#ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
+#ACCOUNT_EMAIL_SUBJECT_PREFIX = "Woozup - "
+#ACCOUNT_SIGNUP_PASSWORD_VERIFICATION = False
+#ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
 # Email (sendgrid)
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = os.environ.get("SENDGRID_USERNAME", "")
-EMAIL_HOST_PASSWORD = os.environ.get("SENDGRID_PASSWORD", "")
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = "contact@woozup.social"
+#EMAIL_HOST = 'smtp.sendgrid.net'
+#EMAIL_HOST_USER = os.environ.get("SENDGRID_USERNAME", "")
+#EMAIL_HOST_PASSWORD = os.environ.get("SENDGRID_PASSWORD", "")
+#EMAIL_PORT = 587
+#EMAIL_USE_TLS = True
+#DEFAULT_FROM_EMAIL = "contact@woozup.social"
 
 # SMS (plivo)
 SMS_AUTH_ID = os.environ.get("PLIVO_AUTH_ID", "")

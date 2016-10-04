@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from service.notification import send_notification, send_mail, send_sms
+from service.notification import send_notification, send_sms
 from django.utils import timezone
 
 REQUEST_LINK = u"%s souhaite se connecter avec toi"
@@ -21,11 +21,11 @@ def link_requested(link, inverted, **kwargs):
     data[u"message"] = REQUEST_LINK%(sender.name)
     send_notification([recipient], data)
     # email
-    if recipient.user.email:
-        template_prefix = "link/email/request"
-        emails = [recipient.user.email]
-        context = {"other" : sender, "user" : recipient}
-        send_mail(template_prefix, emails, context)
+    #if recipient.user.email:
+        #template_prefix = "link/email/request"
+        #emails = [recipient.user.email]
+        #context = {"other" : sender, "user" : recipient}
+        #send_mail(template_prefix, emails, context)
 
 def link_accepted(link, inverted, **kwargs):
     # push notif
@@ -40,11 +40,11 @@ def link_accepted(link, inverted, **kwargs):
     data[u"message"] = ACCEPT_LINK%(sender.name)
     send_notification([recipient], data)
     # email
-    if recipient.user.email:
-        template_prefix = "link/email/accept"
-        emails = [recipient.user.email]
-        context = {"other" : sender, "user" : recipient}
-        send_mail(template_prefix, emails, context)
+    #if recipient.user.email:
+        #template_prefix = "link/email/accept"
+        #emails = [recipient.user.email]
+        #context = {"other" : sender, "user" : recipient}
+        #send_mail(template_prefix, emails, context)
 
 def send_invitation(invite, message, template_prefix, context, sms=False):
     ret = {'emails':0, 'sms':0}

@@ -7,13 +7,13 @@ def is_mobile_number(number):
     return False
     ###
 
-def is_personal_email(email):
-    if '@' in email:
-        for i in ['gmail', 'hotmail', 'orange', 'numericable', 'bbox', 'live',
-                  'free', 'yahoo', 'outlook', 'aol']:
-            if i in email:
-                return True
-    return False
+#def is_personal_email(email):
+    #if '@' in email:
+        #for i in ['gmail', 'hotmail', 'orange', 'numericable', 'bbox', 'live',
+                  #'free', 'yahoo', 'outlook', 'aol']:
+            #if i in email:
+                #return True
+    #return False
 
 def get_clean_number(i):
     ### hardcoded, need to fix it

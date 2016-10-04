@@ -21,7 +21,7 @@ DATABASES = {
 INSTALLED_APPS = list(INSTALLED_APPS)
 INSTALLED_APPS.remove('storages')
 #INSTALLED_APPS.append('django_extensions')
-INSTALLED_APPS.append('tastypie_swagger') # for API doc
+#INSTALLED_APPS.append('tastypie_swagger') # for API doc
 INSTALLED_APPS = tuple(INSTALLED_APPS)
 del STATICFILES_STORAGE
 del DEFAULT_FILE_STORAGE
@@ -30,7 +30,7 @@ STATIC_URL = '/static/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-TASTYPIE_SWAGGER_API_MODULE = 'service.urls.v1_api'
+#TASTYPIE_SWAGGER_API_MODULE = 'service.urls.v1_api'
 
 
 TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'

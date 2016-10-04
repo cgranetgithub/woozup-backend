@@ -3,7 +3,7 @@
 #from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from service.notification import send_mail
+#from service.notification import send_mail
 from django.shortcuts import render_to_response, redirect, render
 from django.db.models import Count
 from event.models import Event
@@ -12,43 +12,43 @@ from event.push import get_event_context
 def home(request):
     return render_to_response('home.html')
 
-@login_required(login_url='/accounts/login/')
-def emails(request):
-    if request.POST:
-        event = Event.objects.last()
-        emails = [request.user.email]
-        context = get_event_context(event)
-        context["user"] = request.user.userprofile
-        if '_signup_confirmation' in request.POST:
-             pass
-        elif '_password_reset_key' in request.POST:
-             pass
-        elif '_event_canceled' in request.POST:
-            template_prefix = "event/email/event_canceled"
-            send_mail(template_prefix, emails, context)
-        elif '_event_created' in request.POST:
-            template_prefix = "event/email/event_created"
-            send_mail(template_prefix, emails, context)
-        elif '_participant_joined' in request.POST:
-            template_prefix = "event/email/participant_joined"
-            send_mail(template_prefix, emails, context)
-        elif '_participant_left' in request.POST:
-            template_prefix = "event/email/participant_left"
-            send_mail(template_prefix, emails, context)
-        elif '_request_connection' in request.POST:
-            template_prefix = "link/email/request"
-            send_mail(template_prefix, emails, context)
-        elif '_accept_connection' in request.POST:
-            template_prefix = "link/email/accept"
-            send_mail(template_prefix, emails, context)
-        elif '_personal_invite' in request.POST:
-            template_prefix = "link/email/personal_invite"
-            send_mail(template_prefix, emails, context)
-        elif '_generic_invite' in request.POST:
-            template_prefix = "link/email/generic_invite"
-            del context['user']
-            send_mail(template_prefix, emails, context)
-    return render(request, 'web/emails.html')
+#@login_required(login_url='/accounts/login/')
+#def emails(request):
+    #if request.POST:
+        #event = Event.objects.last()
+        #emails = [request.user.email]
+        #context = get_event_context(event)
+        #context["user"] = request.user.userprofile
+        #if '_signup_confirmation' in request.POST:
+             #pass
+        #elif '_password_reset_key' in request.POST:
+             #pass
+        #elif '_event_canceled' in request.POST:
+            #template_prefix = "event/email/event_canceled"
+            #send_mail(template_prefix, emails, context)
+        #elif '_event_created' in request.POST:
+            #template_prefix = "event/email/event_created"
+            #send_mail(template_prefix, emails, context)
+        #elif '_participant_joined' in request.POST:
+            #template_prefix = "event/email/participant_joined"
+            #send_mail(template_prefix, emails, context)
+        #elif '_participant_left' in request.POST:
+            #template_prefix = "event/email/participant_left"
+            #send_mail(template_prefix, emails, context)
+        #elif '_request_connection' in request.POST:
+            #template_prefix = "link/email/request"
+            #send_mail(template_prefix, emails, context)
+        #elif '_accept_connection' in request.POST:
+            #template_prefix = "link/email/accept"
+            #send_mail(template_prefix, emails, context)
+        #elif '_personal_invite' in request.POST:
+            #template_prefix = "link/email/personal_invite"
+            #send_mail(template_prefix, emails, context)
+        #elif '_generic_invite' in request.POST:
+            #template_prefix = "link/email/generic_invite"
+            #del context['user']
+            #send_mail(template_prefix, emails, context)
+    #return render(request, 'web/emails.html')
 
 def users(request):
     data = User.objects.extra(

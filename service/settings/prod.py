@@ -13,8 +13,6 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
 
-SITE_ID = 1
-
 # Admin and manager (will receive emails)
 ADMINS = (
     ('charles', 'charles@varioware.com'),
@@ -39,6 +37,8 @@ INSTALLED_APPS = (
     'rest_framework',     # REST API
     'rest_framework.authtoken',
     'rest_auth',
+    'django_filters',
+    'crispy_forms',
     # `allauth`
     'django.contrib.sites', # The Django sites framework is required
     'allauth',
@@ -79,12 +79,16 @@ TEMPLATES = [
     },
 ]
 
-#AUTHENTICATION_BACKENDS = (
-    ## Needed to login by username in Django admin, regardless of `allauth`
-    #'django.contrib.auth.backends.ModelBackend',
-    ## `allauth` specific authentication methods, such as login by e-mail
-    #'allauth.account.auth_backends.AuthenticationBackend',
-#)
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',)
+}
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -122,13 +126,7 @@ USE_TZ = True
 from s3_storage import *
 
 # allauth configuration
-#ACCOUNT_AUTHENTICATION_METHOD = "email"
-#ACCOUNT_EMAIL_REQUIRED = True
-#ACCOUNT_USERNAME_REQUIRED = False
-#ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
-#ACCOUNT_EMAIL_SUBJECT_PREFIX = "Woozup - "
-#ACCOUNT_SIGNUP_PASSWORD_VERIFICATION = False
-#ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_AUTHENTICATION_METHOD = "username"
 
 # Email (sendgrid)
 #EMAIL_HOST = 'smtp.sendgrid.net'
@@ -190,3 +188,5 @@ LOGGING = {
         }
     }
 }
+
+SITE_ID = 1

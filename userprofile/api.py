@@ -359,18 +359,18 @@ class AuthResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            #url(r"^(?P<resource_name>%s)/register%s$" %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('register'), name="api_register"),
-            url(r"^(?P<resource_name>%s)/register_by_email%s$" %
+            url(r"^(?P<resource_name>%s)/register%s$" %
                 (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('register_by_email'), name="api_register_by_email"),
-            #url(r"^(?P<resource_name>%s)/login%s$" %
+                self.wrap_view('register'), name="api_register"),
+            #url(r"^(?P<resource_name>%s)/register_by_email%s$" %
                 #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('login'), name="api_login"),
-            url(r"^(?P<resource_name>%s)/login_by_email%s$" %
+                #self.wrap_view('register_by_email'), name="api_register_by_email"),
+            url(r"^(?P<resource_name>%s)/login%s$" %
                 (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('login_by_email'), name="api_login_by_email"),
+                self.wrap_view('login'), name="api_login"),
+            #url(r"^(?P<resource_name>%s)/login_by_email%s$" %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('login_by_email'), name="api_login_by_email"),
             url(r"^(?P<resource_name>%s)/reset_password%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('reset_password'), name="api_reset_password"),
@@ -392,18 +392,18 @@ class AuthResource(ModelResource):
         (req, result, status) = apifn.register(request, data)
         return self.create_response(req, result, status)
 
-    def register_by_email(self, request, **kwargs):
-        self.method_check(request, allowed=['post'])
-        try:
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get(
-                                    'CONTENT_TYPE', 'application/json'))
-        except:
-            return self.create_response(request,
-                                        {u'reason': u'cannot deserialize data'},
-                                        HttpBadRequest )
-        (req, result, status) = apifn.register_by_email(request, data)
-        return self.create_response(req, result, status)
+    #def register_by_email(self, request, **kwargs):
+        #self.method_check(request, allowed=['post'])
+        #try:
+            #data = self.deserialize(request, request.body,
+                                    #format=request.META.get(
+                                    #'CONTENT_TYPE', 'application/json'))
+        #except:
+            #return self.create_response(request,
+                                        #{u'reason': u'cannot deserialize data'},
+                                        #HttpBadRequest )
+        #(req, result, status) = apifn.register_by_email(request, data)
+        #return self.create_response(req, result, status)
 
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -418,18 +418,18 @@ class AuthResource(ModelResource):
         (req, result, status) = apifn.login(request, data)
         return self.create_response(req, result, status)
 
-    def login_by_email(self, request, **kwargs):
-        self.method_check(request, allowed=['post'])
-        try:
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get(
-                                    'CONTENT_TYPE', 'application/json'))
-        except:
-            return self.create_response(request,
-                                        {'reason': u'cannot deserialize data'},
-                                        HttpBadRequest )
-        (req, result, status) = apifn.login_by_email(request, data)
-        return self.create_response(req, result, status)
+    #def login_by_email(self, request, **kwargs):
+        #self.method_check(request, allowed=['post'])
+        #try:
+            #data = self.deserialize(request, request.body,
+                                    #format=request.META.get(
+                                    #'CONTENT_TYPE', 'application/json'))
+        #except:
+            #return self.create_response(request,
+                                        #{'reason': u'cannot deserialize data'},
+                                        #HttpBadRequest )
+        #(req, result, status) = apifn.login_by_email(request, data)
+        #return self.create_response(req, result, status)
 
     def reset_password(self, request, **kwargs):
         self.method_check(request, allowed=['post'])

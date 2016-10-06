@@ -2,6 +2,7 @@ from django.views.generic import RedirectView
 from django.conf.urls import include, url
 from django.contrib import admin
 
+import drf
 from tastypie.api import Api
 
 from link.api import *
@@ -12,13 +13,13 @@ from web.views import home, profile
 from service.settings.prod import STATIC_URL
 #from service.notification import GCMDeviceAuthenticatedResource
 
-def module_exists(module_name):
-    try:
-        __import__(module_name)
-    except ImportError:
-        return False
-    else:
-        return True
+#def module_exists(module_name):
+    #try:
+        #__import__(module_name)
+    #except ImportError:
+        #return False
+    #else:
+        #return True
 
 v1_api = Api(api_name='v1')
 v1_api.register(MyAgendaResource())
@@ -50,21 +51,20 @@ urlpatterns = [
     url(r'^apple-touch-icon-precomposed.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),
     url(r'^apple-touch-icon.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),
     url(r'^robots.txt$', RedirectView.as_view(url=STATIC_URL+'robots.txt')),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^rest-auth/', include('rest_auth.urls')),
-    url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
     #url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
     #url(r'^home/$', home),
     #url(r'^logout/$', social_logout),
 ]
 
-if module_exists('tastypie_swagger'):
-    urlpatterns += [
-        url(r'api/doc/', include('tastypie_swagger.urls',
-                                 namespace='v1_api_tastypie_swagger'),
-                         kwargs={
-                            "tastypie_api_module":v1_api,
-                            "namespace":"v1_api_tastypie_swagger",
-                            "version": "0.1"}
-        )
-    ]
+urlpatterns += drf.urlpatterns
+
+#if module_exists('tastypie_swagger'):
+    #urlpatterns += [
+        #url(r'api/doc/', include('tastypie_swagger.urls',
+                                 #namespace='v1_api_tastypie_swagger'),
+                         #kwargs={
+                            #"tastypie_api_module":v1_api,
+                            #"namespace":"v1_api_tastypie_swagger",
+                            #"version": "0.1"}
+        #)
+    #]

@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 
 from link.tasks import create_connections
 from link.models import Link, Invite
-from userprofile.models import UserProfile
+from userprofile.models import Profile
 from service.testutils import register, login
 
 
@@ -69,7 +69,7 @@ user3_contacts = [
 
 def sort_contact(c, username, contacts):
     # execute background task directly
-    u = UserProfile.objects.get(user__username=username)
+    u = Profile.objects.get(user__username=username)
     create_connections(u, contacts)
 
 class LinkTestCase(TestCase):
@@ -90,20 +90,20 @@ class LinkTestCase(TestCase):
         self.u10 = register(self.c, 'user10@fr.fr')
         self.u11 = register(self.c, 'user11@fr.fr')
         self.u12 = register(self.c, 'user12@fr.fr')
-        self.l1 = Link.objects.create(sender=self.u01.userprofile,
-                                      receiver=self.u02.userprofile)
-        self.l2 = Link.objects.create(sender=self.u01.userprofile,
-                                      receiver=self.u03.userprofile)
-        self.l3 = Link.objects.create(sender=self.u01.userprofile,
-                                      receiver=self.u04.userprofile)
-        self.l4 = Link.objects.create(sender=self.u05.userprofile,
-                                      receiver=self.u01.userprofile)
-        self.l5 = Link.objects.create(sender=self.u06.userprofile,
-                                      receiver=self.u01.userprofile)
-        self.l6 = Link.objects.create(sender=self.u07.userprofile,
-                                      receiver=self.u08.userprofile)
-        self.l7 = Link.objects.create(sender=self.u09.userprofile,
-                                      receiver=self.u10.userprofile)
+        self.l1 = Link.objects.create(sender=self.u01.profile,
+                                      receiver=self.u02.profile)
+        self.l2 = Link.objects.create(sender=self.u01.profile,
+                                      receiver=self.u03.profile)
+        self.l3 = Link.objects.create(sender=self.u01.profile,
+                                      receiver=self.u04.profile)
+        self.l4 = Link.objects.create(sender=self.u05.profile,
+                                      receiver=self.u01.profile)
+        self.l5 = Link.objects.create(sender=self.u06.profile,
+                                      receiver=self.u01.profile)
+        self.l6 = Link.objects.create(sender=self.u07.profile,
+                                      receiver=self.u08.profile)
+        self.l7 = Link.objects.create(sender=self.u09.profile,
+                                      receiver=self.u10.profile)
 
     def test_journey(self):
         """do typical sequence of calls an app would do"""
@@ -176,10 +176,10 @@ class LinkTestCase(TestCase):
         self.assertEqual(Link.objects.count(), 9) #+newuser1
         #the following MUST raise a DoesNotExist exception
         with self.assertRaises(Link.DoesNotExist):
-            Link.objects.get(sender=self.u01.userprofile,
-                             receiver=self.u11.userprofile)
-            Link.objects.get(sender=self.u01.userprofile,
-                             receiver=self.u12.userprofile)
+            Link.objects.get(sender=self.u01.profile,
+                             receiver=self.u11.profile)
+            Link.objects.get(sender=self.u01.profile,
+                             receiver=self.u12.profile)
         # Now post a second user
         email = 'user2@fr.fr'
         (api_key, username) = login(self.c, email)
@@ -189,10 +189,10 @@ class LinkTestCase(TestCase):
         self.assertEqual(Invite.objects.count(), 14)
         #the following MUST raise a DoesNotExist exception
         with self.assertRaises(Link.DoesNotExist):
-            Link.objects.get(sender=self.u02.userprofile,
-                             receiver=self.u11.userprofile)
-            Link.objects.get(sender=self.u02.userprofile,
-                             receiver=self.u12.userprofile)
+            Link.objects.get(sender=self.u02.profile,
+                             receiver=self.u11.profile)
+            Link.objects.get(sender=self.u02.profile,
+                             receiver=self.u12.profile)
         # And for a third user
         email = 'user3@fr.fr'
         (api_key, username) = login(self.c, email)
@@ -202,10 +202,10 @@ class LinkTestCase(TestCase):
         self.assertEqual(Invite.objects.count(), 19)
         #the following MUST raise a DoesNotExist exception
         with self.assertRaises(Link.DoesNotExist):
-            Link.objects.get(sender=self.u03.userprofile,
-                             receiver=self.u11.userprofile)
-            Link.objects.get(sender=self.u03.userprofile,
-                             receiver=self.u12.userprofile)
+            Link.objects.get(sender=self.u03.profile,
+                             receiver=self.u11.profile)
+            Link.objects.get(sender=self.u03.profile,
+                             receiver=self.u12.profile)
         # register the common friend, should create 3 links
         email = 'common@fr.fr'
         register(self.c, email)
@@ -243,7 +243,7 @@ class LinkTestCase(TestCase):
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         # execute background task directly
-        u = UserProfile.objects.get(user__username=username)
+        u = Profile.objects.get(user__username=username)
         create_connections(u, ce.michael)
         create_connections(u, ce.charles)
         create_connections(u, ce.caroline)
@@ -251,13 +251,13 @@ class LinkTestCase(TestCase):
     def test_uniqueness(self):
         with self.assertRaises(ValidationError):
             with self.assertRaises(IntegrityError):
-                Link.objects.create(sender=self.u09.userprofile,
-                                    receiver=self.u10.userprofile)
+                Link.objects.create(sender=self.u09.profile,
+                                    receiver=self.u10.profile)
         with self.assertRaises(ValidationError):
-            Link.objects.create(sender=self.u10.userprofile,
-                                receiver=self.u09.userprofile)
-            Link.objects.create(sender=self.u09.userprofile,
-                                receiver=self.u09.userprofile)
+            Link.objects.create(sender=self.u10.profile,
+                                receiver=self.u09.profile)
+            Link.objects.create(sender=self.u09.profile,
+                                receiver=self.u09.profile)
 
 class InviteTestCase(TestCase):
     c = Client(enforce_csrf_checks=True)

@@ -5,7 +5,7 @@ from event import push
 
 def run_checks(request, event_id):
     if request.user and request.user.is_authenticated():
-        profile = request.user.userprofile
+        profile = request.user.profile
         try:
             event = Event.objects.get(id=event_id)
             if profile != event.owner:

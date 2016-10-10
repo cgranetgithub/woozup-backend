@@ -15,7 +15,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # Admin and manager (will receive emails)
 ADMINS = (
-    ('charles', 'charles@varioware.com'),
+    ('charles', 'cgranet@protonmail.com'),
     ('michael', 'murlock42@gmail.com'),
 )
 MANAGERS = ADMINS
@@ -34,27 +34,28 @@ INSTALLED_APPS = (
     'tastypie',           # REST API
     'storages',           # S3 storage
     'push_notifications', # push to mobile
+    # REST API
     'rest_framework',     # REST API
     'rest_framework.authtoken',
     'rest_auth',
     'django_filters',
     'crispy_forms',
-    # `allauth`
+    # allauth & REST registration
     'django.contrib.sites', # The Django sites framework is required
     'allauth',
     'allauth.account',
     'rest_auth.registration',
-    #
+    # allauth, social auth
     'allauth.socialaccount',
     'allauth.socialaccount.providers.facebook',
     'allauth.socialaccount.providers.twitter',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.instagram',
     # project apps
-    'event',
-    'link',
-    'userprofile',
-    'web'
+    'event.apps.EventConfig',
+    'link.apps.LinkConfig',
+    'userprofile.apps.UserProfileConfig',
+    'web.apps.WebConfig'
 )
 
 TEMPLATES = [

@@ -6,7 +6,7 @@ from django.test.client import Client
 from django.core.management import call_command
 from django.contrib.auth.models import User
 
-from userprofile.models import UserProfile, UserPosition
+from userprofile.models import Profile, Position
 from service.testutils import register, login
 from link.models import Link
 
@@ -125,8 +125,8 @@ class AuthTestCase(TestCase):
 
     def test_profiles_creation(self):
         # if profiles are not properly created, this will generate an error
-        UserProfile.objects.get(user=self.u01)
-        UserPosition.objects.get(user=self.u01)
+        Profile.objects.get(user=self.u01)
+        Position.objects.get(user=self.u01)
 
 class ProfileTestCase(TestCase):
     def setUp(self):
@@ -219,7 +219,7 @@ class PositionTestCase(TestCase):
         res = c.post('/api/v1/userposition/setlast/%s'%self.authParam,
                         data = json.dumps({'last':'{ "type": "Point", "coordinates": [42.0, 2.0] }'}),
                         content_type='application/json')
-        self.assertEqual(self.u01.userposition.last.geojson,
+        self.assertEqual(self.u01.position.last.geojson,
                          u'{"type": "Point", "coordinates": [42.0, 2.0]}')
 
     def test_setprofile(self):
@@ -233,8 +233,8 @@ class PositionTestCase(TestCase):
         self.assertEqual(u01.first_name, 'toto')
         self.assertEqual(u01.last_name, 'tata')
         self.assertEqual(u01.email, 'toto@gmail.com')
-        self.assertEqual(u01.userprofile.phone_number, '+33667890343')
-        self.assertEqual(u01.userprofile.gender, 'MA')
+        self.assertEqual(u01.profile.phone_number, '+33667890343')
+        self.assertEqual(u01.profile.gender, 'MA')
 
     def test_resetpassword(self):
         # just call the API for code coverage, if no error raised, fine!
@@ -322,12 +322,12 @@ class RelationshipTestCase(TestCase):
         self.auth4 = '?username=%s&api_key=%s'%(username, api_key)
 
     def test_oneway(self):
-        l1 = Link.objects.create(sender=self.u1.userprofile,
-                                 receiver=self.u2.userprofile)
-        l2 = Link.objects.create(sender=self.u1.userprofile,
-                                 receiver=self.u3.userprofile)
-        l3 = Link.objects.create(sender=self.u1.userprofile,
-                                 receiver=self.u4.userprofile)
+        l1 = Link.objects.create(sender=self.u1.profile,
+                                 receiver=self.u2.profile)
+        l2 = Link.objects.create(sender=self.u1.profile,
+                                 receiver=self.u3.profile)
+        l3 = Link.objects.create(sender=self.u1.profile,
+                                 receiver=self.u4.profile)
         self.assertEqual(l1.sender_status, 'NEW')
         self.assertEqual(l2.sender_status, 'NEW')
         self.assertEqual(l3.sender_status, 'NEW')
@@ -339,8 +339,8 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l1 = Link.objects.get(sender=self.u1.userprofile,
-                              receiver=self.u2.userprofile)
+        l1 = Link.objects.get(sender=self.u1.profile,
+                              receiver=self.u2.profile)
         self.assertEqual(l1.sender_status, 'ACC')
         self.assertEqual(l1.receiver_status, 'PEN')
         # u2 accepts u1
@@ -348,8 +348,8 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l1 = Link.objects.get(sender=self.u1.userprofile,
-                              receiver=self.u2.userprofile)
+        l1 = Link.objects.get(sender=self.u1.profile,
+                              receiver=self.u2.profile)
         self.assertEqual(l1.sender_status, 'ACC')
         self.assertEqual(l1.receiver_status, 'ACC')
         # u1 ignore u3
@@ -357,8 +357,8 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l2 = Link.objects.get(sender=self.u1.userprofile,
-                              receiver=self.u3.userprofile)
+        l2 = Link.objects.get(sender=self.u1.profile,
+                              receiver=self.u3.profile)
         self.assertEqual(l2.sender_status, 'IGN')
         self.assertEqual(l2.receiver_status, 'NEW')
         # u1 invites u4
@@ -366,8 +366,8 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l3 = Link.objects.get(sender=self.u1.userprofile,
-                              receiver=self.u4.userprofile)
+        l3 = Link.objects.get(sender=self.u1.profile,
+                              receiver=self.u4.profile)
         self.assertEqual(l3.sender_status, 'ACC')
         self.assertEqual(l3.receiver_status, 'PEN')
         # u4 accepts u1
@@ -375,18 +375,18 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l3 = Link.objects.get(sender=self.u1.userprofile,
-                              receiver=self.u4.userprofile)
+        l3 = Link.objects.get(sender=self.u1.profile,
+                              receiver=self.u4.profile)
         self.assertEqual(l3.sender_status, 'ACC')
         self.assertEqual(l3.receiver_status, 'REJ')
 
     def test_theotherway(self):
-        l1 = Link.objects.create(receiver=self.u1.userprofile,
-                                 sender=self.u2.userprofile)
-        l2 = Link.objects.create(receiver=self.u1.userprofile,
-                                 sender=self.u3.userprofile)
-        l3 = Link.objects.create(receiver=self.u1.userprofile,
-                                 sender=self.u4.userprofile)
+        l1 = Link.objects.create(receiver=self.u1.profile,
+                                 sender=self.u2.profile)
+        l2 = Link.objects.create(receiver=self.u1.profile,
+                                 sender=self.u3.profile)
+        l3 = Link.objects.create(receiver=self.u1.profile,
+                                 sender=self.u4.profile)
         self.assertEqual(l1.sender_status, 'NEW')
         self.assertEqual(l2.sender_status, 'NEW')
         self.assertEqual(l3.sender_status, 'NEW')
@@ -398,8 +398,8 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l1 = Link.objects.get(receiver=self.u1.userprofile,
-                              sender=self.u2.userprofile)
+        l1 = Link.objects.get(receiver=self.u1.profile,
+                              sender=self.u2.profile)
         self.assertEqual(l1.receiver_status, 'ACC')
         self.assertEqual(l1.sender_status, 'PEN')
         # u2 accepts u1
@@ -407,8 +407,8 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l1 = Link.objects.get(receiver=self.u1.userprofile,
-                              sender=self.u2.userprofile)
+        l1 = Link.objects.get(receiver=self.u1.profile,
+                              sender=self.u2.profile)
         self.assertEqual(l1.receiver_status, 'ACC')
         self.assertEqual(l1.sender_status, 'ACC')
         # u1 ignore u3
@@ -416,8 +416,8 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l2 = Link.objects.get(receiver=self.u1.userprofile,
-                              sender=self.u3.userprofile)
+        l2 = Link.objects.get(receiver=self.u1.profile,
+                              sender=self.u3.profile)
         self.assertEqual(l2.receiver_status, 'IGN')
         self.assertEqual(l2.sender_status, 'NEW')
         # u1 invites u4
@@ -425,8 +425,8 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l3 = Link.objects.get(receiver=self.u1.userprofile,
-                              sender=self.u4.userprofile)
+        l3 = Link.objects.get(receiver=self.u1.profile,
+                              sender=self.u4.profile)
         self.assertEqual(l3.receiver_status, 'ACC')
         self.assertEqual(l3.sender_status, 'PEN')
         # u4 accepts u1
@@ -434,8 +434,8 @@ class RelationshipTestCase(TestCase):
                         data = json.dumps({}),
                         content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        l3 = Link.objects.get(receiver=self.u1.userprofile,
-                              sender=self.u4.userprofile)
+        l3 = Link.objects.get(receiver=self.u1.profile,
+                              sender=self.u4.profile)
         self.assertEqual(l3.receiver_status, 'ACC')
         self.assertEqual(l3.sender_status, 'REJ')
 
@@ -513,60 +513,60 @@ class ResourcesTestCase(TestCase):
         (api_key, username) = login(c, email)
         self.auth17 = '?username=%s&api_key=%s'%(username, api_key)
         # create relations for u1
-        Link.objects.create(sender=self.u1.userprofile, sender_status='NEW',
-                            receiver=self.u2.userprofile, receiver_status='NEW')
-        Link.objects.create(sender=self.u1.userprofile, sender_status='NEW',
-                            receiver=self.u3.userprofile, receiver_status='IGN')
-        Link.objects.create(sender=self.u1.userprofile, sender_status='IGN',
-                            receiver=self.u4.userprofile, receiver_status='NEW')
-        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
-                            receiver=self.u5.userprofile, receiver_status='PEN')
-        Link.objects.create(sender=self.u1.userprofile, sender_status='PEN',
-                            receiver=self.u6.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
-                            receiver=self.u7.userprofile, receiver_status='REJ')
-        Link.objects.create(sender=self.u1.userprofile, sender_status='REJ',
-                            receiver=self.u8.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
-                            receiver=self.u9.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u10.userprofile, sender_status='NEW',
-                            receiver=self.u1.userprofile, receiver_status='NEW')
-        Link.objects.create(sender=self.u11.userprofile, sender_status='NEW',
-                            receiver=self.u1.userprofile, receiver_status='IGN')
-        Link.objects.create(sender=self.u12.userprofile, sender_status='IGN',
-                            receiver=self.u1.userprofile, receiver_status='NEW')
-        Link.objects.create(sender=self.u13.userprofile, sender_status='ACC',
-                            receiver=self.u1.userprofile, receiver_status='PEN')
-        Link.objects.create(sender=self.u14.userprofile, sender_status='PEN',
-                            receiver=self.u1.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u15.userprofile, sender_status='ACC',
-                            receiver=self.u1.userprofile, receiver_status='REJ')
-        Link.objects.create(sender=self.u16.userprofile, sender_status='REJ',
-                            receiver=self.u1.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u17.userprofile, sender_status='ACC',
-                            receiver=self.u1.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u1.profile, sender_status='NEW',
+                            receiver=self.u2.profile, receiver_status='NEW')
+        Link.objects.create(sender=self.u1.profile, sender_status='NEW',
+                            receiver=self.u3.profile, receiver_status='IGN')
+        Link.objects.create(sender=self.u1.profile, sender_status='IGN',
+                            receiver=self.u4.profile, receiver_status='NEW')
+        Link.objects.create(sender=self.u1.profile, sender_status='ACC',
+                            receiver=self.u5.profile, receiver_status='PEN')
+        Link.objects.create(sender=self.u1.profile, sender_status='PEN',
+                            receiver=self.u6.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u1.profile, sender_status='ACC',
+                            receiver=self.u7.profile, receiver_status='REJ')
+        Link.objects.create(sender=self.u1.profile, sender_status='REJ',
+                            receiver=self.u8.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u1.profile, sender_status='ACC',
+                            receiver=self.u9.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u10.profile, sender_status='NEW',
+                            receiver=self.u1.profile, receiver_status='NEW')
+        Link.objects.create(sender=self.u11.profile, sender_status='NEW',
+                            receiver=self.u1.profile, receiver_status='IGN')
+        Link.objects.create(sender=self.u12.profile, sender_status='IGN',
+                            receiver=self.u1.profile, receiver_status='NEW')
+        Link.objects.create(sender=self.u13.profile, sender_status='ACC',
+                            receiver=self.u1.profile, receiver_status='PEN')
+        Link.objects.create(sender=self.u14.profile, sender_status='PEN',
+                            receiver=self.u1.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u15.profile, sender_status='ACC',
+                            receiver=self.u1.profile, receiver_status='REJ')
+        Link.objects.create(sender=self.u16.profile, sender_status='REJ',
+                            receiver=self.u1.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u17.profile, sender_status='ACC',
+                            receiver=self.u1.profile, receiver_status='ACC')
         # create relations for u2
-        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
-                            receiver=self.u3.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
-                            receiver=self.u5.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
-                            receiver=self.u7.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
-                            receiver=self.u9.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u2.userprofile, sender_status='PEN',
-                            receiver=self.u10.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.profile, sender_status='PEN',
+                            receiver=self.u3.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.profile, sender_status='PEN',
+                            receiver=self.u5.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.profile, sender_status='PEN',
+                            receiver=self.u7.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.profile, sender_status='PEN',
+                            receiver=self.u9.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.profile, sender_status='PEN',
+                            receiver=self.u10.profile, receiver_status='ACC')
         # create relations for u3
-        Link.objects.create(sender=self.u3.userprofile, sender_status='NEW',
-                            receiver=self.u6.userprofile, receiver_status='NEW')
-        Link.objects.create(sender=self.u3.userprofile, sender_status='NEW',
-                            receiver=self.u8.userprofile, receiver_status='NEW')
-        Link.objects.create(sender=self.u3.userprofile, sender_status='NEW',
-                            receiver=self.u10.userprofile, receiver_status='NEW')
-        Link.objects.create(sender=self.u3.userprofile, sender_status='ACC',
-                            receiver=self.u12.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u3.userprofile, sender_status='ACC',
-                            receiver=self.u14.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u3.profile, sender_status='NEW',
+                            receiver=self.u6.profile, receiver_status='NEW')
+        Link.objects.create(sender=self.u3.profile, sender_status='NEW',
+                            receiver=self.u8.profile, receiver_status='NEW')
+        Link.objects.create(sender=self.u3.profile, sender_status='NEW',
+                            receiver=self.u10.profile, receiver_status='NEW')
+        Link.objects.create(sender=self.u3.profile, sender_status='ACC',
+                            receiver=self.u12.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u3.profile, sender_status='ACC',
+                            receiver=self.u14.profile, receiver_status='ACC')
 
     def test_MyFriends(self):
         res = c.get('/api/v1/friends/mine/%s'%(self.auth1))

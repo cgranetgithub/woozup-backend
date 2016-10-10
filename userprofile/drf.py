@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers, viewsets
-from userprofile.models import UserProfile, UserPosition
+from userprofile.models import Profile, Position
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -13,21 +13,21 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class NewFriendsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = UserProfile
+        model = Profile
         #fields = ('first_name', 'last_name')
 
 class NewFriendsViewSet(viewsets.ModelViewSet):
-    #queryset = UserProfile.objects.all()
+    #queryset = Profile.objects.all()
     serializer_class = NewFriendsSerializer
     def get_queryset(self):
         #user = self.request.user
         #return Purchase.objects.filter(purchaser=user)
-        userprofile = self.request.user.userprofile
-        links = userprofile.link_as_sender.filter(sender_status='NEW')
-        receivers = UserProfile.objects.filter(
+        profile = self.request.user.profile
+        links = profile.link_as_sender.filter(sender_status='NEW')
+        receivers = Profile.objects.filter(
                                     user_id__in=links.values('receiver_id'))
-        links = userprofile.link_as_receiver.filter(receiver_status='NEW')
-        senders = UserProfile.objects.filter(
+        links = profile.link_as_receiver.filter(receiver_status='NEW')
+        senders = Profile.objects.filter(
                                     user_id__in=links.values('sender_id'))
         return senders | receivers
 

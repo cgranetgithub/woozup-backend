@@ -7,9 +7,9 @@ class UserProfileConfig(AppConfig):
     verbose_name = "User Profile"
 
     def ready(self):
-        from link.tasks import (transform_invites_from_profile,
+        from link.tasks import (transform_invites_from_number,
                                 transform_invites_from_user)
-        UserProfile = self.get_model('UserProfile')
-        post_save.connect(transform_invites_from_profile, sender=UserProfile)
+        Number = self.get_model('Number')
+        post_save.connect(transform_invites_from_number, sender=Number)
         post_save.connect(transform_invites_from_user,
                           sender=settings.AUTH_USER_MODEL)

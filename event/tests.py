@@ -249,8 +249,8 @@ class EventTestCase(TestCase):
         for i in emails_list:
             u = register(c, i)
             friends_list.append(u)
-            Link.objects.create(sender=self.u01.userprofile,
-                                receiver=u.userprofile,
+            Link.objects.create(sender=self.u01.profile,
+                                receiver=u.profile,
                                 sender_status="ACC", receiver_status="ACC")
         # create an event for all friends
         etype = EventType.objects.first().id
@@ -316,69 +316,69 @@ class ResourcesTestCase(TestCase):
         (api_key, username) = login(c, email)
         self.auth5 = '?username=%s&api_key=%s'%(username, api_key)
         # create relations
-        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
-                            receiver=self.u2.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u1.userprofile, sender_status='ACC',
-                            receiver=self.u3.userprofile, receiver_status='ACC')
-        Link.objects.create(sender=self.u2.userprofile, sender_status='ACC',
-                            receiver=self.u4.userprofile, receiver_status='ACC')
+        Link.objects.create(sender=self.u1.profile, sender_status='ACC',
+                            receiver=self.u2.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u1.profile, sender_status='ACC',
+                            receiver=self.u3.profile, receiver_status='ACC')
+        Link.objects.create(sender=self.u2.profile, sender_status='ACC',
+                            receiver=self.u4.profile, receiver_status='ACC')
         # create categorie & type
         cat = EventCategory.objects.create(name="meal")
         etype = EventType.objects.create(name="meal")
         etype.category.add(cat)
         # create some events for u1
-        e1 = Event.objects.create(owner=self.u1.userprofile, event_type=etype,
+        e1 = Event.objects.create(owner=self.u1.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u1 breakfast",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e2 = Event.objects.create(owner=self.u1.userprofile, event_type=etype,
+        e2 = Event.objects.create(owner=self.u1.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u1 lunch",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e2.participants.add(self.u2.userprofile)
-        e3 = Event.objects.create(owner=self.u1.userprofile, event_type=etype,
+        e2.participants.add(self.u2.profile)
+        e3 = Event.objects.create(owner=self.u1.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u1 diner",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e3.participants.add(self.u2.userprofile)
-        e3.participants.add(self.u3.userprofile)
+        e3.participants.add(self.u2.profile)
+        e3.participants.add(self.u3.profile)
         # create some events for u2
-        e1 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
+        e1 = Event.objects.create(owner=self.u2.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u2 breakfast",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e2 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
+        e2 = Event.objects.create(owner=self.u2.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u2 lunch",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e2.invitees.add(self.u1.userprofile)
-        e2.participants.add(self.u1.userprofile)
-        e3 = Event.objects.create(owner=self.u2.userprofile, event_type=etype,
+        e2.invitees.add(self.u1.profile)
+        e2.participants.add(self.u1.profile)
+        e3 = Event.objects.create(owner=self.u2.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u2 diner",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e3.invitees.add(self.u4.userprofile)
-        e3.participants.add(self.u4.userprofile)
+        e3.invitees.add(self.u4.profile)
+        e3.participants.add(self.u4.profile)
         # create some events for u3
-        e1 = Event.objects.create(owner=self.u3.userprofile, event_type=etype,
+        e1 = Event.objects.create(owner=self.u3.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u3 breakfast",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e2 = Event.objects.create(owner=self.u3.userprofile, event_type=etype,
+        e2 = Event.objects.create(owner=self.u3.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u3 lunch",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e2.participants.add(self.u1.userprofile)
+        e2.participants.add(self.u1.profile)
         # create some events for u4
-        e1 = Event.objects.create(owner=self.u4.userprofile, event_type=etype,
+        e1 = Event.objects.create(owner=self.u4.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u4 breakfast",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e2 = Event.objects.create(owner=self.u4.userprofile, event_type=etype,
+        e2 = Event.objects.create(owner=self.u4.profile, event_type=etype,
                                   start=timezone.now(),
                                   name="u4 lunch",
                                   location_coords='{ "type": "Point", "coordinates": [50.0, 50.0] }')
-        e2.participants.add(self.u2.userprofile)
+        e2.participants.add(self.u2.profile)
 
     def test_AllEvents(self):
         res = c.get('/api/v1/events/all/%s'%(self.auth1))

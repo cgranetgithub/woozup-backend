@@ -18,9 +18,9 @@ class Link(models.Model):
                     (REJECTED, 'rejected'),
                     (IGNORED , 'ignored'),
                     (BLOCKED , 'blocked' ) )
-    sender   = models.ForeignKey('userprofile.UserProfile',
+    sender   = models.ForeignKey('userprofile.Profile',
                                  related_name='link_as_sender')
-    receiver = models.ForeignKey('userprofile.UserProfile',
+    receiver = models.ForeignKey('userprofile.Profile',
                                  related_name='link_as_receiver')
     sender_status   = models.CharField(max_length=3, choices=LINK_STATUS,
                                                      default=NEW)
@@ -77,7 +77,7 @@ class Invite(models.Model):
                       (ACCEPTED, 'accepted'),
                       (IGNORED , 'ignored'),
                       (CLOSED  , 'closed' ) )
-    sender  = models.ForeignKey('userprofile.UserProfile')
+    sender  = models.ForeignKey('userprofile.Profile')
     name    = models.CharField(max_length=255, blank=True,
                                help_text='name to be displayed in the app')
     numbers = models.CharField(max_length=255, blank=True,

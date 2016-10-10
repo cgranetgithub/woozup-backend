@@ -41,7 +41,7 @@ class Event(models.Model):
     start      = models.DateTimeField()
     end        = models.DateTimeField(blank=True, null=True)
     event_type = models.ForeignKey(EventType)
-    owner      = models.ForeignKey('userprofile.UserProfile',
+    owner      = models.ForeignKey('userprofile.Profile',
                                    related_name='events_as_owner')
     closed     = models.BooleanField(default=False,
                     help_text=u"""if closed no more participants accepted""")
@@ -57,10 +57,10 @@ class Event(models.Model):
                                    #blank=True, null=True)
     image      = models.ImageField(upload_to='event_image',
                                    blank=True, null=True)
-    participants = models.ManyToManyField('userprofile.UserProfile',
+    participants = models.ManyToManyField('userprofile.Profile',
                                           blank=True,
                                           related_name='events_as_participant')
-    invitees = models.ManyToManyField('userprofile.UserProfile',
+    invitees = models.ManyToManyField('userprofile.Profile',
                                           blank=True,
                                           related_name='events_as_invitee')
     created_at = models.DateTimeField(auto_now_add=True, help_text=u"""

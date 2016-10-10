@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 
 import apidoc as doc
 from doc import authdoc
-from userprofile.models import UserProfile, UserPosition
+from userprofile.models import Profile, Position
 from service.b64field import Base64FileField
 from link import push
 
@@ -22,14 +22,14 @@ class PositionResource(ModelResource):
     #last = fields.CharField('last', null=True)
     class Meta:
         resource_name = 'userposition'
-        queryset = UserPosition.objects.all()
+        queryset = Position.objects.all()
         list_allowed_methods = []
         detail_allowed_methods = ['get', 'put']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        return UserPosition.objects.filter(user=request.user)
+        return Position.objects.filter(user=request.user)
 
  ### WARNING need to restrict to user
 
@@ -215,7 +215,7 @@ class ProfileResource(ModelResource):
     image_field = Base64FileField("image", null=True, blank=True)
     class Meta:
         resource_name = 'userprofile'
-        queryset = UserProfile.objects.all()
+        queryset = Profile.objects.all()
         list_allowed_methods = []
         ordering = ['user']
         detail_allowed_methods = ['get']
@@ -226,8 +226,8 @@ class ProfileResource(ModelResource):
     ### WARNING: must not restrict only to user because access is required
     ### when creating event with invitees => restrict to self+friends
     def get_object_list(self, request):
-        return ( request.user.userprofile.get_friends()
-               | UserProfile.objects.filter(user=request.user) )
+        return ( request.user.profile.get_friends()
+               | Profile.objects.filter(user=request.user) )
 
     def prepend_urls(self):
         return [
@@ -274,7 +274,7 @@ class MyFriendsResource(ModelResource):
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'friends/mine'
-        queryset = UserProfile.objects.all()
+        queryset = Profile.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['user']
@@ -283,7 +283,7 @@ class MyFriendsResource(ModelResource):
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        userprofile = request.user.userprofile
+        userprofile = request.user.profile
         return userprofile.get_friends()
 
 class PendingFriendsResource(ModelResource):
@@ -291,7 +291,7 @@ class PendingFriendsResource(ModelResource):
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'friends/pending'
-        queryset = UserProfile.objects.all()
+        queryset = Profile.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['user']
@@ -300,12 +300,12 @@ class PendingFriendsResource(ModelResource):
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        userprofile = request.user.userprofile
+        userprofile = request.user.profile
         links = userprofile.link_as_receiver.filter(receiver_status='PEN')
-        senders = UserProfile.objects.filter(
+        senders = Profile.objects.filter(
                                     user_id__in=links.values('sender_id'))
         links = userprofile.link_as_sender.filter(sender_status='PEN')
-        receivers = UserProfile.objects.filter(
+        receivers = Profile.objects.filter(
                                     user_id__in=links.values('receiver_id'))
         return senders | receivers
 
@@ -314,7 +314,7 @@ class NewFriendsResource(ModelResource):
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'friends/new'
-        queryset = UserProfile.objects.all()
+        queryset = Profile.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['user']
@@ -323,12 +323,12 @@ class NewFriendsResource(ModelResource):
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        userprofile = request.user.userprofile
+        userprofile = request.user.profile
         links = userprofile.link_as_sender.filter(sender_status='NEW')
-        receivers = UserProfile.objects.filter(
+        receivers = Profile.objects.filter(
                                     user_id__in=links.values('receiver_id'))
         links = userprofile.link_as_receiver.filter(receiver_status='NEW')
-        senders = UserProfile.objects.filter(
+        senders = Profile.objects.filter(
                                     user_id__in=links.values('sender_id'))
         return senders | receivers
 
@@ -338,7 +338,7 @@ class AuthResource(ModelResource):
     """
     class Meta:
         queryset = User.objects.all()
-        fields = ['first_name', 'last_name', 'email']
+        fields = ['username', 'first_name', 'last_name', 'email']
         allowed_methods = []
         resource_name = 'auth'
         # for the doc:
@@ -377,6 +377,12 @@ class AuthResource(ModelResource):
             url(r"^(?P<resource_name>%s)/ping%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('ping'), name="api_ping"),
+            url(r"^(?P<resource_name>%s)/get_code%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('get_code'), name="api_get_code"),
+            url(r"^(?P<resource_name>%s)/verif_code%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('verif_code'), name="api_verif_code"),
         ]
 
     def register(self, request, **kwargs):
@@ -446,3 +452,30 @@ class AuthResource(ModelResource):
 
     def ping(self, request, **kwargs):
         return self.create_response(request, {}, HttpResponse)
+
+    def get_code(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        try:
+            data = self.deserialize(request, request.body,
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                        {'reason': u'cannot deserialize data'},
+                                        HttpBadRequest )
+        (req, result, status) = apifn.get_code(request, data)
+        return self.create_response(req, result, status)
+
+    def verif_code(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        try:
+            data = self.deserialize(request, request.body,
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                        {'reason': u'cannot deserialize data'},
+                                        HttpBadRequest )
+        (req, result, status) = apifn.verif_code(request, data)
+        return self.create_response(req, result, status)
+

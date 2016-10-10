@@ -1,6 +1,7 @@
 from base64 import b64decode
 
 from link.models import Link
+from .models import Number
 from service.utils import get_clean_number
 
 from django.http import HttpResponse
@@ -27,8 +28,8 @@ def setlast(request, data):
             return (request, {u'reason': "empty"}, HttpBadRequest)
         if last:
             pnt = GEOSGeometry(last)
-            request.user.userposition.last = last
-            request.user.userposition.save()
+            request.user.position.last = last
+            request.user.position.save()
             return (request, {}, HttpResponse)
         else:
             return (request, {u'reason': "empty"}, HttpBadRequest)
@@ -62,18 +63,18 @@ def setprofile(request, data):
             if number:
                 num = get_clean_number(number)
                 if num is not None:
-                    request.user.userprofile.phone_number = num
+                    request.user.profile.phone_number = num
             else: # user can set empty number
-                request.user.userprofile.phone_number = ''
+                request.user.profile.phone_number = ''
         except:
             pass
         try:
             gender = data.get('gender').strip()
             if gender in ['MA', 'FE']:
-                request.user.userprofile.gender = gender
+                request.user.profile.gender = gender
         except:
             pass
-        request.user.userprofile.save()
+        request.user.profile.save()
         return (request, {}, HttpResponse)
     else:
         return (request, {u'reason': u"You are not authenticated"},
@@ -84,8 +85,8 @@ def setpicture(request, data):
         b64_text = data.get('file', '')
         filename = data.get('name', '')
         image_data = b64decode(b64_text)
-        request.user.userprofile.image = ContentFile(image_data, filename)
-        request.user.userprofile.save()
+        request.user.profile.image = ContentFile(image_data, filename)
+        request.user.profile.save()
         return (request, {}, HttpResponse)
     else:
         return (request, {u'reason': u"You are not authenticated"},
@@ -104,10 +105,40 @@ def register(request, data):
     try:
         password = data.get('password', '').strip()
         if not password:
-            return (request, {u'reason': reason, u'code': '10'},
+            return (request, {u'reason': reason, u'code': '11'},
                     HttpBadRequest)
     except:
-        return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
+        return (request, {u'reason': reason, u'code': '12'}, HttpBadRequest)
+    reason = "Number is required"
+    try:
+        number = data.get('number', '').strip()
+        if not number:
+            return (request, {u'reason': reason, u'code': '13'},
+                    HttpBadRequest)
+    except:
+        return (request, {u'reason': reason, u'code': '13'}, HttpBadRequest)
+    reason = "Verif code is required"
+    try:
+        code = data.get('code', '')
+        if type(code) is not int:
+            try:
+                code = code.strip()
+                code = int(code)
+            except:
+                return (request, {u'reason': u'code is not a number',
+                                  u'code': '15'}, HttpBadRequest)
+        if not code:
+            return (request, {u'reason': reason, u'code': '16'},
+                    HttpBadRequest)
+    except:
+        return (request, {u'reason': reason, u'code': '17'}, HttpBadRequest)
+    # find the number (must exist)
+    try:
+        number = Number.objects.get(phone_number=number)
+    except:
+        return (request, {u'reason': u'number %s not found'%number,
+                          u'code': '18'}, HttpBadRequest)
+    # check if user already exists, otherwise create it
     try:
         user = User.objects.get(username=username)
         return (request, {u'reason': u'user already exists',
@@ -118,14 +149,19 @@ def register(request, data):
         except:
             return (request, {u'reason': u'user creation failed',
                               u'code': '300'}, HttpBadRequest)
+    # make user <--> number association
+    try:
+        number.validate(user, number, code)
+    except:
+        return (request, {u'reason': u'user/number/code do not match',
+                          u'code': '19'}, HttpBadRequest)
+    # finish authentication
     user = auth.authenticate(username=username, password=password)
     if user:
         if user.is_active:
             auth.login(request, user)
-            #user.userprofile.phone_number = number
-            #user.userprofile.save()
             return (request, {'api_key' : user.api_key.key,
-                              'userid'  : request.user.id,
+                              'userid'  : user.id,
                               'username': user.username,
                               'code'    : '0'}, HttpCreated)
         else:
@@ -135,33 +171,6 @@ def register(request, data):
         return (request, {u'reason': u'unable to authenticate',
                           u'code': '400'}, HttpUnauthorized)
 
-#def register_by_email(request, data):
-    #if 'email' not in data:
-        #return (request, {u'reason': "'email' required", u'code': '10'},
-                #HttpBadRequest)
-    #if 'password' not in data:
-        #return (request, {u'reason': "password required", u'code': '20'},
-                #HttpBadRequest)
-    #data['password1'] = data['password']
-    #data['password2'] = data['password']
-    #try:
-        #form = SignupForm(data)
-    #except:
-        #return (request, {u'reason': u'user creation failed',
-                            #u'code': '300'}, HttpBadRequest)
-    #if form.is_valid():
-        #user = form.save(request)
-        #complete_signup(request, user,
-                        #app_settings.EMAIL_VERIFICATION, None)
-        #return (request, {'api_key' : user.api_key.key,
-                          #'userid'  : request.user.id,
-                          #'username': user.username,
-                          #'code'    : '0'}, HttpCreated)
-    #else:
-        #return (request, {u'reason': form.errors,
-                            #u'code': '300'}, HttpBadRequest)
-
-
 def login(request, data):
     username = data.get('username', '').lower().strip()
     password = data.get('password', '').strip()
@@ -170,12 +179,44 @@ def login(request, data):
         if user.is_active:
             auth.login(request, user)
             return (request, {'api_key' : user.api_key.key,
-                              'userid'  : request.user.id,
+                              'userid'  : user.id,
                               'username': user.username}, HttpResponse)
         else:
             return (request, {u'reason': u'disabled'}, HttpForbidden)
     else:
         return (request, {u'reason': u'incorrect'}, HttpUnauthorized)
+
+def get_code(request, data):
+    # !!!
+    # must verify number correctness
+    # !!!
+    phone_number = data.get('phone_number', '').lower().strip()
+    nb = get_clean_number(phone_number)
+    if nb:
+        (number, created) = Number.objects.get_or_create(phone_number=nb)
+        number.get_code()
+        return (request, {}, HttpResponse)
+    else:
+        return (request, {u'reason': u'not a number valid number'},
+                HttpBadRequest)
+
+def verif_code(request, data):
+    phone_number = data.get('phone_number', '').lower().strip()
+    code = data.get('code', '')
+    if type(code) is not int:
+        try:
+            code = code.strip()
+            code = int(code)
+        except:
+            return (request, {u'reason': u'code is not a number'}, HttpBadRequest)
+    try:
+        number = Number.objects.get(phone_number=phone_number)
+    except Number.DoesNotExist:
+        return (request, {u'reason': u'unknown phone_number'}, HttpBadRequest)
+    if number.verif_code(code):
+        return (request, {}, HttpResponse)
+    else:
+        return (request, {u'reason': u'incorrect code'}, HttpForbidden)
 
 #def login_by_email(request, data):
     #if 'login' not in data:

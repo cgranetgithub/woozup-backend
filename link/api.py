@@ -48,7 +48,7 @@ class InviteResource(ModelResource):
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        return Invite.objects.filter( sender=request.user.profile )
+        return Invite.objects.filter( sender=request.user )
 
     def prepend_urls(self):
         return [
@@ -122,7 +122,7 @@ class ContactResource(Resource):
                                     {u'reason': u'cannot deserialize data'},
                                     HttpBadRequest )
             # launch background processing
-            create_connections.delay(user.profile, data)
+            create_connections.delay(user, data)
             #
             return self.create_response(request, {'received': True})
         else:

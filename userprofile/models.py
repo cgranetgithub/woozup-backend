@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import random
-from django.conf import settings
 from django.db.models import Q
 from django.contrib.gis.db import models
 from django.db.models.signals import post_save
@@ -9,16 +8,36 @@ from tastypie.models import create_api_key
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from service.notification import send_sms
+from django.contrib.auth.models import User
 
 MALE   = 'MA'
 FEMALE = 'FE'
+
+class ExtendedUser(User):
+    class Meta:
+        proxy = True
+
+    @property
+    def name(self):
+        return self.get_full_name() or self.username
+
+    def get_friends(self):
+        link_as_sender = self.link_as_sender.filter(
+                            sender_status='ACC', receiver_status='ACC')
+        receivers = ExtendedUser.objects.filter(
+                            id__in=link_as_sender.values('receiver_id'))
+        link_as_receiver = self.link_as_receiver.filter(
+                            sender_status='ACC', receiver_status='ACC')
+        senders = ExtendedUser.objects.filter(
+                            id__in=link_as_receiver.values('sender_id'))
+        return senders | receivers
 
 def a_random_number():
     return random.randint(1234, 9876)
     
 class Number(models.Model):
     phone_number = PhoneNumberField(unique=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True)
+    user = models.OneToOneField(ExtendedUser, null=True)
     validation_code = models.IntegerField(null=True)
     validated = models.BooleanField(default=False)
     code_sent_at = models.DateTimeField(null=True)
@@ -27,8 +46,11 @@ class Number(models.Model):
         self.validation_code = a_random_number()
         self.code_sent_at = timezone.now()
         self.save()
-        send_sms('Code de vérification Woozup : %s'%self.validation_code,
-                 set([unicode(self.phone_number)]))
+        try:
+            send_sms('Code de vérification Woozup : %s'%self.validation_code,
+                    set([unicode(self.phone_number)]))
+        except:
+            return "Code sending failed"
         
     def verif_code(self, code):
         return (code == self.validation_code)
@@ -48,7 +70,7 @@ class Number(models.Model):
 class Profile(models.Model):
     GENDER = ( (MALE  , 'male'  ),
                (FEMALE, 'female') )
-    user   = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True)
+    user   = models.OneToOneField(ExtendedUser, primary_key=True)
     gender = models.CharField(max_length=2, choices=GENDER, blank=True)
     birth_date = models.DateField(blank=True, null=True)
     locale = models.CharField(max_length=3, blank=True)
@@ -59,9 +81,6 @@ class Profile(models.Model):
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     @property
-    def name(self):
-        return self.user.get_full_name() or self.user.username
-    @property
     def email(self):
         return self.user.email
     def __unicode__(self):
@@ -69,21 +88,8 @@ autofield, not modifiable""")
     #class Meta:
         #app_label = 'profile'
 
-    def get_friends(self):
-        link_as_sender = self.link_as_sender.filter(
-                                sender_status='ACC',
-                                receiver_status='ACC')
-        receivers = Profile.objects.filter(
-                                user_id__in=link_as_sender.values('receiver_id'))
-        link_as_receiver = self.link_as_receiver.filter(
-                                sender_status='ACC',
-                                receiver_status='ACC')
-        senders = Profile.objects.filter(
-                                user_id__in=link_as_receiver.values('sender_id'))
-        return senders | receivers
-
 class Position(models.Model):
-    user   = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True)
+    user   = models.OneToOneField(ExtendedUser, primary_key=True)
     last   = models.GeometryField(null=True, blank=True, help_text=u"""
 Type: Geometry, Entry format: GeoJson (example: "{ 'type' : 'Point',
 'coordinates' : [125.6, 10.1] }")<br>""")
@@ -107,5 +113,5 @@ def create_profiles(sender, instance, created, **kwargs):
         Position.objects.create(user=instance)
         instance.groups.add(Group.objects.get(name='std'))
         
-post_save.connect(create_profiles, sender=settings.AUTH_USER_MODEL)
-post_save.connect(create_api_key,  sender=settings.AUTH_USER_MODEL)
+post_save.connect(create_profiles, sender=ExtendedUser)
+post_save.connect(create_api_key,  sender=ExtendedUser)

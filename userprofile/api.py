@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 
 import apidoc as doc
 from doc import authdoc
-from userprofile.models import Profile, Position
+from userprofile.models import Profile, Position, ExtendedUser
 from service.b64field import Base64FileField
 from link import push
 
@@ -59,16 +59,16 @@ class UserResource(ModelResource):
     """
     An API for accessing a User, requires authentication
     """
-    #profile = fields.ToOneField(ProfileResource,
-                                #'userprofile', full=True)
-                               ##'userprofile', related_name='user', full=True)
+    #profile = fields.ToOneField('userprofile.api.ProfileResource', 'profile',  related_name='user')
+    profile = fields.ToOneField('userprofile.api.ProfileResource', 'profile')
+    
     class Meta:
         resource_name = 'user'
         queryset = User.objects.all()
-        list_allowed_methods = []
+        list_allowed_methods = ['get']
         detail_allowed_methods = ['get', 'put']
         excludes = ['password', 'is_superuser', 'is_staff']
-        includes = ['first_name', 'last_name']
+        #includes = ['first_name', 'last_name']
         filtering = {
                     'username': ALL,
                     'first_name': ALL,
@@ -97,8 +97,14 @@ class UserResource(ModelResource):
             } ,
         ]
 
-    def get_object_list(self, request):
-        return User.objects.filter(id=request.user.id)
+    #def get_object_list(self, request):
+        #return User.objects.filter(id=request.user.id)
+
+    ### WARNING: must not restrict only to user because access is required
+    ### when creating event with invitees => restrict to self+friends
+    #def get_object_list(self, request):
+        #return ( ExtendedUser.objects.get(id=request.user.id).get_friends()
+               #| ExtendedUser.objects.filter(id=request.user.id) )
 
 ### WARNING need to restrict to user
 
@@ -166,7 +172,7 @@ class UserResource(ModelResource):
         new_sender_status   = 'ACC'
         new_receiver_status = 'PEN'
         (req, result, status,
-         link, inverted) = apifn.change_link(request, sender_id, receiver_id,
+        link, inverted) = apifn.change_link(request, sender_id, receiver_id,
                                              new_sender_status,
                                              new_receiver_status)
         push.link_requested(link, inverted)
@@ -208,26 +214,27 @@ class UserResource(ModelResource):
         return self.create_response(req, result, status)
 
 class ProfileResource(ModelResource):
-    user = fields.ToOneField(UserResource, 'user', full=True)
+    #user = fields.ToOneField(UserResource, attribute='user', related_name='profile', full=True)
+    #user = fields.ToOneField(UserResource, 'user')
     name = fields.CharField(attribute='name', readonly=True)
     email = fields.CharField(attribute='email', readonly=True)
     #image = fields.FileField(attribute="image", null=True, blank=True)
     image_field = Base64FileField("image", null=True, blank=True)
     class Meta:
-        resource_name = 'userprofile'
+        resource_name = 'profile'
         queryset = Profile.objects.all()
-        list_allowed_methods = []
-        ordering = ['user']
-        detail_allowed_methods = ['get']
+        #list_allowed_methods = ['get']
+        #ordering = ['user']
+        #detail_allowed_methods = ['get']
         #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
     ### WARNING: must not restrict only to user because access is required
     ### when creating event with invitees => restrict to self+friends
-    def get_object_list(self, request):
-        return ( request.user.profile.get_friends()
-               | Profile.objects.filter(user=request.user) )
+    #def get_object_list(self, request):
+        #return ( ExtendedUser.objects.get(request.user).get_friends()
+               #| Profile.objects.filter(user=request.user) )
 
     def prepend_urls(self):
         return [
@@ -274,7 +281,7 @@ class MyFriendsResource(ModelResource):
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'friends/mine'
-        queryset = Profile.objects.all()
+        queryset = User.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['user']
@@ -283,15 +290,14 @@ class MyFriendsResource(ModelResource):
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        userprofile = request.user.profile
-        return userprofile.get_friends()
+        return ExtendedUser.objects.get(id=request.user.id).get_friends()
 
 class PendingFriendsResource(ModelResource):
     user = fields.ToOneField(UserResource, 'user', full=True)
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'friends/pending'
-        queryset = Profile.objects.all()
+        queryset = User.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['user']
@@ -300,13 +306,13 @@ class PendingFriendsResource(ModelResource):
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        userprofile = request.user.profile
-        links = userprofile.link_as_receiver.filter(receiver_status='PEN')
-        senders = Profile.objects.filter(
-                                    user_id__in=links.values('sender_id'))
-        links = userprofile.link_as_sender.filter(sender_status='PEN')
-        receivers = Profile.objects.filter(
-                                    user_id__in=links.values('receiver_id'))
+        user = request.user
+        links = user.link_as_receiver.filter(receiver_status='PEN')
+        senders = User.objects.filter(
+                                    id__in=links.values('sender_id'))
+        links = user.link_as_sender.filter(sender_status='PEN')
+        receivers = User.objects.filter(
+                                    id__in=links.values('receiver_id'))
         return senders | receivers
 
 class NewFriendsResource(ModelResource):
@@ -314,7 +320,7 @@ class NewFriendsResource(ModelResource):
     name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'friends/new'
-        queryset = Profile.objects.all()
+        queryset = User.objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['user']
@@ -323,13 +329,13 @@ class NewFriendsResource(ModelResource):
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        userprofile = request.user.profile
-        links = userprofile.link_as_sender.filter(sender_status='NEW')
-        receivers = Profile.objects.filter(
-                                    user_id__in=links.values('receiver_id'))
-        links = userprofile.link_as_receiver.filter(receiver_status='NEW')
-        senders = Profile.objects.filter(
-                                    user_id__in=links.values('sender_id'))
+        user = request.user
+        links = user.link_as_sender.filter(sender_status='NEW')
+        receivers = User.objects.filter(
+                                    id__in=links.values('receiver_id'))
+        links = user.link_as_receiver.filter(receiver_status='NEW')
+        senders = User.objects.filter(
+                                    id__in=links.values('sender_id'))
         return senders | receivers
 
 class AuthResource(ModelResource):
@@ -383,6 +389,9 @@ class AuthResource(ModelResource):
             url(r"^(?P<resource_name>%s)/verif_code%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('verif_code'), name="api_verif_code"),
+            url(r"^(?P<resource_name>%s)/is_registered%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('is_registered'), name="api_is_registered"),
         ]
 
     def register(self, request, **kwargs):
@@ -479,3 +488,15 @@ class AuthResource(ModelResource):
         (req, result, status) = apifn.verif_code(request, data)
         return self.create_response(req, result, status)
 
+    def is_registered(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        try:
+            data = self.deserialize(request, request.body,
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                        {'reason': u'cannot deserialize data'},
+                                        HttpBadRequest )
+        (req, result, status) = apifn.is_registered(request, data)
+        return self.create_response(req, result, status)

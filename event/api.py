@@ -13,8 +13,8 @@ from django.utils.timezone import is_naive
 from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
 from event.models import EventCategory, EventType, Event
-from userprofile.api import ProfileResource
-from userprofile.models import Profile
+from userprofile.api import UserResource
+from userprofile.models import ExtendedUser
 
 import apifn
 
@@ -51,11 +51,11 @@ class EventTypeResource(ModelResource):
 class AbstractEventResource(ModelResource):
     event_type = fields.ToOneField(EventTypeResource, 'event_type',
                                       full=True)
-    participants = fields.ToManyField(ProfileResource, 'participants',
+    participants = fields.ToManyField(UserResource, 'participants',
                                       full=True, null=True)
-    invitees = fields.ManyToManyField(ProfileResource, 'invitees',
+    invitees = fields.ManyToManyField(UserResource, 'invitees',
                                       full=True, null=True)
-    owner = fields.ToOneField(ProfileResource, 'owner', full=True, null=True)
+    owner = fields.ToOneField(UserResource, 'owner', full=True, null=True)
     class Meta:
         abstract = True
         serializer = MyDateSerializer()
@@ -80,9 +80,9 @@ class AllEventsResource(AbstractEventResource):
     def get_object_list(self, request):
         user = request.user
         # restrict result to my events + my friends' events
-        me = Profile.objects.filter(user=user)
+        me = User.objects.filter(id=user.id)
         # mine = Event.objects.filter(owner__user=user)
-        myfriends = user.profile.get_friends()
+        myfriends = ExtendedUser.objects.get(id=user.id).get_friends()
         # owners = list(myfriends.values_list('user_id', flat=True)) + [user.id]
         owners = me | myfriends
         events = Event.objects.filter(owner__in=owners).distinct()
@@ -95,7 +95,7 @@ class MyAgendaResource(AbstractEventResource):
     def get_object_list(self, request):
         # restrict result to my events + the events I go to
         mine = Event.objects.filter(owner__user=request.user)
-        participation = request.user.profile.events_as_participant.all()
+        participation = request.user.events_as_participant.all()
         events = mine | participation
         return events.distinct()
 
@@ -107,7 +107,7 @@ class MyEventsResource(AbstractEventResource):
 
     def obj_create(self, bundle, **kwargs):
         #force owner to the authorized user
-        kwargs['owner'] = bundle.request.user.profile
+        kwargs['owner'] = bundle.request.user
         return super(MyEventsResource, self).obj_create(bundle, **kwargs)
 
     def obj_delete(self, bundle, **kwargs):
@@ -149,15 +149,15 @@ User leaves an event, that is, is removed from the participant list.""",
     def get_object_list(self, request):
         user = request.user
         # restrict result to my friends' events
-        myfriends = user.profile.get_friends()
+        myfriends = ExtendedUser.objects.get(id=user.id).get_friends()
         events = Event.objects.filter(owner__in=myfriends
                              ).filter( Q(invitees=None)
-                                     | Q(invitees__in=[user.profile])
+                                     | Q(invitees__in=[user])
                              ).distinct()
-        # filter by distance
-        if user.position.last:
-            events = events.filter(location_coords__distance_lte=(
-                                            user.position.last, D(km=100)))
+        # filter by distance TODO add an option for filtering
+        #if user.position.last:
+            #events = events.filter(location_coords__distance_lte=(
+                                            #user.position.last, D(km=100)))
         return events
 
     def prepend_urls(self):

@@ -111,8 +111,8 @@ def register(request, data):
         return (request, {u'reason': reason, u'code': '12'}, HttpBadRequest)
     reason = "Number is required"
     try:
-        number = data.get('number', '').strip()
-        if not number:
+        phone_number = data.get('number', '').strip()
+        if not phone_number:
             return (request, {u'reason': reason, u'code': '13'},
                     HttpBadRequest)
     except:
@@ -134,7 +134,7 @@ def register(request, data):
         return (request, {u'reason': reason, u'code': '17'}, HttpBadRequest)
     # find the number (must exist)
     try:
-        number = Number.objects.get(phone_number=number)
+        number = Number.objects.get(phone_number=phone_number)
     except:
         return (request, {u'reason': u'number %s not found'%number,
                           u'code': '18'}, HttpBadRequest)
@@ -150,9 +150,8 @@ def register(request, data):
             return (request, {u'reason': u'user creation failed',
                               u'code': '300'}, HttpBadRequest)
     # make user <--> number association
-    try:
-        number.validate(user, number, code)
-    except:
+    validated = number.validate(user, phone_number, code)
+    if not validated:
         return (request, {u'reason': u'user/number/code do not match',
                           u'code': '19'}, HttpBadRequest)
     # finish authentication
@@ -187,9 +186,6 @@ def login(request, data):
         return (request, {u'reason': u'incorrect'}, HttpUnauthorized)
 
 def get_code(request, data):
-    # !!!
-    # must verify number correctness
-    # !!!
     phone_number = data.get('phone_number', '').lower().strip()
     nb = get_clean_number(phone_number)
     if nb:
@@ -217,6 +213,17 @@ def verif_code(request, data):
         return (request, {}, HttpResponse)
     else:
         return (request, {u'reason': u'incorrect code'}, HttpForbidden)
+
+def is_registered(request, data):
+    phone_number = data.get('phone_number', '').lower().strip()
+    try:
+        number = Number.objects.get(phone_number=phone_number)
+    except Number.DoesNotExist:
+        return (request, {u'reason': u'unknown phone_number'}, HttpBadRequest)
+    if number.validated and number.user:
+        return (request, {'method':'password'}, HttpResponse)
+    else:
+        return (request, {u'reason': u'not registered'}, HttpForbidden)
 
 #def login_by_email(request, data):
     #if 'login' not in data:

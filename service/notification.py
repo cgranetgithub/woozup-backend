@@ -54,7 +54,7 @@ from django.conf import settings
     #msg = render_mail(template_prefix, emails, context)
     #msg.send()
 
-def send_notification(userprofile_list, data):
+def send_notification(user_list, data):
     from push_notifications.models import APNSDevice, GCMDevice
 
     ### temporary, to be removed
@@ -62,10 +62,10 @@ def send_notification(userprofile_list, data):
     data['ttl'] = data['title']
     ###
 
-    android_push = GCMDevice.objects.filter(user__userprofile__in=userprofile_list,
+    android_push = GCMDevice.objects.filter(user__in=user_list,
                                             active=True)
     android_push.send_message(data['message'], extra=data)
-    ios_push = APNSDevice.objects.filter(user__userprofile__in=userprofile_list)
+    ios_push = APNSDevice.objects.filter(user__in=user_list)
     ios_push.send_message(data['message'], extra=data)
 
 def send_sms(message, number_set):

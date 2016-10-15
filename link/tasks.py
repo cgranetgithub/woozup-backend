@@ -67,7 +67,7 @@ def find_users_from_number_list(number_list):
         return User.objects.none()
 
 @job('default', connection=conn)
-def create_connections(profile, data):
+def create_connections(user, data):
     django.setup()
     # for each contact
     for contact in data:
@@ -78,18 +78,17 @@ def create_connections(profile, data):
         users = find_users_from_number_list(number_list)
         # exist => check links
         for u in users:
-            p = u.profile
-            if profile != p:
+            if user != u:
                 # existing Link?
                 try:
                     Link.objects.get(
-                        ( Q(sender=profile) & Q(receiver=p) )
-                        | ( Q(sender=p) & Q(receiver=profile) )
+                        ( Q(sender=user) & Q(receiver=u) )
+                        | ( Q(sender=u) & Q(receiver=user) )
                                     )
                     # YES => nothing to do
                 except Link.DoesNotExist:
                     # NO => create a new Link
-                    Link.objects.create(sender=profile, receiver=p)
+                    Link.objects.create(sender=user, receiver=u)
         # NO corresponding user => check invites
         if not users:
             name = contact.get('name', '')
@@ -99,7 +98,7 @@ def create_connections(profile, data):
             if name and not name.startswith('.'):
                 if emails:
                     try:
-                        invite = Invite.objects.get(sender = profile,
+                        invite = Invite.objects.get(sender = user,
                                                     emails = emails)
                         invite.name = name
                         invite.numbers = numbers
@@ -108,36 +107,36 @@ def create_connections(profile, data):
                     except Invite.DoesNotExist:
                         if numbers:
                             try:
-                                invite = Invite.objects.get(sender = profile,
+                                invite = Invite.objects.get(sender = user,
                                                             numbers = numbers)
                                 invite.name = name
                                 invite.emails = emails
                                 invite.photo = photo
                                 invite.save()
                             except Invite.DoesNotExist:
-                                Invite.objects.create(sender = profile,
+                                Invite.objects.create(sender = user,
                                                       name=name,
                                                       emails = emails,
                                                       numbers = numbers)
                             except:
                                 logger.error("""contact has no corresponding \
-profile, name/emails/numbers exist, more than one Invite with same numbers \
+user, name/emails/numbers exist, more than one Invite with same numbers \
 %s %s %s"""%(name, emails, numbers))
                 elif numbers:
                     try:
-                        invite = Invite.objects.get(sender = profile,
+                        invite = Invite.objects.get(sender = user,
                                                     numbers = numbers)
                         invite.name = name
                         #invite.emails = emails #not needed
                         invite.photo = photo
                         invite.save()
                     except Invite.DoesNotExist:
-                        Invite.objects.create(sender = profile, name=name,
+                        Invite.objects.create(sender = user, name=name,
                                               emails = emails,
                                               numbers = numbers,
                                               photo = photo)
                     except:
-                        logger.error("""contact has no corresponding profile, \
+                        logger.error("""contact has no corresponding user, \
 no emails, name/numbers exist, more than one Invite with same numbers \
 %s %s"""%(name, numbers))
 
@@ -146,19 +145,19 @@ def transform_invites_from_number(sender, instance, **kwargs):
     assert type(instance) is Number
     if (not instance.phone_number) or (not instance.user):
         return 0
-    userprofile = instance.user.profile
+    user = instance.user
     cnt = 0
     invites = Invite.objects.filter(numbers__icontains=instance.phone_number
                                     ).exclude(status='CLO')
     for i in invites:
-        if userprofile != i.sender:
+        if user != i.sender:
             try:
-                Link.objects.get(sender=userprofile, receiver=i.sender)
+                Link.objects.get(sender=user, receiver=i.sender)
             except Link.DoesNotExist:
                 try:
-                    Link.objects.get(sender=i.sender, receiver=userprofile)
+                    Link.objects.get(sender=i.sender, receiver=user)
                 except Link.DoesNotExist:
-                    Link.objects.create(sender=i.sender, receiver=userprofile)
+                    Link.objects.create(sender=i.sender, receiver=user)
                     i.status = 'CLO'
                     i.save()
                     cnt += 1
@@ -174,16 +173,16 @@ def transform_invites_from_user(sender, instance, **kwarg):
     invites = Invite.objects.filter(emails__icontains=user.email
                                     ).exclude(status='CLO')
     for i in invites:
-        if user.profile != i.sender:
+        if user != i.sender:
             try:
-                Link.objects.get(sender=user.profile, receiver=i.sender)
+                Link.objects.get(sender=user, receiver=i.sender)
             except Link.DoesNotExist:
                 try:
                     Link.objects.get(sender=i.sender,
-                                     receiver=user.profile)
+                                     receiver=user)
                 except Link.DoesNotExist:
                     Link.objects.create(sender=i.sender,
-                                        receiver=user.profile)
+                                        receiver=user)
                     i.status = 'CLO'
                     i.save()
                     cnt += 1

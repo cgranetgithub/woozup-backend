@@ -18,7 +18,7 @@ def link_requested(link, inverted, **kwargs):
     else:
         recipient = link.receiver
         sender = link.sender
-    data[u"message"] = REQUEST_LINK%(sender.name)
+    data[u"message"] = REQUEST_LINK%(sender.get_full_name())
     send_notification([recipient], data)
     # email
     #if recipient.user.email:
@@ -37,7 +37,7 @@ def link_accepted(link, inverted, **kwargs):
     else:
         recipient = link.sender
         sender = link.receiver
-    data[u"message"] = ACCEPT_LINK%(sender.name)
+    data[u"message"] = ACCEPT_LINK%(sender.get_full_name())
     send_notification([recipient], data)
     # email
     #if recipient.user.email:
@@ -67,7 +67,7 @@ def send_invitation(invite, message, template_prefix, context, sms=False):
 def invite_validated(invite):
     template_prefix = "link/email/personal_invite"
     context = {"other" : invite.sender}
-    message = SMS_PERSONAL%invite.sender.name
+    message = SMS_PERSONAL%invite.sender.get_full_name()
     return send_invitation(invite, message, template_prefix, context, True)
 
 def invite_ignored(invite):

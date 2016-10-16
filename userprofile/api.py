@@ -8,11 +8,12 @@ from tastypie.authentication import ApiKeyAuthentication
 #from django.db.models import Q
 from django.http import HttpResponse
 from django.conf.urls import url
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 import apidoc as doc
 from doc import authdoc
-from userprofile.models import Profile, Position, ExtendedUser
+from userprofile.models import Profile, Position
+from userprofile.utils import get_friends
 from service.b64field import Base64FileField
 from link import push
 
@@ -64,7 +65,7 @@ class UserResource(ModelResource):
     
     class Meta:
         resource_name = 'user'
-        queryset = User.objects.all()
+        queryset = get_user_model().objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = ['get', 'put']
         excludes = ['password', 'is_superuser', 'is_staff']
@@ -103,8 +104,8 @@ class UserResource(ModelResource):
     ### WARNING: must not restrict only to user because access is required
     ### when creating event with invitees => restrict to self+friends
     #def get_object_list(self, request):
-        #return ( ExtendedUser.objects.get(id=request.user.id).get_friends()
-               #| ExtendedUser.objects.filter(id=request.user.id) )
+        #return ( get_friends(user)
+               #| User.objects.filter(id=request.user.id) )
 
 ### WARNING need to restrict to user
 
@@ -216,7 +217,7 @@ class UserResource(ModelResource):
 class ProfileResource(ModelResource):
     #user = fields.ToOneField(UserResource, attribute='user', related_name='profile', full=True)
     #user = fields.ToOneField(UserResource, 'user')
-    name = fields.CharField(attribute='name', readonly=True)
+    #name = fields.CharField(attribute='name', readonly=True)
     email = fields.CharField(attribute='email', readonly=True)
     #image = fields.FileField(attribute="image", null=True, blank=True)
     image_field = Base64FileField("image", null=True, blank=True)
@@ -224,7 +225,7 @@ class ProfileResource(ModelResource):
         resource_name = 'profile'
         queryset = Profile.objects.all()
         #list_allowed_methods = ['get']
-        #ordering = ['user']
+        #ordering = ['first_name']
         #detail_allowed_methods = ['get']
         #filtering = {'user' : ALL_WITH_RELATIONS}
         authorization  = DjangoAuthorization()
@@ -233,7 +234,7 @@ class ProfileResource(ModelResource):
     ### WARNING: must not restrict only to user because access is required
     ### when creating event with invitees => restrict to self+friends
     #def get_object_list(self, request):
-        #return ( ExtendedUser.objects.get(request.user).get_friends()
+        #return ( User.objects.get(request.user).get_friends()
                #| Profile.objects.filter(user=request.user) )
 
     def prepend_urls(self):
@@ -277,64 +278,64 @@ class ProfileResource(ModelResource):
         return self.create_response(req, result, status)
 
 class MyFriendsResource(ModelResource):
-    user = fields.ToOneField(UserResource, 'user', full=True)
-    name = fields.CharField(attribute='name', readonly=True)
+    #user = fields.ToOneField(UserResource, 'user', full=True)
+    #name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'friends/mine'
-        queryset = User.objects.all()
+        queryset = get_user_model().objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
-        ordering = ['user']
-        filtering = {'user' : ALL_WITH_RELATIONS}
+        ordering = ['first_name']
+        filtering = {'username': ALL, 'first_name': ALL}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        return ExtendedUser.objects.get(id=request.user.id).get_friends()
+        return get_friends(request.user)
 
 class PendingFriendsResource(ModelResource):
-    user = fields.ToOneField(UserResource, 'user', full=True)
-    name = fields.CharField(attribute='name', readonly=True)
+    #user = fields.ToOneField(UserResource, 'user', full=True)
+    #name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'friends/pending'
-        queryset = User.objects.all()
+        queryset = get_user_model().objects.all()
         list_allowed_methods = ['get']
         detail_allowed_methods = []
-        ordering = ['user']
-        filtering = {'user' : ALL_WITH_RELATIONS}
+        ordering = ['first_name']
+        filtering = {'username': ALL, 'first_name': ALL}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
         user = request.user
         links = user.link_as_receiver.filter(receiver_status='PEN')
-        senders = User.objects.filter(
+        senders = get_user_model().objects.filter(
                                     id__in=links.values('sender_id'))
         links = user.link_as_sender.filter(sender_status='PEN')
-        receivers = User.objects.filter(
+        receivers = get_user_model().objects.filter(
                                     id__in=links.values('receiver_id'))
         return senders | receivers
 
 class NewFriendsResource(ModelResource):
-    user = fields.ToOneField(UserResource, 'user', full=True)
-    name = fields.CharField(attribute='name', readonly=True)
+    #user = fields.ToOneField(UserResource, 'user', full=True)
+    #name = fields.CharField(attribute='name', readonly=True)
     class Meta:
         resource_name = 'friends/new'
-        queryset = User.objects.all()
-        list_allowed_methods = ['get']
-        detail_allowed_methods = []
-        ordering = ['user']
-        filtering = {'user' : ALL_WITH_RELATIONS}
+        queryset = get_user_model().objects.all()
+        #list_allowed_methods = ['get']
+        #detail_allowed_methods = []
+        ordering = ['first_name']
+        filtering = {'username': ALL, 'first_name': ALL}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
         user = request.user
         links = user.link_as_sender.filter(sender_status='NEW')
-        receivers = User.objects.filter(
+        receivers = get_user_model().objects.filter(
                                     id__in=links.values('receiver_id'))
         links = user.link_as_receiver.filter(receiver_status='NEW')
-        senders = User.objects.filter(
+        senders = get_user_model().objects.filter(
                                     id__in=links.values('sender_id'))
         return senders | receivers
 
@@ -343,7 +344,7 @@ class AuthResource(ModelResource):
     An API for loging in / registering, no authentication required
     """
     class Meta:
-        queryset = User.objects.all()
+        queryset = get_user_model().objects.all()
         fields = ['username', 'first_name', 'last_name', 'email']
         allowed_methods = []
         resource_name = 'auth'

@@ -14,7 +14,8 @@ from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
 from event.models import EventCategory, EventType, Event
 from userprofile.api import UserResource
-from userprofile.models import ExtendedUser
+from userprofile.utils import get_friends
+from django.contrib.auth import get_user_model
 
 import apifn
 
@@ -80,9 +81,9 @@ class AllEventsResource(AbstractEventResource):
     def get_object_list(self, request):
         user = request.user
         # restrict result to my events + my friends' events
-        me = User.objects.filter(id=user.id)
+        me = get_user_model().objects.filter(id=user.id)
         # mine = Event.objects.filter(owner__user=user)
-        myfriends = ExtendedUser.objects.get(id=user.id).get_friends()
+        myfriends = get_friends(user)
         # owners = list(myfriends.values_list('user_id', flat=True)) + [user.id]
         owners = me | myfriends
         events = Event.objects.filter(owner__in=owners).distinct()
@@ -149,7 +150,7 @@ User leaves an event, that is, is removed from the participant list.""",
     def get_object_list(self, request):
         user = request.user
         # restrict result to my friends' events
-        myfriends = ExtendedUser.objects.get(id=user.id).get_friends()
+        myfriends = get_friends(user)
         events = Event.objects.filter(owner__in=myfriends
                              ).filter( Q(invitees=None)
                                      | Q(invitees__in=[user])

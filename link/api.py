@@ -122,7 +122,7 @@ class ContactResource(Resource):
                                     {u'reason': u'cannot deserialize data'},
                                     HttpBadRequest )
             # launch background processing
-            create_connections.delay(user, data)
+            create_connections.delay(user.id, data)
             #
             return self.create_response(request, {'received': True})
         else:

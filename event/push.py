@@ -24,7 +24,7 @@ def get_event_context(instance):
 #     # notify only participants
 #     friends = instance.participants.all()
 #     # push notification
-#     msg = EVENT_MODIFIED%(instance.owner.name,
+#     msg = EVENT_MODIFIED%(instance.owner.get_full_name(),
 #                         instance.name)
 #     data = {u"title":u"Changement Woozup", u"message":msg,
 #             u"reason":u"eventchanged", u"id":instance.id}
@@ -33,7 +33,7 @@ def get_event_context(instance):
 #     template_prefix = "event/email/event_modified"
 #     emails = friends.values_list('user__email', flat=True)
 #     context = get_event_context(instance)
-#     context["user_name"] = instance.owner.name
+#     context["user_name"] = instance.owner.get_full_name()
 #     send_mail(template_prefix, emails, context)
 
 def event_created(sender, instance, **kwargs):
@@ -45,7 +45,7 @@ def event_created(sender, instance, **kwargs):
     #                         instance.location_coords, D(km=100)))
 
     # push notification
-    msg = EVENT_CREATED%(instance.owner.name,
+    msg = EVENT_CREATED%(instance.owner.get_full_name(),
                          instance.event_type.name)
     data = {u"title":u"Invitation Woozup", u"message":msg,
             u"reason":u"newevent", u"id":instance.id}
@@ -64,7 +64,7 @@ def event_canceled(sender, instance, **kwargs):
     # notify only participants
     friends = instance.participants.all()
     # push notification
-    msg = EVENT_CANCELED%(instance.owner.name,
+    msg = EVENT_CANCELED%(instance.owner.get_full_name(),
                           instance.name)
     data = {u"title":u"Annulation Woozup", u"message":msg,
             u"reason":u"eventcanceled", u"id":instance.id}
@@ -89,7 +89,7 @@ def event_saved(sender, instance, created, update_fields, **kwargs):
     #     event_modified(sender, instance, **kwargs)
 
 def participant_joined(request, user, event):
-    msg = PARTICIPANT_JOINED%(user.name, event.name)
+    msg = PARTICIPANT_JOINED%(user.get_full_name(), event.name)
     #recepients = [ i[u"id"] for i in event.participants.values() ]
     recepients = [ i for i in event.participants.all() ]
     recepients.append(event.owner)
@@ -107,7 +107,7 @@ def participant_joined(request, user, event):
     #send_mail(template_prefix, emails, context)
 
 def participant_left(request, user, event):
-    msg = PARTICIPANT_LEFT%(user.name, event.name)
+    msg = PARTICIPANT_LEFT%(user.get_full_name(), event.name)
     #recepients = [ i[u"id"] for i in event.participants.values() ]
     recepients = [ i for i in event.participants.all() ]
     recepients.append(event.owner)

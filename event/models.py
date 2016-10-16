@@ -1,4 +1,6 @@
 from django.contrib.gis.db import models
+from django.conf import settings
+from userprofile.utils import get_friends
 
 class EventCategory(models.Model):
     name        = models.CharField(max_length=50)
@@ -41,7 +43,7 @@ class Event(models.Model):
     start      = models.DateTimeField()
     end        = models.DateTimeField(blank=True, null=True)
     event_type = models.ForeignKey(EventType)
-    owner      = models.ForeignKey('userprofile.extendeduser',
+    owner      = models.ForeignKey(settings.AUTH_USER_MODEL,
                                    related_name='events_as_owner')
     closed     = models.BooleanField(default=False,
                     help_text=u"""if closed no more participants accepted""")
@@ -57,10 +59,10 @@ class Event(models.Model):
                                    #blank=True, null=True)
     image      = models.ImageField(upload_to='event_image',
                                    blank=True, null=True)
-    participants = models.ManyToManyField('userprofile.extendeduser',
+    participants = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                           blank=True,
                                           related_name='events_as_participant')
-    invitees = models.ManyToManyField('userprofile.extendeduser',
+    invitees = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                           blank=True,
                                           related_name='events_as_invitee')
     created_at = models.DateTimeField(auto_now_add=True, help_text=u"""
@@ -76,4 +78,4 @@ autofield, not modifiable""")
         if self.invitees.all():
             return self.invitees.all()
         else:
-            return self.owner.get_friends()
+            return get_friends(self.owner)

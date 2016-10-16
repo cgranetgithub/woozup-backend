@@ -28,7 +28,7 @@ del DEFAULT_FILE_STORAGE
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 #TASTYPIE_SWAGGER_API_MODULE = 'service.urls.v1_api'
 
@@ -38,4 +38,16 @@ TEST_OUTPUT_VERBOSE = True
 TEST_OUTPUT_DESCRIPTIONS = True
 TEST_OUTPUT_DIR = 'xmlrunner'
 
-#SITE_ID = 2
+# GeoDjango
+def path_helper(var, lib):
+    var = os.environ.get(var, "/usr/lib")
+    if os.path.isfile(var):
+        return var
+    var = "{}/{}".format(var, lib)
+    assert os.path.isfile(var), "Missing {}".format(lib)
+    return var
+
+GEOS_LIBRARY_PATH = path_helper('GEOS_LIBRARY_PATH', 'libgeos_c.so')
+GDAL_LIBRARY_PATH = path_helper('GDAL_LIBRARY_PATH', 'libgdal.so')
+PROJ4_LIBRARY_PATH = path_helper('PROJ4_LIBRARY_PATH', 'libproj.so')
+

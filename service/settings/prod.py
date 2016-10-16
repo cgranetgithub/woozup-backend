@@ -148,19 +148,6 @@ PUSH_NOTIFICATIONS_SETTINGS = {
     "APNS_CERTIFICATE": os.path.join(BASE_DIR, "pushcert.pem")
 }
 
-# GeoDjango
-def path_helper(var, lib):
-    var = os.environ.get(var, "/usr/lib")
-    if os.path.isfile(var):
-        return var
-    var = "{}/{}".format(var, lib)
-    assert os.path.isfile(var), "Missing {}".format(lib)
-    return var
-
-GEOS_LIBRARY_PATH = path_helper('GEOS_LIBRARY_PATH', 'libgeos_c.so')
-GDAL_LIBRARY_PATH = path_helper('GDAL_LIBRARY_PATH', 'libgdal.so')
-PROJ4_LIBRARY_PATH = path_helper('PROJ4_LIBRARY_PATH', 'libproj.so')
-
 # Cache settings.
 CACHES = {
     'default': {

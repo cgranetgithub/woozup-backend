@@ -28,10 +28,22 @@ del DEFAULT_FILE_STORAGE
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
 
+# Cache settings.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+    # Long cache timeout for staticfiles, since this is used heavily by the optimizing storage.
+    "staticfiles": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "TIMEOUT": 60 * 60 * 24 * 365,
+        "LOCATION": "staticfiles",
+    },
+}
+
 #EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 #TASTYPIE_SWAGGER_API_MODULE = 'service.urls.v1_api'
-
 
 TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
 TEST_OUTPUT_VERBOSE = True

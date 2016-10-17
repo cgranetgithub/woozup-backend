@@ -149,18 +149,19 @@ PUSH_NOTIFICATIONS_SETTINGS = {
 }
 
 # Cache settings.
+import urlparse
+redis_url = urlparse.urlparse(os.environ.get('REDISCLOUD_URL'))
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    },
-    # Long cache timeout for staticfiles, since this is used heavily by the optimizing storage.
-    "staticfiles": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "TIMEOUT": 60 * 60 * 24 * 365,
-        "LOCATION": "staticfiles",
-    },
+        'default': {
+            'BACKEND': 'redis_cache.RedisCache',
+            'LOCATION': '%s:%s' % (redis_url.hostname, redis_url.port),
+            'OPTIONS': {
+                'PASSWORD': redis_url.password,
+                'DB': 0,
+        }
+    }
 }
-
+            
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

@@ -61,7 +61,7 @@ class UserResource(ModelResource):
     An API for accessing a User, requires authentication
     """
     #profile = fields.ToOneField('userprofile.api.ProfileResource', 'profile',  related_name='user')
-    profile = fields.ToOneField('userprofile.api.ProfileResource', 'profile')
+    profile = fields.ToOneField('userprofile.api.ProfileResource', 'profile', full=True)
     
     class Meta:
         resource_name = 'user'

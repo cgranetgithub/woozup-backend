@@ -132,6 +132,9 @@ class UserResource(ModelResource):
             url(r"^(?P<resource_name>%s)/reject/(?P<user_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('reject'), name="api_reject"),
+            url(r'^(?P<resource_name>%s)/setprofile%s$' %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('setprofile'), name='api_setprofile'),
         ]
 
     def logout(self, request, **kwargs):
@@ -213,6 +216,20 @@ class UserResource(ModelResource):
          link, inverted) = apifn.change_link(request, sender_id, receiver_id,
                                              None, new_receiver_status)
         return self.create_response(req, result, status)
+    def setprofile(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        try:
+            data = self.deserialize(request, request.body,
+                                    format=request.META.get(
+                                    'CONTENT_TYPE', 'application/json'))
+        except:
+            return self.create_response(request,
+                                        {u'reason': u'cannot deserialize data'},
+                                        HttpBadRequest )
+        (req, result, status) = apifn.setprofile(request, data)
+        return self.create_response(req, result, status)
 
 class ProfileResource(ModelResource):
     #user = fields.ToOneField(UserResource, attribute='user', related_name='profile', full=True)
@@ -242,9 +259,6 @@ class ProfileResource(ModelResource):
             url(r'^(?P<resource_name>%s)/setpicture%s$' %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('setpicture'), name='api_setpicture'),
-            url(r'^(?P<resource_name>%s)/setprofile%s$' %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('setprofile'), name='api_setprofile'),
         ]
 
     def setpicture(self, request, **kwargs):
@@ -260,21 +274,6 @@ class ProfileResource(ModelResource):
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
         (req, result, status) = apifn.setpicture(request, data)
-        return self.create_response(req, result, status)
-
-    def setprofile(self, request, **kwargs):
-        self.method_check(request, allowed=['post'])
-        self.is_authenticated(request)
-        self.throttle_check(request)
-        try:
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get(
-                                    'CONTENT_TYPE', 'application/json'))
-        except:
-            return self.create_response(request,
-                                        {u'reason': u'cannot deserialize data'},
-                                        HttpBadRequest )
-        (req, result, status) = apifn.setprofile(request, data)
         return self.create_response(req, result, status)
 
 class MyFriendsResource(ModelResource):

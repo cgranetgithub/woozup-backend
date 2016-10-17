@@ -51,23 +51,23 @@ def setprofile(request, data):
                 request.user.last_name = last_name
         except:
             pass
-        try:
-            email = data.get('email').strip()
-            if email:
-                request.user.email = email
-        except:
-            pass
+        #try:
+            #email = data.get('email').strip()
+            #if email:
+                #request.user.email = email
+        #except:
+            #pass
         request.user.save()
-        try:
-            number = data.get('number').strip()
-            if number:
-                num = get_clean_number(number)
-                if num is not None:
-                    request.user.profile.phone_number = num
-            else: # user can set empty number
-                request.user.profile.phone_number = ''
-        except:
-            pass
+        #try:
+            #number = data.get('number').strip()
+            #if number:
+                #num = get_clean_number(number)
+                #if num is not None:
+                    #request.user.number.phone_number = num
+            #else: # user can set empty number
+                #request.user.number.phone_number = ''
+        #except:
+            #pass
         try:
             gender = data.get('gender').strip()
             if gender in ['MA', 'FE']:

@@ -60,9 +60,8 @@ class UserResource(ModelResource):
     """
     An API for accessing a User, requires authentication
     """
-    #profile = fields.ToOneField('userprofile.api.ProfileResource', 'profile',  related_name='user')
-    profile = fields.ToOneField('userprofile.api.ProfileResource', 'profile', full=True)
-    
+    profile = fields.ToOneField('userprofile.api.ProfileResource',
+                                'profile', full=True)
     class Meta:
         resource_name = 'user'
         queryset = get_user_model().objects.all()
@@ -277,8 +276,8 @@ class ProfileResource(ModelResource):
         return self.create_response(req, result, status)
 
 class MyFriendsResource(ModelResource):
-    #user = fields.ToOneField(UserResource, 'user', full=True)
-    #name = fields.CharField(attribute='name', readonly=True)
+    profile = fields.ToOneField('userprofile.api.ProfileResource',
+                                'profile', full=True)
     class Meta:
         resource_name = 'friends/mine'
         queryset = get_user_model().objects.all()
@@ -293,8 +292,8 @@ class MyFriendsResource(ModelResource):
         return get_friends(request.user)
 
 class PendingFriendsResource(ModelResource):
-    #user = fields.ToOneField(UserResource, 'user', full=True)
-    #name = fields.CharField(attribute='name', readonly=True)
+    profile = fields.ToOneField('userprofile.api.ProfileResource',
+                                'profile', full=True)
     class Meta:
         resource_name = 'friends/pending'
         queryset = get_user_model().objects.all()
@@ -316,8 +315,8 @@ class PendingFriendsResource(ModelResource):
         return senders | receivers
 
 class NewFriendsResource(ModelResource):
-    #user = fields.ToOneField(UserResource, 'user', full=True)
-    #name = fields.CharField(attribute='name', readonly=True)
+    profile = fields.ToOneField('userprofile.api.ProfileResource',
+                                'profile', full=True)
     class Meta:
         resource_name = 'friends/new'
         queryset = get_user_model().objects.all()

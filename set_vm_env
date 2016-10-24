@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# to launch this script easily, use
+# nohup ./set_vm_env
+# to detach script from console
+
+source ../venv/bin/activate
+
+ln -s /usr/lib/libgeos_c.so.1 libgeos_c.so
+ln -s /usr/lib/libgdal.so.1 libgdal.so
+ln -s /usr/lib/libproj.so libproj.so
+
+export GEOS_LIBRARY_PATH=.
+export GDAL_LIBRARY_PATH=.
+export PROJ4_LIBRARY_PATH=.
+
+export DJANGO_SETTINGS_MODULE=service.settings.vm
+
+redis-server &
+rqworker &

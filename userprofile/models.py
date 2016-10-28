@@ -4,7 +4,6 @@ from django.db.models import Q
 from django.contrib.gis.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import Group
-from tastypie.models import create_api_key
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from service.notification import send_sms
@@ -13,24 +12,6 @@ from django.conf import settings
 MALE   = 'MA'
 FEMALE = 'FE'
 
-#class ExtendedUser(User):
-    #class Meta:
-        #proxy = True
-
-    #@property
-    #def name(self):
-        #return self.get_full_name() or self.username
-
-    #def get_friends(self):
-        #link_as_sender = self.link_as_sender.filter(
-                            #sender_status='ACC', receiver_status='ACC')
-        #receivers = ExtendedUser.objects.filter(
-                            #id__in=link_as_sender.values('receiver_id'))
-        #link_as_receiver = self.link_as_receiver.filter(
-                            #sender_status='ACC', receiver_status='ACC')
-        #senders = ExtendedUser.objects.filter(
-                            #id__in=link_as_receiver.values('sender_id'))
-        #return senders | receivers
 
 def a_random_number():
     return random.randint(1234, 9876)
@@ -112,6 +93,6 @@ def create_profiles(sender, instance, created, **kwargs):
         Profile.objects.create(user=instance)
         Position.objects.create(user=instance)
         instance.groups.add(Group.objects.get(name='std'))
-        
-post_save.connect(create_profiles, sender=settings.AUTH_USER_MODEL)
-post_save.connect(create_api_key,  sender=settings.AUTH_USER_MODEL)
+        # create journal record
+        from journal.models import Record
+        Record.objects.create(record_type='NEWUSER', user=instance)

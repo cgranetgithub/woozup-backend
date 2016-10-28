@@ -82,7 +82,7 @@ class AllEventsResource(AbstractEventResource):
         user = request.user
         # restrict result to my events + my friends' events
         me = get_user_model().objects.filter(id=user.id)
-        # mine = Event.objects.filter(owner__user=user)
+        # mine = Event.objects.filter(owner=user)
         myfriends = get_friends(user)
         # owners = list(myfriends.values_list('user_id', flat=True)) + [user.id]
         owners = me | myfriends
@@ -95,7 +95,7 @@ class MyAgendaResource(AbstractEventResource):
 
     def get_object_list(self, request):
         # restrict result to my events + the events I go to
-        mine = Event.objects.filter(owner__user=request.user)
+        mine = Event.objects.filter(owner=request.user)
         participation = request.user.events_as_participant.all()
         events = mine | participation
         return events.distinct()
@@ -123,7 +123,7 @@ class MyEventsResource(AbstractEventResource):
 
     def get_object_list(self, request):
         # restrict result to my events
-        events = Event.objects.filter(owner__user=request.user)
+        events = Event.objects.filter(owner=request.user)
         return events
 
 class FriendsEventsResource(AbstractEventResource):

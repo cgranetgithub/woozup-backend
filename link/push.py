@@ -2,16 +2,20 @@
 
 from service.notification import send_notification, send_sms
 from django.utils import timezone
+from journal.models import Record
 
 REQUEST_LINK = u"%s souhaite se connecter avec toi"
 ACCEPT_LINK = u"%s a accepté ton invitation"
-SMS_PERSONAL = u"%s t'invite sur Woozup ! Télécharge l'appli dans l'AppStore ou le PlayStore."
-SMS_GENERIC = u"Découvre Woozup, l'appli pour passer du temps avec ses amis ! Télécharge Woozup dans l'AppStore ou le PlayStore."
+SMS_PERSONAL = u"%s t'invite sur Woozup ! Télécharge l'appli pour iphone ou Android."
+SMS_GENERIC = u"Découvre Woozup, le meilleur moyen de voir tes amis ! Télécharge Woozup pour iphone ou Android."
+
+def link_saved(sender, instance, created, update_fields, **kwargs):
+    pass
 
 def link_requested(link, inverted, **kwargs):
     # push notif
     data = {u"title":u"Woozup : demande de contact",
-            u"reason":u"friendrequest", u"id":link.sender.user.id}
+            u"reason":u"friendrequest", u"id":link.sender.id}
     if inverted:
         recipient = link.sender
         sender = link.receiver
@@ -30,7 +34,7 @@ def link_requested(link, inverted, **kwargs):
 def link_accepted(link, inverted, **kwargs):
     # push notif
     data = {u"title":u"Woozup : nouveau contact",
-            u"reason":u"friendaccept", u"id":link.receiver.user.id}
+            u"reason":u"friendaccept", u"id":link.receiver.id}
     if inverted:
         recipient = link.receiver
         sender = link.sender
@@ -39,6 +43,9 @@ def link_accepted(link, inverted, **kwargs):
         sender = link.receiver
     data[u"message"] = ACCEPT_LINK%(sender.get_full_name())
     send_notification([recipient], data)
+    # create journal record
+    Record.objects.create(record_type='NEWFRIEND', user=sender,
+                          refering_user=recipient)
     # email
     #if recipient.user.email:
         #template_prefix = "link/email/accept"
@@ -49,14 +56,14 @@ def link_accepted(link, inverted, **kwargs):
 def send_invitation(invite, message, template_prefix, context, sms=False):
     ret = {'emails':0, 'sms':0}
     # email
-    if invite.emails:
-        emails = set([x.strip() for x in invite.emails.split(',')])
-        send_mail(template_prefix, emails, context)
-        ret['emails'] += len(emails)
-        invite.sent_at = timezone.now()
-        invite.save()
+    #if invite.emails:
+        #emails = set([x.strip() for x in invite.emails.split(',')])
+        #send_mail(template_prefix, emails, context)
+        #ret['emails'] += len(emails)
+        #invite.sent_at = timezone.now()
+        #invite.save()
     # SMS
-    elif (invite.numbers and sms):
+    if (invite.numbers and sms):
         numbers = set([x.strip() for x in invite.numbers.split(',')])
         send_sms(message, numbers)
         ret['sms'] += len(numbers)

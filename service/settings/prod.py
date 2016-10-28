@@ -55,7 +55,8 @@ INSTALLED_APPS = (
     'event.apps.EventConfig',
     'link.apps.LinkConfig',
     'userprofile.apps.UserProfileConfig',
-    'web.apps.WebConfig'
+    'web.apps.WebConfig',
+    'journal.apps.JournalConfig'
 )
 
 TEMPLATES = [
@@ -150,7 +151,7 @@ PUSH_NOTIFICATIONS_SETTINGS = {
 
 # Cache settings.
 import urlparse
-redis_url = urlparse.urlparse(os.environ.get('REDISCLOUD_URL'))
+redis_url = urlparse.urlparse(os.environ.get('REDISCLOUD_URL', "localhost"))
 CACHES = {
         'default': {
             'BACKEND': 'redis_cache.RedisCache',

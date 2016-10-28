@@ -8,6 +8,7 @@ from tastypie.api import Api
 from link.api import *
 from event.api import *
 from userprofile.api import *
+from journal.api import *
 from web.views import home, profile
 
 from service.settings.prod import STATIC_URL
@@ -37,6 +38,7 @@ v1_api.register(NewFriendsResource())
 v1_api.register(AuthResource())
 v1_api.register(InviteResource())
 v1_api.register(ContactResource())
+v1_api.register(RecordResource())
 #v1_api.register(GCMDeviceAuthenticatedResource())
 
 urlpatterns = [

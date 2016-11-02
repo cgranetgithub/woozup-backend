@@ -15,7 +15,7 @@ from doc import authdoc
 from userprofile.models import Profile, Position
 from userprofile.utils import get_friends
 from service.b64field import Base64FileField
-from link import push
+#from link import push
 
 import apifn
 
@@ -69,10 +69,8 @@ class UserResource(ModelResource):
         detail_allowed_methods = ['get', 'put']
         excludes = ['password', 'is_superuser', 'is_staff']
         #includes = ['first_name', 'last_name']
-        filtering = {
-                    'username': ALL,
-                    'first_name': ALL,
-                    }
+        ordering = ['first_name']
+        filtering = {'username': ALL, 'first_name': ALL}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
         # for the doc:
@@ -97,8 +95,9 @@ class UserResource(ModelResource):
             } ,
         ]
 
-    #def get_object_list(self, request):
-        #return User.objects.filter(id=request.user.id)
+    def get_object_list(self, request):
+        print get_user_model().objects.filter(is_superuser=False)
+        return get_user_model().objects.filter(is_superuser=False)
 
     ### WARNING: must not restrict only to user because access is required
     ### when creating event with invitees => restrict to self+friends
@@ -119,12 +118,12 @@ class UserResource(ModelResource):
             url(r'^(?P<resource_name>%s)/push_notif_reg%s$' %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('push_notif_reg'), name='api_push_notif_reg'),
-            url(r"^(?P<resource_name>%s)/invite/(?P<user_id>\w[\w/-]*)%s$" %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('invite'), name="api_invite"),
-            url(r"^(?P<resource_name>%s)/ignore/(?P<user_id>\w[\w/-]*)%s$" %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('ignore'), name="api_ignore"),
+            #url(r"^(?P<resource_name>%s)/invite/(?P<user_id>\w[\w/-]*)%s$" %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('invite'), name="api_invite"),
+            #url(r"^(?P<resource_name>%s)/ignore/(?P<user_id>\w[\w/-]*)%s$" %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('ignore'), name="api_ignore"),
             url(r"^(?P<resource_name>%s)/accept/(?P<user_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('accept'), name="api_accept"),
@@ -166,54 +165,56 @@ class UserResource(ModelResource):
         (req, result, status) = apifn.push_notif_reg(request, data)
         return self.create_response(req, result, status)
 
-    def invite(self, request, **kwargs):
-        self.method_check(request, allowed=['post'])
-        self.is_authenticated(request)
-        self.throttle_check(request)
-        sender_id   = request.user.id
-        receiver_id = kwargs['user_id']
-        new_sender_status   = 'ACC'
-        new_receiver_status = 'PEN'
-        (req, result, status,
-        link, inverted) = apifn.change_link(request, sender_id, receiver_id,
-                                             new_sender_status,
-                                             new_receiver_status)
-        push.link_requested(link, inverted)
-        return self.create_response(req, result, status)
+    #def invite(self, request, **kwargs):
+        #self.method_check(request, allowed=['post'])
+        #self.is_authenticated(request)
+        #self.throttle_check(request)
+        #sender_id   = request.user.id
+        #receiver_id = kwargs['user_id']
+        #new_sender_status   = 'ACC'
+        #new_receiver_status = 'PEN'
+        #(req, result, status,
+        #link, inverted) = apifn.change_link(request, sender_id, receiver_id,
+                                             #new_sender_status,
+                                             #new_receiver_status)
+        #push.link_requested(link, inverted)
+        #return self.create_response(req, result, status)
 
-    def ignore(self, request, **kwargs):
-        self.method_check(request, allowed=['post'])
-        self.is_authenticated(request)
-        self.throttle_check(request)
-        sender_id   = request.user.id
-        receiver_id = kwargs['user_id']
-        new_sender_status = 'IGN'
-        (req, result, status,
-         link, inverted) = apifn.change_link(request, sender_id, receiver_id,
-                                             new_sender_status, None)
-        return self.create_response(req, result, status)
+    #def ignore(self, request, **kwargs):
+        #self.method_check(request, allowed=['post'])
+        #self.is_authenticated(request)
+        #self.throttle_check(request)
+        #sender_id   = request.user.id
+        #receiver_id = kwargs['user_id']
+        #new_sender_status = 'IGN'
+        #(req, result, status,
+         #link, inverted) = apifn.change_link(request, sender_id, receiver_id,
+                                             #new_sender_status, None)
+        #return self.create_response(req, result, status)
     def accept(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        sender_id   = kwargs['user_id']
-        receiver_id = request.user.id
-        new_receiver_status = 'ACC'
-        (req, result, status,
-         link, inverted) = apifn.change_link(request, sender_id, receiver_id,
-                                             None, new_receiver_status)
-        push.link_accepted(link, inverted)
+        #sender_id   = kwargs['user_id']
+        #receiver_id = request.user.id
+        #new_receiver_status = 'ACC'
+        #(req, result, status,
+         #link, inverted) = apifn.change_link(request, sender_id, receiver_id,
+                                             #None, new_receiver_status)
+        (req, result, status) = apifn.accept(request, kwargs['user_id'])
+        #push.link_accepted(link, inverted)
         return self.create_response(req, result, status)
     def reject(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        sender_id   = kwargs['user_id']
-        receiver_id = request.user.id
-        new_receiver_status = 'REJ'
-        (req, result, status,
-         link, inverted) = apifn.change_link(request, sender_id, receiver_id,
-                                             None, new_receiver_status)
+        #sender_id   = kwargs['user_id']
+        #receiver_id = request.user.id
+        #new_receiver_status = 'REJ'
+        #(req, result, status,
+         #link, inverted) = apifn.change_link(request, sender_id, receiver_id,
+                                             #None, new_receiver_status)
+        (req, result, status) = apifn.reject(request, kwargs['user_id'])
         return self.create_response(req, result, status)
     def setprofile(self, request, **kwargs):
         self.method_check(request, allowed=['post'])

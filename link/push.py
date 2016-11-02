@@ -36,11 +36,11 @@ def link_accepted(link, inverted, **kwargs):
     data = {u"title":u"Woozup : nouveau contact",
             u"reason":u"friendaccept", u"id":link.receiver.id}
     if inverted:
-        recipient = link.receiver
-        sender = link.sender
-    else:
         recipient = link.sender
         sender = link.receiver
+    else:
+        recipient = link.receiver
+        sender = link.sender
     data[u"message"] = ACCEPT_LINK%(sender.get_full_name())
     send_notification([recipient], data)
     # create journal record

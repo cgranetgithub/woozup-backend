@@ -96,8 +96,7 @@ class UserResource(ModelResource):
         ]
 
     def get_object_list(self, request):
-        print get_user_model().objects.filter(is_superuser=False)
-        return get_user_model().objects.filter(is_superuser=False)
+        return get_user_model().objects.exclude(is_superuser=True)
 
     ### WARNING: must not restrict only to user because access is required
     ### when creating event with invitees => restrict to self+friends
@@ -290,7 +289,7 @@ class MyFriendsResource(ModelResource):
         authentication = ApiKeyAuthentication()
 
     def get_object_list(self, request):
-        return get_friends(request.user)
+        return get_friends(request.user).exclude(is_superuser=True)
 
 class PendingFriendsResource(ModelResource):
     profile = fields.ToOneField('userprofile.api.ProfileResource',
@@ -313,7 +312,8 @@ class PendingFriendsResource(ModelResource):
         links = user.link_as_sender.filter(sender_status='PEN')
         receivers = get_user_model().objects.filter(
                                     id__in=links.values('receiver_id'))
-        return senders | receivers
+        ret = senders | receivers
+        return ret.exclude(is_superuser=True)
 
 class NewFriendsResource(ModelResource):
     profile = fields.ToOneField('userprofile.api.ProfileResource',
@@ -336,7 +336,8 @@ class NewFriendsResource(ModelResource):
         links = user.link_as_receiver.filter(receiver_status='NEW')
         senders = get_user_model().objects.filter(
                                     id__in=links.values('sender_id'))
-        return senders | receivers
+        ret = senders | receivers
+        return ret.exclude(is_superuser=True)
 
 class AuthResource(ModelResource):
     """

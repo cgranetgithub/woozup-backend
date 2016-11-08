@@ -77,15 +77,15 @@ def invite_validated(invite):
     message = SMS_PERSONAL%invite.sender.get_full_name()
     return send_invitation(invite, message, template_prefix, context, True)
 
-def invite_ignored(invite):
-    template_prefix = "link/email/generic_invite"
-    context = {}
-    return send_invitation(invite, SMS_GENERIC, template_prefix, context, True)
+#def invite_ignored(invite):
+    #template_prefix = "link/email/generic_invite"
+    #context = {}
+    #return send_invitation(invite, SMS_GENERIC, template_prefix, context, True)
 
-def send_bulk_generic_invitation(numbers, emails):
-    assert type(numbers) is set
-    assert type(emails) is set
-    template_prefix = "link/email/generic_invite"
-    context = {}
-    send_mail(template_prefix, emails, context)
-    send_sms(SMS_GENERIC, numbers)
+#def send_bulk_generic_invitation(numbers, emails):
+    #assert type(numbers) is set
+    #assert type(emails) is set
+    #template_prefix = "link/email/generic_invite"
+    #context = {}
+    #send_mail(template_prefix, emails, context)
+    #send_sms(SMS_GENERIC, numbers)

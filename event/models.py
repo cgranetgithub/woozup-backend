@@ -72,8 +72,8 @@ autofield, not modifiable""")
 
     def __unicode__(self):
         return u"%s (%s)"%(self.name, self.event_type)
-    class Meta:
-        unique_together = ('start', 'event_type', 'owner')
+    #class Meta:
+        #unique_together = ('start', 'event_type', 'owner')
     def get_invitees(self):
         if self.invitees.all():
             return self.invitees.all()

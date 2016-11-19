@@ -361,38 +361,30 @@ def accept(request, receiver_id):
         try:
             link = Link.objects.get(sender=sender, receiver=receiver)
             if link.sender_status == 'NEW' and link.receiver_status == 'NEW':
-                link.sender_status = 'ACC'
                 link.receiver_status = 'PEN'
-                link.save()
                 push.link_requested(link, inverted)
             elif link.sender_status == 'PEN' and link.receiver_status == 'ACC':
-                link.sender_status = 'ACC'
-                link.save()
                 push.link_accepted(link, inverted)
+            link.sender_status = 'ACC'
+            link.save()
         except Link.DoesNotExist:
             try:
                 (link, created) = Link.objects.get_or_create(sender=receiver,
                                                              receiver=sender)
                 inverted = True
                 if link.sender_status == 'NEW' and link.receiver_status == 'NEW':
-                    link.receiver_status = 'ACC'
                     link.sender_status = 'PEN'
-                    link.save()
                     push.link_requested(link, inverted)
                 elif link.sender_status == 'ACC' and link.receiver_status == 'PEN':
-                    link.receiver_status = 'ACC'
-                    link.save()
                     push.link_accepted(link, inverted)
-            except Link.DoesNotExist:
-                return (request, {u'reason': u'Link not found'},
-                        HttpForbidden)
+                link.receiver_status = 'ACC'
+                link.save()
             except:
-                return (request, {u'reason': u'Unexpected'},
+                return (request, {u'reason': u'not found => created => issue'},
                         HttpForbidden)
         except:
-            return (request, {u'reason': u'Unexpected'},
+            return (request, {u'reason': u'found => issue'},
                     HttpForbidden)
-        #link.save()
         return (request, {}, HttpResponse)
     else:
         return (request, {u'reason': u"You are not authenticated"},
@@ -405,38 +397,33 @@ def reject(request, receiver_id):
         inverted = False
         try:
             link = Link.objects.get(sender=sender, receiver=receiver)
-            if link.sender_status == 'NEW' and link.receiver_status == 'NEW':
+            if link.sender_status == 'NEW':
                 link.sender_status = 'IGN'
-                #link.receiver_status = 'PEN'
-                link.save()
-                #push.link_requested(link, inverted)
-            elif link.sender_status == 'PEN' and link.receiver_status == 'ACC':
+            elif link.sender_status == 'PEN':
                 link.sender_status = 'REJ'
-                link.save()
-                #push.link_accepted(link, inverted)
+            else:
+                link.sender_status = 'BLO'
+            link.save()
         except Link.DoesNotExist:
             try:
                 link = Link.objects.get(sender=receiver, receiver=sender)
                 inverted = True
-                if link.sender_status == 'NEW' and link.receiver_status == 'NEW':
+                if link.receiver_status == 'NEW':
                     link.receiver_status = 'IGN'
-                    #link.sender_status = 'PEN'
-                    link.save()
-                    #push.link_requested(link, inverted)
-                elif link.sender_status == 'ACC' and link.receiver_status == 'PEN':
+                elif link.receiver_status == 'PEN':
                     link.receiver_status = 'REJ'
-                    link.save()
-                    #push.link_accepted(link, inverted)
+                else:
+                    link.receiver_status = 'BLO'
+                link.save()
             except Link.DoesNotExist:
                 return (request, {u'reason': u'Link not found'},
                         HttpForbidden)
             except:
-                return (request, {u'reason': u'Unexpected'},
+                return (request, {u'reason': u'Link found but error'},
                         HttpForbidden)
         except:
             return (request, {u'reason': u'Unexpected'},
                     HttpForbidden)
-        #link.save()
         return (request, {}, HttpResponse)
     else:
         return (request, {u'reason': u"You are not authenticated"},

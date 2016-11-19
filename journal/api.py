@@ -22,12 +22,10 @@ class RecordResource(ModelResource):
 
     def get_object_list(self, request):
         user = request.user
-        # restrict result to my events + my friends' events
-        me = get_user_model().objects.filter(id=user.id)
-        # mine = Event.objects.filter(owner=user)
+        #me = get_user_model().objects.filter(id=user.id)
         myfriends = get_friends(user)
-        # owners = list(myfriends.values_list('user_id', flat=True)) + [user.id]
-        concerned = me | myfriends
+        #concerned = me | myfriends
+        concerned = myfriends
         user_records = Record.objects.filter(user__in=concerned).distinct()
         ref_records = Record.objects.filter(refering_user__in=concerned).distinct()
         return user_records | ref_records

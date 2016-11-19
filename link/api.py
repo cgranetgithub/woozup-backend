@@ -1,4 +1,4 @@
-# from tastypie import fields
+from tastypie import fields
 from tastypie.http import HttpUnauthorized, HttpForbidden, HttpBadRequest
 from tastypie.utils import trailing_slash
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
@@ -10,10 +10,56 @@ from django.conf.urls import url
 
 from doc import authdoc
 from link.tasks import create_connections
-from link.models import Invite
+from link.models import Invite, Link
 from link.push import invite_validated
 
 import apidoc as doc
+
+import json
+
+class LinkResource(ModelResource):
+    sender = fields.ToOneField('userprofile.api.UserResource',
+                                'sender', full=True)
+    receiver = fields.ToOneField('userprofile.api.UserResource',
+                                'receiver', full=True)
+    class Meta:
+        resource_name = 'link'
+        queryset = Link.objects.all()
+        allowed_methods = ['get']
+        authorization  = DjangoAuthorization()
+        authentication = ApiKeyAuthentication()
+        #always_return_data = True
+
+    def get_object_list(self, request):
+        as_sender = Link.objects.filter(sender=request.user)
+        as_receiver = Link.objects.filter(receiver=request.user)
+        return as_sender | as_receiver
+    
+    def prepend_urls(self):
+        return [
+            url(r"^(?P<resource_name>%s)/withuser/(?P<user_id>\w[\w/-]*)%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('withuser'), name="api_withuser"),
+        ]
+
+    def withuser(self, request, **kwargs):
+        self.method_check(request, allowed=['get'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        user_id = kwargs['user_id']
+        as_sender = Link.objects.filter(sender=request.user, receiver__id=user_id)
+        as_receiver = Link.objects.filter(receiver=request.user, sender__id=user_id)
+        result = as_sender | as_receiver
+        if len(result) == 0:
+            return self.create_response(request, False, HttpResponse)
+        elif len(result) == 1:
+            res = LinkResource()
+            link_bundle = res.build_bundle(request=request, obj=result[0])
+            link_json = res.serialize(None, res.full_dehydrate(link_bundle), "application/json")
+            return self.create_response(request, link_json, HttpResponse)
+        else:
+            return self.create_response(request, {u'reason': u'multiple links between 2 users!'}, HttpBadRequest)
+
 
 def change_invite_status(request, invite_id, new_status):
     if request.user and request.user.is_authenticated():

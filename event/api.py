@@ -80,14 +80,18 @@ class AllEventsResource(AbstractEventResource):
 
     def get_object_list(self, request):
         user = request.user
-        # restrict result to my events + my friends' events
-        me = get_user_model().objects.filter(id=user.id)
-        # mine = Event.objects.filter(owner=user)
+        #me = get_user_model().objects.filter(id=user.id)
+        mine = Event.objects.filter(owner=user)
+        # restrict result to my friends' events
         myfriends = get_friends(user)
-        # owners = list(myfriends.values_list('user_id', flat=True)) + [user.id]
-        owners = me | myfriends
-        events = Event.objects.filter(owner__in=owners).distinct()
-        return events
+        friend_events = Event.objects.filter(owner__in=myfriends
+                             ).filter( Q(invitees=None)
+                                     | Q(invitees__in=[user])
+                             )
+        #owners = me | myfriends
+        #events = Event.objects.filter(owner__in=owners).distinct()
+        events = mine | friend_events
+        return events.distinct()
 
 class MyAgendaResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):

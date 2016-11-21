@@ -13,6 +13,7 @@ from django.contrib.auth import get_user_model
 import apidoc as doc
 from doc import authdoc
 from userprofile.models import Profile, Position
+from event.models import Event
 from userprofile.utils import get_friends
 from service.b64field import Base64FileField
 #from link import push
@@ -117,18 +118,18 @@ class UserResource(ModelResource):
             url(r'^(?P<resource_name>%s)/push_notif_reg%s$' %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('push_notif_reg'), name='api_push_notif_reg'),
-            #url(r"^(?P<resource_name>%s)/invite/(?P<user_id>\w[\w/-]*)%s$" %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('invite'), name="api_invite"),
-            #url(r"^(?P<resource_name>%s)/ignore/(?P<user_id>\w[\w/-]*)%s$" %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('ignore'), name="api_ignore"),
             url(r"^(?P<resource_name>%s)/accept/(?P<user_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('accept'), name="api_accept"),
             url(r"^(?P<resource_name>%s)/reject/(?P<user_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('reject'), name="api_reject"),
+            url(r"^(?P<resource_name>%s)/friendscount/(?P<user_id>\w[\w/-]*)%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('friendscount'), name="api_friendscount"),
+            url(r"^(?P<resource_name>%s)/eventscount/(?P<user_id>\w[\w/-]*)%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('eventscount'), name="api_eventscount"),
             url(r'^(?P<resource_name>%s)/setprofile%s$' %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('setprofile'), name='api_setprofile'),
@@ -164,57 +165,36 @@ class UserResource(ModelResource):
         (req, result, status) = apifn.push_notif_reg(request, data)
         return self.create_response(req, result, status)
 
-    #def invite(self, request, **kwargs):
-        #self.method_check(request, allowed=['post'])
-        #self.is_authenticated(request)
-        #self.throttle_check(request)
-        #sender_id   = request.user.id
-        #receiver_id = kwargs['user_id']
-        #new_sender_status   = 'ACC'
-        #new_receiver_status = 'PEN'
-        #(req, result, status,
-        #link, inverted) = apifn.change_link(request, sender_id, receiver_id,
-                                             #new_sender_status,
-                                             #new_receiver_status)
-        #push.link_requested(link, inverted)
-        #return self.create_response(req, result, status)
-
-    #def ignore(self, request, **kwargs):
-        #self.method_check(request, allowed=['post'])
-        #self.is_authenticated(request)
-        #self.throttle_check(request)
-        #sender_id   = request.user.id
-        #receiver_id = kwargs['user_id']
-        #new_sender_status = 'IGN'
-        #(req, result, status,
-         #link, inverted) = apifn.change_link(request, sender_id, receiver_id,
-                                             #new_sender_status, None)
-        #return self.create_response(req, result, status)
     def accept(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        #sender_id   = kwargs['user_id']
-        #receiver_id = request.user.id
-        #new_receiver_status = 'ACC'
-        #(req, result, status,
-         #link, inverted) = apifn.change_link(request, sender_id, receiver_id,
-                                             #None, new_receiver_status)
         (req, result, status) = apifn.accept(request, kwargs['user_id'])
-        #push.link_accepted(link, inverted)
         return self.create_response(req, result, status)
+
     def reject(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        #sender_id   = kwargs['user_id']
-        #receiver_id = request.user.id
-        #new_receiver_status = 'REJ'
-        #(req, result, status,
-         #link, inverted) = apifn.change_link(request, sender_id, receiver_id,
-                                             #None, new_receiver_status)
         (req, result, status) = apifn.reject(request, kwargs['user_id'])
         return self.create_response(req, result, status)
+
+    def friendscount(self, request, **kwargs):
+        self.method_check(request, allowed=['get'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        user = get_user_model().objects.get(id=kwargs['user_id'])
+        count = get_friends(user).count()
+        return self.create_response(request, count, HttpResponse)
+
+    def eventscount(self, request, **kwargs):
+        self.method_check(request, allowed=['get'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        user = get_user_model().objects.get(id=kwargs['user_id'])
+        count = Event.objects.filter(owner=user).count()
+        return self.create_response(request, count, HttpResponse)
+
     def setprofile(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
@@ -231,11 +211,7 @@ class UserResource(ModelResource):
         return self.create_response(req, result, status)
 
 class ProfileResource(ModelResource):
-    #user = fields.ToOneField(UserResource, attribute='user', related_name='profile', full=True)
-    #user = fields.ToOneField(UserResource, 'user')
-    #name = fields.CharField(attribute='name', readonly=True)
     email = fields.CharField(attribute='email', readonly=True)
-    #image = fields.FileField(attribute="image", null=True, blank=True)
     image_field = Base64FileField("image", null=True, blank=True)
     class Meta:
         resource_name = 'profile'
@@ -369,15 +345,9 @@ class AuthResource(ModelResource):
             url(r"^(?P<resource_name>%s)/register%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('register'), name="api_register"),
-            #url(r"^(?P<resource_name>%s)/register_by_email%s$" %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('register_by_email'), name="api_register_by_email"),
             url(r"^(?P<resource_name>%s)/login%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('login'), name="api_login"),
-            #url(r"^(?P<resource_name>%s)/login_by_email%s$" %
-                #(self._meta.resource_name, trailing_slash()),
-                #self.wrap_view('login_by_email'), name="api_login_by_email"),
             url(r"^(?P<resource_name>%s)/reset_password%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('reset_password'), name="api_reset_password"),
@@ -408,19 +378,6 @@ class AuthResource(ModelResource):
         (req, result, status) = apifn.register(request, data)
         return self.create_response(req, result, status)
 
-    #def register_by_email(self, request, **kwargs):
-        #self.method_check(request, allowed=['post'])
-        #try:
-            #data = self.deserialize(request, request.body,
-                                    #format=request.META.get(
-                                    #'CONTENT_TYPE', 'application/json'))
-        #except:
-            #return self.create_response(request,
-                                        #{u'reason': u'cannot deserialize data'},
-                                        #HttpBadRequest )
-        #(req, result, status) = apifn.register_by_email(request, data)
-        #return self.create_response(req, result, status)
-
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
@@ -433,19 +390,6 @@ class AuthResource(ModelResource):
                                         HttpBadRequest )
         (req, result, status) = apifn.login(request, data)
         return self.create_response(req, result, status)
-
-    #def login_by_email(self, request, **kwargs):
-        #self.method_check(request, allowed=['post'])
-        #try:
-            #data = self.deserialize(request, request.body,
-                                    #format=request.META.get(
-                                    #'CONTENT_TYPE', 'application/json'))
-        #except:
-            #return self.create_response(request,
-                                        #{'reason': u'cannot deserialize data'},
-                                        #HttpBadRequest )
-        #(req, result, status) = apifn.login_by_email(request, data)
-        #return self.create_response(req, result, status)
 
     def reset_password(self, request, **kwargs):
         self.method_check(request, allowed=['post'])

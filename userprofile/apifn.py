@@ -227,27 +227,26 @@ def is_registered(request, data):
     else:
         return (request, {u'reason': u'not registered'}, HttpForbidden)
 
-#def login_by_email(request, data):
-    #if 'login' not in data:
-        #return (request, {u'reason': "'login' missing"}, HttpBadRequest)
-    #if 'password' not in data:
-        #return (request, {u'reason': "'password' missing"}, HttpBadRequest)
-    #form = LoginForm(data)
-    #if form.is_valid():
-        #form.login(request)
-        #return (request, {'api_key' : form.user.api_key.key,
-                          #'userid'  : form.user.id,
-                          #'username': form.user.username}, HttpResponse)
-    #else:
-        #return (request, {u'reason': form.errors}, HttpUnauthorized)
-
-#def reset_password(request, data):
-    #form = ResetPasswordForm(data)
-    #if form.is_valid():
-        #form.save(request)
-        #return (request, {}, HttpResponse)
-    #else:
-        #return (request, {u'reason': form.errors}, HttpBadRequest)
+def reset_password(request, data):
+    phone_number = data.get('phone_number', '').lower().strip()
+    code = data.get('code', '')
+    password = data.get('password', '')
+    if type(code) is not int:
+        try:
+            code = code.strip()
+            code = int(code)
+        except:
+            return (request, {u'reason': u'code is not a number'}, HttpBadRequest)
+    try:
+        number = Number.objects.get(phone_number=phone_number)
+    except Number.DoesNotExist:
+        return (request, {u'reason': u'unknown phone_number'}, HttpBadRequest)
+    if number.verif_code(code):
+        number.user.set_password(password)
+        number.user.save()
+        return (request, {}, HttpResponse)
+    else:
+        return (request, {u'reason': u'incorrect code'}, HttpForbidden)
 
 def logout(request):
     if request.user and request.user.is_authenticated():
@@ -318,40 +317,6 @@ def push_notif_reg(request, data):
     else:
         return (request, {u'reason': u"You are not authenticated"},
                     HttpUnauthorized)
-
-#def change_link(request, sender_id, receiver_id,
-                #new_sender_status=None, new_receiver_status=None):
-    #""" Generic function for changing link status
-    #"""
-    #if request.user and request.user.is_authenticated():
-        #inverted = False
-        #try:
-            #link = Link.objects.get(sender=sender_id,
-                                    #receiver=receiver_id)
-            #if new_sender_status:
-                #link.sender_status = new_sender_status
-            #if new_receiver_status:
-                #link.receiver_status = new_receiver_status
-        #except Link.DoesNotExist:
-            #try:
-                #link = Link.objects.get(sender=receiver_id,
-                                        #receiver=sender_id)
-                #if new_sender_status:
-                    #link.receiver_status = new_sender_status
-                #if new_receiver_status:
-                    #link.sender_status = new_receiver_status
-                #inverted = True
-            #except Link.DoesNotExist:
-                #return (request, {u'reason': u'Link not found'},
-                        #HttpForbidden, None, None)
-            #except:
-                #return (request, {u'reason': u'Unexpected'},
-                        #HttpForbidden, None, None)
-        #link.save()
-        #return (request, {}, HttpResponse, link, inverted)
-    #else:
-        #return (request, {u'reason': u"You are not authenticated"},
-                #HttpUnauthorized, None, None)
 
 def accept(request, receiver_id):
     sender = request.user

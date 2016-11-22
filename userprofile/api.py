@@ -257,6 +257,7 @@ class MyFriendsResource(ModelResource):
     class Meta:
         resource_name = 'friends/mine'
         queryset = get_user_model().objects.all()
+        excludes = ['password', 'is_superuser', 'is_staff']
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['first_name']
@@ -273,6 +274,7 @@ class PendingFriendsResource(ModelResource):
     class Meta:
         resource_name = 'friends/pending'
         queryset = get_user_model().objects.all()
+        excludes = ['password', 'is_superuser', 'is_staff']
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         ordering = ['first_name']
@@ -297,6 +299,7 @@ class NewFriendsResource(ModelResource):
     class Meta:
         resource_name = 'friends/new'
         queryset = get_user_model().objects.all()
+        excludes = ['password', 'is_superuser', 'is_staff']
         #list_allowed_methods = ['get']
         #detail_allowed_methods = []
         ordering = ['first_name']
@@ -321,6 +324,7 @@ class AuthResource(ModelResource):
     """
     class Meta:
         queryset = get_user_model().objects.all()
+        excludes = ['password', 'is_superuser', 'is_staff']
         fields = ['username', 'first_name', 'last_name', 'email']
         allowed_methods = []
         resource_name = 'auth'

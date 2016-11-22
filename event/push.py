@@ -52,6 +52,8 @@ def event_created(sender, instance, **kwargs):
                          instance.event_type.name)
     data = {u"title":u"Invitation Woozup", u"message":msg,
             u"reason":u"newevent", u"id":instance.id}
+    if instance.owner.profile.image:
+        data[u'image'] = instance.owner.profile.image.url
     # send_notification(close_friends, data)
     send_notification(instance.get_invitees(), data)
     # email
@@ -74,6 +76,8 @@ def event_canceled(sender, instance, **kwargs):
                           instance.name)
     data = {u"title":u"Annulation Woozup", u"message":msg,
             u"reason":u"eventcanceled", u"id":instance.id}
+    if instance.owner.profile.image:
+        data[u'image'] = instance.owner.profile.image.url
     send_notification(friends, data)
     # email
     #template_prefix = "event/email/event_canceled"
@@ -106,6 +110,8 @@ def participant_joined(request, user, event):
     msg = PARTICIPANT_JOINED%(user.get_full_name(), event.name)
     data = {u"title":u"Woozup", u"message":msg, u"reason":u"joinevent",
             u"id":event.id}
+    if user.profile.image:
+        data[u'image'] = user.profile.image.url
     send_notification(recepients, data)
     # email
     #template_prefix = "event/email/participant_joined"
@@ -123,6 +129,8 @@ def participant_left(request, user, event):
     msg = PARTICIPANT_LEFT%(user.get_full_name(), event.name)
     data = {u"title":u"Woozup", u"message":msg, u"reason":u"leftevent",
             u"id":event.id}
+    if user.profile.image:
+        data[u'image'] = user.profile.image.url
     send_notification(recepients, data)
     # email
     #template_prefix = "event/email/participant_left"

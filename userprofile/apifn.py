@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+import logging
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
 from base64 import b64decode
 
 from link.models import Link
@@ -13,7 +18,8 @@ from django.utils.timezone import now as datetime_now
 
 from push_notifications.models import APNSDevice, GCMDevice
 from tastypie.http import (HttpUnauthorized, HttpForbidden,
-                           HttpCreated, HttpBadRequest)
+                           HttpCreated, HttpBadRequest,
+                           HttpUnprocessableEntity)
 from tastypie.models import ApiKey
 
 from link import push
@@ -214,7 +220,7 @@ def verif_code(request, data):
     if number.verif_code(code):
         return (request, {}, HttpResponse)
     else:
-        return (request, {u'reason': u'incorrect code'}, HttpForbidden)
+        return (request, {u'reason': u'incorrect code'}, HttpUnprocessableEntity)
 
 def is_registered(request, data):
     phone_number = data.get('phone_number', '').lower().strip()
@@ -246,7 +252,7 @@ def reset_password(request, data):
         number.user.save()
         return (request, {}, HttpResponse)
     else:
-        return (request, {u'reason': u'incorrect code'}, HttpForbidden)
+        return (request, {u'reason': u'incorrect code'}, HttpUnprocessableEntity)
 
 def logout(request):
     if request.user and request.user.is_authenticated():
@@ -345,11 +351,13 @@ def accept(request, receiver_id):
                 link.receiver_status = 'ACC'
                 link.save()
             except:
+                logger.error(u'not found => created => issue')
                 return (request, {u'reason': u'not found => created => issue'},
-                        HttpForbidden)
+                        HttpUnprocessableEntity)
         except:
+            logger.error(u'found => issue')
             return (request, {u'reason': u'found => issue'},
-                    HttpForbidden)
+                    HttpUnprocessableEntity)
         return (request, {}, HttpResponse)
     else:
         return (request, {u'reason': u"You are not authenticated"},

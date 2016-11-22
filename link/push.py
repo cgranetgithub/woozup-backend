@@ -23,6 +23,8 @@ def link_requested(link, inverted, **kwargs):
         recipient = link.receiver
         sender = link.sender
     data[u"message"] = REQUEST_LINK%(sender.get_full_name())
+    if sender.profile.image:
+        data[u"image"] = sender.profile.image.url
     send_notification([recipient], data)
     # email
     #if recipient.user.email:
@@ -42,6 +44,8 @@ def link_accepted(link, inverted, **kwargs):
         recipient = link.receiver
         sender = link.sender
     data[u"message"] = ACCEPT_LINK%(sender.get_full_name())
+    if sender.profile.image:
+        data[u"image"] = sender.profile.image.url
     send_notification([recipient], data)
     # create journal record
     Record.objects.create(record_type='NEWFRIEND', user=sender,

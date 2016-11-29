@@ -12,7 +12,7 @@ from django.conf.urls import url
 from django.utils.timezone import is_naive
 from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
-from event.models import EventCategory, EventType, Event
+from event.models import EventCategory, EventType, Event, Comment
 from userprofile.api import UserResource
 from userprofile.utils import get_friends
 from django.contrib.auth import get_user_model
@@ -36,6 +36,7 @@ class EventCategoryResource(ModelResource):
         queryset = EventCategory.objects.all()
         allowed_methods = ['get']
         ordering = ['order']
+        always_return_data = True
 
 class EventTypeResource(ModelResource):
     category = fields.ToManyField(EventCategoryResource, 'category',
@@ -48,6 +49,7 @@ class EventTypeResource(ModelResource):
                     'category': ALL_WITH_RELATIONS,
                     }
         ordering = ['order']
+        always_return_data = True
 
 class AbstractEventResource(ModelResource):
     event_type = fields.ToOneField(EventTypeResource, 'event_type',
@@ -73,6 +75,7 @@ class AbstractEventResource(ModelResource):
         ordering = ['start']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
+        always_return_data = True
 
 class AllEventsResource(AbstractEventResource):
     class Meta(AbstractEventResource.Meta):
@@ -198,3 +201,28 @@ User leaves an event, that is, is removed from the participant list.""",
         event_id = kwargs['event_id']
         (req, data, status) = apifn.leave(request, event_id)
         return self.create_response(req, data, status)
+
+class CommentResource(ModelResource):
+    author = fields.ToOneField(UserResource, 'author', full=True)
+    event = fields.ToOneField(AllEventsResource, 'event', full=True)
+    class Meta:
+        resource_name = 'comments'
+        queryset = Comment.objects.all()
+        list_allowed_methods = ['get', 'post']
+        detail_allowed_methods = ['get', 'put', 'delete']
+        #ordering = ['created_at']
+        filtering = {
+                    'event': ALL_WITH_RELATIONS,
+                    }
+        always_return_data = True
+        authentication = ApiKeyAuthentication()
+        authorization  = DjangoAuthorization()
+
+    def get_object_list(self, request):
+        queryset = Comment.objects.all()
+        return queryset
+
+    def obj_create(self, bundle, **kwargs):
+        #force owner to the authorized user
+        kwargs['author'] = bundle.request.user
+        return super(CommentResource, self).obj_create(bundle, **kwargs)

@@ -40,6 +40,7 @@ v1_api.register(InviteResource())
 v1_api.register(LinkResource())
 v1_api.register(ContactResource())
 v1_api.register(RecordResource())
+v1_api.register(CommentResource())
 #v1_api.register(GCMDeviceAuthenticatedResource())
 
 urlpatterns = [

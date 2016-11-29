@@ -35,8 +35,8 @@ autofield, not modifiable""")
         return self.name
 
 class Event(models.Model):
-    name       = models.CharField(max_length=50, blank=True)
-    comment    = models.CharField(max_length=255, blank=True)
+    name       = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
     special    = models.BooleanField(default=False)
     public     = models.BooleanField(default=False)
     canceled   = models.BooleanField(default=False)
@@ -79,3 +79,16 @@ autofield, not modifiable""")
             return self.invitees.all()
         else:
             return get_friends(self.owner)
+
+class Comment(models.Model):
+    text       = models.TextField()
+    event      = models.ForeignKey(Event)
+    author     = models.ForeignKey(settings.AUTH_USER_MODEL)
+    created_at = models.DateTimeField(auto_now_add=True, help_text=u"""
+autofield, not modifiable""")
+    updated_at = models.DateTimeField(auto_now=True, help_text=u"""
+autofield, not modifiable""")
+    class Meta:
+        ordering = ['updated_at']
+    def __unicode__(self):
+        return u"%s %s %s"%(self.author, self.event, self.text)

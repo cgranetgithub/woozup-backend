@@ -143,12 +143,19 @@ class UserResource(ModelResource):
         return self.create_response(req, result, status)
 
     def check_auth(self, request, **kwargs):
-        #
         self.method_check(request, allowed=['get'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        (req, result, status) = apifn.check_auth(request)
-        return self.create_response(req, result, status)
+        if request.user and request.user.is_authenticated():
+            res = UserResource()
+            user_bundle = res.build_bundle(request=request, obj=request.user)
+            user_json = res.serialize(None, res.full_dehydrate(user_bundle),
+                                      "application/json")
+            return self.create_response(request, user_json, HttpResponse)
+        else:
+            return self.create_response(request,
+                                    {u'reason': u"You are not authenticated"},
+                                    HttpUnauthorized)
 
     def push_notif_reg(self, request, **kwargs):
         self.method_check(request, allowed=['post'])

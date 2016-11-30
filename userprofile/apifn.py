@@ -267,18 +267,6 @@ def logout(request):
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)
 
-def check_auth(request):
-    #
-    #from service.notification import send_notification
-    #send_notification([request.user.id], 'checking geoevent auth')
-    #
-    if request.user and request.user.is_authenticated():
-        return (request, {'userid':request.user.id },
-                    HttpResponse)
-    else:
-        return (request, {u'reason': u"You are not authenticated"},
-                    HttpUnauthorized)
-
 def push_notif_reg(request, data):
     if request.user and request.user.is_authenticated():
         try:

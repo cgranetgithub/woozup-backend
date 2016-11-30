@@ -67,9 +67,10 @@ class AbstractEventResource(ModelResource):
         detail_allowed_methods = ['get']
         filtering = {
                     #'owner'       : ALL_WITH_RELATIONS,
-                    'event_type'  : ALL_WITH_RELATIONS,
-                    'start'       : ALL,
-                    'position'    : ALL,
+                    'event_type' : ALL_WITH_RELATIONS,
+                    'start'      : ALL,
+                    'position'   : ALL,
+                    'canceled'   : ALL,
                     #'participants': ALL_WITH_RELATIONS,
                     }
         ordering = ['start']
@@ -218,9 +219,9 @@ class CommentResource(ModelResource):
         authentication = ApiKeyAuthentication()
         authorization  = DjangoAuthorization()
 
-    def get_object_list(self, request):
-        queryset = Comment.objects.all()
-        return queryset
+    #def get_object_list(self, request):
+        #queryset = Comment.objects.all()
+        #return queryset
 
     def obj_create(self, bundle, **kwargs):
         #force owner to the authorized user

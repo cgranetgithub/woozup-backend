@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+import logging
+
 from tastypie import fields
 from tastypie.http import HttpBadRequest
 from tastypie.utils import trailing_slash
@@ -166,6 +169,7 @@ class UserResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                     {u'reason': u'cannot deserialize data'},
                                     HttpBadRequest )

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-# Get an instance of a logger
-logger = logging.getLogger(__name__)
 
 from base64 import b64decode
 
@@ -272,19 +270,24 @@ def push_notif_reg(request, data):
         try:
             device_id = data.get('device_id').strip()
         except:
-            return (request, {u'reason': "empty device_id"}, HttpBadRequest)
+            logging.error(u"missing device_id")
+            return (request, {u'reason': u"empty device_id"}, HttpBadRequest)
         if not device_id:
-            return (request, {u'reason': "empty device_id"}, HttpBadRequest)
+            logging.error(u"empty device_id")
+            return (request, {u'reason': u"empty device_id"}, HttpBadRequest)
         try:
             platform = data.get('platform').strip()
         except:
-            return (request, {u'reason': "empty platform"}, HttpBadRequest)
+            logging.error(u"empty platform")
+            return (request, {u'reason': u"empty platform"}, HttpBadRequest)
         try:
             registration_id = data.get('registration_id').strip()
             if not registration_id:
-                return (request, {u'reason': "empty registration_id"}, HttpBadRequest)
+                logging.error(u"empty registration_id")
+                return (request, {u'reason': u"empty registration_id"}, HttpBadRequest)
         except:
-            return (request, {u'reason': "empty platform"}, HttpBadRequest)
+            logging.error(u"empty platform")
+            return (request, {u'reason': u"empty platform"}, HttpBadRequest)
         try:
             if platform == 'ios':
                 (device, created) = APNSDevice.objects.get_or_create(
@@ -295,6 +298,7 @@ def push_notif_reg(request, data):
                                                     user=request.user,
                                                     device_id=device_id)
             else:
+                logging.error(u"unknown platform")
                 return (request, {u'reason': "unknown platform"}, HttpBadRequest)
             device.registration_id = registration_id
             try:
@@ -306,6 +310,7 @@ def push_notif_reg(request, data):
             device.save()
             return (request, {'userid':request.user.id }, HttpResponse)
         except:
+            logging.error(u"error during registration")
             return (request, {u'reason': u'error during registration'},
                         HttpBadRequest)
     else:
@@ -339,11 +344,11 @@ def accept(request, receiver_id):
                 link.receiver_status = 'ACC'
                 link.save()
             except:
-                logger.error(u'not found => created => issue')
+                logging.error(u'not found => created => issue')
                 return (request, {u'reason': u'not found => created => issue'},
                         HttpUnprocessableEntity)
         except:
-            logger.error(u'found => issue')
+            logging.error(u'found => issue')
             return (request, {u'reason': u'found => issue'},
                     HttpUnprocessableEntity)
         return (request, {}, HttpResponse)

@@ -63,3 +63,4 @@ GEOS_LIBRARY_PATH = path_helper('GEOS_LIBRARY_PATH', 'libgeos_c.so')
 GDAL_LIBRARY_PATH = path_helper('GDAL_LIBRARY_PATH', 'libgdal.so')
 PROJ4_LIBRARY_PATH = path_helper('PROJ4_LIBRARY_PATH', 'libproj.so')
 
+PUSH_NOTIFICATIONS_SETTINGS["APNS_CERTIFICATE"] = os.path.join(BASE_DIR, "devpushcert.pem")

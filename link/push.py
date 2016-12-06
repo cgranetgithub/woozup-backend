@@ -15,7 +15,7 @@ def link_saved(sender, instance, created, update_fields, **kwargs):
 def link_requested(link, inverted, **kwargs):
     # push notif
     data = {u"title":u"Woozup : demande de contact",
-            u"reason":u"friendrequest", u"id":link.sender.id}
+            u"reason":u"friendrequest"}
     if inverted:
         recipient = link.sender
         sender = link.receiver
@@ -23,6 +23,7 @@ def link_requested(link, inverted, **kwargs):
         recipient = link.receiver
         sender = link.sender
     data[u"message"] = REQUEST_LINK%(sender.get_full_name())
+    data[u"id"] = sender.id
     if sender.profile.image:
         data[u"image"] = sender.profile.image.url
     send_notification([recipient], data)
@@ -36,7 +37,7 @@ def link_requested(link, inverted, **kwargs):
 def link_accepted(link, inverted, **kwargs):
     # push notif
     data = {u"title":u"Woozup : nouveau contact",
-            u"reason":u"friendaccept", u"id":link.receiver.id}
+            u"reason":u"friendaccept"}
     if inverted:
         recipient = link.sender
         sender = link.receiver
@@ -44,6 +45,7 @@ def link_accepted(link, inverted, **kwargs):
         recipient = link.receiver
         sender = link.sender
     data[u"message"] = ACCEPT_LINK%(sender.get_full_name())
+    data[u"id"] = sender.id
     if sender.profile.image:
         data[u"image"] = sender.profile.image.url
     send_notification([recipient], data)

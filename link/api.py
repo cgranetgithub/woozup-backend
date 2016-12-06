@@ -115,8 +115,7 @@ class InviteResource(ModelResource):
         # send invitation
         invite = result.get('invite', False)
         if invite:
-            #invite_validated(invite)
-            pass #comment until app launch
+            invite_validated(invite)
         return self.create_response(req, result, status)
 
     def ignore(self, request, **kwargs):

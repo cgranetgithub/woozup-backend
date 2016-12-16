@@ -225,10 +225,12 @@ def is_registered(request, data):
     try:
         number = Number.objects.get(phone_number=phone_number)
     except Number.DoesNotExist:
-        return (request, {u'reason': u'unknown phone_number'}, HttpBadRequest)
+        logging.error(u'cannot deserialize data')
+        return (request, {u'reason': u'unknown phone_number'}, HttpForbidden)
     if number.validated and number.user:
         return (request, {'method':'password'}, HttpResponse)
     else:
+        logging.error(u'not registered')
         return (request, {u'reason': u'not registered'}, HttpForbidden)
 
 def reset_password(request, data):
@@ -240,10 +242,12 @@ def reset_password(request, data):
             code = code.strip()
             code = int(code)
         except:
+            logging.error(u'code is not a number')
             return (request, {u'reason': u'code is not a number'}, HttpBadRequest)
     try:
         number = Number.objects.get(phone_number=phone_number)
     except Number.DoesNotExist:
+        logging.error(u'unknown phone_number')
         return (request, {u'reason': u'unknown phone_number'}, HttpBadRequest)
     if number.verif_code(code):
         number.user.set_password(password)

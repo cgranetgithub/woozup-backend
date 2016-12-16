@@ -54,6 +54,7 @@ class PositionResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
@@ -215,6 +216,7 @@ class UserResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
@@ -256,6 +258,7 @@ class ProfileResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
@@ -387,6 +390,7 @@ class AuthResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                         {u'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
@@ -400,6 +404,7 @@ class AuthResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                         {'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
@@ -413,6 +418,7 @@ class AuthResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                         {'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
@@ -429,6 +435,7 @@ class AuthResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                         {'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
@@ -442,6 +449,7 @@ class AuthResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                         {'reason': u'cannot deserialize data'},
                                         HttpBadRequest )
@@ -455,6 +463,7 @@ class AuthResource(ModelResource):
                                     format=request.META.get(
                                     'CONTENT_TYPE', 'application/json'))
         except:
+            logging.error(u'cannot deserialize data')
             return self.create_response(request,
                                         {'reason': u'cannot deserialize data'},
                                         HttpBadRequest )

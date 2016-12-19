@@ -199,7 +199,8 @@ def get_code(request, data):
         number.get_code()
         return (request, {}, HttpResponse)
     else:
-        return (request, {u'reason': u'not a number valid number'},
+        logging.error(u'%s not a number valid number'%nb)
+        return (request, {u'reason': u'%s not a number valid number'%nb},
                 HttpBadRequest)
 
 def verif_code(request, data):
@@ -225,13 +226,13 @@ def is_registered(request, data):
     try:
         number = Number.objects.get(phone_number=phone_number)
     except Number.DoesNotExist:
-        logging.error(u'cannot deserialize data')
-        return (request, {u'reason': u'unknown phone_number'}, HttpForbidden)
+        logging.error(u'unknown phone_number')
+        return (request, {u'reason': u'unknown phone_number'}, HttpUnauthorized)
     if number.validated and number.user:
         return (request, {'method':'password'}, HttpResponse)
     else:
         logging.error(u'not registered')
-        return (request, {u'reason': u'not registered'}, HttpForbidden)
+        return (request, {u'reason': u'not registered'}, HttpUnauthorized)
 
 def reset_password(request, data):
     phone_number = data.get('phone_number', '').lower().strip()

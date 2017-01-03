@@ -72,13 +72,6 @@ autofield, not modifiable""")
 
     def __unicode__(self):
         return u"%s (%s)"%(self.name, self.event_type)
-    #class Meta:
-        #unique_together = ('start', 'event_type', 'owner')
-    def get_invitees(self):
-        if self.invitees.all():
-            return self.invitees.all()
-        else:
-            return get_friends(self.owner)
 
 class Comment(models.Model):
     text       = models.TextField()
@@ -89,6 +82,6 @@ autofield, not modifiable""")
     updated_at = models.DateTimeField(auto_now=True, help_text=u"""
 autofield, not modifiable""")
     class Meta:
-        ordering = ['updated_at']
+        ordering = ['-updated_at']
     def __unicode__(self):
         return u"%s %s %s"%(self.author, self.event, self.text)

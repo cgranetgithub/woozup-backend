@@ -211,7 +211,7 @@ class CommentResource(ModelResource):
         queryset = Comment.objects.all()
         list_allowed_methods = ['get', 'post']
         detail_allowed_methods = ['get', 'put', 'delete']
-        #ordering = ['created_at']
+        ordering = ['-updated_at']
         filtering = {
                     'event': ALL_WITH_RELATIONS,
                     }

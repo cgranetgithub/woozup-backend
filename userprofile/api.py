@@ -2,11 +2,14 @@
 import logging
 
 from tastypie import fields
-from tastypie.http import HttpBadRequest
 from tastypie.utils import trailing_slash
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
+from tastypie.exceptions import BadRequest
 from tastypie.authorization import DjangoAuthorization
 from tastypie.authentication import ApiKeyAuthentication
+from tastypie.http import (HttpUnauthorized, HttpForbidden,
+                           HttpCreated, HttpBadRequest,
+                           HttpUnprocessableEntity)
 
 #from django.db.models import Q
 from django.http import HttpResponse
@@ -19,7 +22,13 @@ from userprofile.models import Profile, Position
 from event.models import Event
 from userprofile.utils import get_friends
 from service.b64field import Base64FileField
+from .models import Number
 #from link import push
+
+from allauth.socialaccount import providers
+from allauth.socialaccount.models import SocialLogin, SocialToken, SocialApp
+from allauth.socialaccount.providers.facebook.views import fb_complete_login
+from allauth.socialaccount.helpers import complete_social_login
 
 import apifn
 
@@ -366,6 +375,12 @@ class AuthResource(ModelResource):
             url(r"^(?P<resource_name>%s)/login%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('login'), name="api_login"),
+            url(r"^(?P<resource_name>%s)/social_register%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('social_register'), name="api_social_register"),
+            url(r"^(?P<resource_name>%s)/social_login%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('social_login'), name="api_social_login"),
             url(r"^(?P<resource_name>%s)/reset_password%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('reset_password'), name="api_reset_password"),
@@ -383,46 +398,181 @@ class AuthResource(ModelResource):
                 self.wrap_view('is_registered'), name="api_is_registered"),
         ]
 
-    def register(self, request, **kwargs):
-        self.method_check(request, allowed=['post'])
+    def get_clean_data(self, request):
         try:
             data = self.deserialize(request, request.body,
-                                    format=request.META.get(
-                                    'CONTENT_TYPE', 'application/json'))
+                format=request.META.get('CONTENT_TYPE', 'application/json'))
+            return data
         except:
-            logging.error(u'cannot deserialize data')
+            bad_request = {'reason': u'cannot deserialize data'}
+            logging.error(bad_request)
+            raise BadRequest(bad_request)
+
+    def get_clean_username(self, data):
+        try:
+            username = data.get('username').lower().strip()
+            if not username:
+                bad_request = {u'reason': u"empty username", u'code': u'10'}
+                logging.error(bad_request)
+                raise BadRequest(bad_request)
+            return username
+        except:
+            bad_request = {u'reason': u"invalid or missing username",
+                           u'code': u'10'}
+            logging.error(bad_request)
+            raise BadRequest(bad_request)
+
+    def get_clean_password(self, data):
+        try:
+            password = data.get('password').strip()
+            if not password:
+                bad_request = {u'reason': u"empty password", u'code': u'11'}
+                logging.error(bad_request)
+                raise BadRequest(bad_request)
+            return password
+        except:
+            bad_request = {u'reason': u"invalid or missing password",
+                           u'code': u'11'}
+            logging.error(bad_request)
+            raise BadRequest(bad_request)
+    
+    def get_clean_number(self, data):
+        try:
+            phone_number = data.get('phone_number').strip()
+            if not phone_number:
+                bad_request = {u'reason': u"empty number", u'code': u'13'}
+                logging.error(bad_request)
+                raise BadRequest(bad_request)
+            return phone_number
+        except:
+            bad_request = {u'reason': u"invalid or missing number",
+                           u'code': u'13'}
+            logging.error(bad_request)
+            raise BadRequest(bad_request)
+        
+    def get_clean_code(self, data):
+        try:
+            code = data.get('code')
+            if not code:
+                bad_request = {u'reason': u"empty code", u'code': u'15'}
+                logging.error(bad_request)
+                raise BadRequest(bad_request)
+            if type(code) is not int:
+                try:
+                    code = int(code.strip())
+                except:
+                    bad_request = {u'reason': u"code not int", u'code': u'15'}
+                    logging.error(bad_request)
+                    raise BadRequest(bad_request)
+            return code
+        except:
+            bad_request = {u'reason': u"invalid or missing code",
+                           u'code': u'15'}
+            logging.error(bad_request)
+            raise BadRequest(bad_request)
+
+    def get_clean_token(self, data):
+        try:
+            access_token = data.get('access_token').strip()
+            if not access_token:
+                bad_request = {u'reason': u"empty access_token"}
+                logging.error(bad_request)
+                raise BadRequest(bad_request)
+            return access_token
+        except:
+            bad_request = {u'reason': u"invalid or missing access_token"}
+            logging.error(bad_request)
+            raise BadRequest(bad_request)
+
+    def find_number(self, phone_number):
+        try:
+            number = Number.objects.get(phone_number=phone_number)
+            return number
+        except:
+            bad_request = {u'reason': u'number %s not found'%phone_number,
+                           u'code': '18'}
+            logging.error(bad_request)
+            raise BadRequest(bad_request)
+
+    def link_user_number(self, user, code, number, phone_number):
+        # make user <--> number association
+        validated = number.validate(user, phone_number, code)
+        if not validated:
+            bad_request = {u'reason': u'user/number/code do not match',
+                           u'code': '19'}
+            logging.error(bad_request)
+            raise BadRequest(bad_request)
+
+    def register(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        # pre register (control inputs)
+        try:
+            data         = self.get_clean_data(request)
+            username     = self.get_clean_username(data)
+            password     = self.get_clean_password(data)
+            phone_number = self.get_clean_number(data)
+            code         = self.get_clean_code(data)
+            number       = self.find_number(phone_number)
+        except:
             return self.create_response(request,
-                                        {u'reason': u'cannot deserialize data'},
-                                        HttpBadRequest )
-        (req, result, status) = apifn.register(request, data)
+                                        u'something wrong with args',
+                                        HttpBadRequest)
+        # check if user already exists, otherwise create it
+        try:
+            user = get_user_model().objects.get(username=username)
+            bad_request = {u'reason': u'user already exists', u'code': '200'}
+            logging.error(bad_request)
+            return self.create_response(request, bad_request, HttpBadRequest)
+        except get_user_model().DoesNotExist:
+            try:
+                user = get_user_model().objects.create_user(username=username,
+                                                            password=password)
+            except:
+                bad_request = {u'reason': u'user creation failed',
+                               u'code': '300'}
+                logging.error(bad_request)
+                return self.create_response(request, bad_request,
+                                            HttpBadRequest)
+        # link user number
+        try:
+            self.link_user_number(user, code, number, phone_number)
+        except:
+            return self.create_response(request,
+                                        u'link_user_number failed',
+                                        HttpBadRequest)
+        # finish authentication
+        (req, result, status) = apifn.login(request, username, password)
+        result[u'code'] = u'0'
+        status = HttpCreated
         return self.create_response(req, result, status)
 
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get(
-                                    'CONTENT_TYPE', 'application/json'))
+            data     = self.get_clean_data(request)
+            username = self.get_clean_username(data)
+            password = self.get_clean_password(data)
         except:
-            logging.error(u'cannot deserialize data')
             return self.create_response(request,
-                                        {'reason': u'cannot deserialize data'},
-                                        HttpBadRequest )
-        (req, result, status) = apifn.login(request, data)
+                                        u'something wrong with args',
+                                        HttpBadRequest)
+        (req, result, status) = apifn.login(request, username, password)
         return self.create_response(req, result, status)
 
     def reset_password(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get(
-                                    'CONTENT_TYPE', 'application/json'))
+            data         = self.get_clean_data(request)
+            password     = self.get_clean_password(data)
+            phone_number = self.get_clean_number(data)
+            code         = self.get_clean_code(data)
+            number       = self.find_number(phone_number)
         except:
-            logging.error(u'cannot deserialize data')
             return self.create_response(request,
-                                        {'reason': u'cannot deserialize data'},
-                                        HttpBadRequest )
-        (req, result, status) = apifn.reset_password(request, data)
+                                        u'something wrong with args',
+                                        HttpBadRequest)
+        (req, result, status) = apifn.reset_password(request, password, code,
+                                                     number)
         return self.create_response(req, result, status)
 
     def ping(self, request, **kwargs):
@@ -431,41 +581,113 @@ class AuthResource(ModelResource):
     def get_code(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get(
-                                    'CONTENT_TYPE', 'application/json'))
+            data         = self.get_clean_data(request)
+            phone_number = self.get_clean_number(data)
         except:
-            logging.error(u'cannot deserialize data: %s'%request.body)
             return self.create_response(request,
-                                        {'reason': u'cannot deserialize data'},
-                                        HttpBadRequest )
-        (req, result, status) = apifn.get_code(request, data)
+                                        u'something wrong with args',
+                                        HttpBadRequest)
+        (req, result, status) = apifn.get_code(request, phone_number)
         return self.create_response(req, result, status)
 
     def verif_code(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get(
-                                    'CONTENT_TYPE', 'application/json'))
+            data         = self.get_clean_data(request)
+            phone_number = self.get_clean_number(data)
+            code         = self.get_clean_code(data)
+            number       = self.find_number(phone_number)
         except:
-            logging.error(u'cannot deserialize data')
             return self.create_response(request,
-                                        {'reason': u'cannot deserialize data'},
-                                        HttpBadRequest )
-        (req, result, status) = apifn.verif_code(request, data)
-        return self.create_response(req, result, status)
+                                        u'something wrong with args',
+                                        HttpBadRequest)
+        if number.verif_code(code):
+            return self.create_response(request, {}, HttpResponse)
+        else:
+            return self.create_response(request,
+                                        {u'reason': u'incorrect code'},
+                                        HttpUnprocessableEntity)
 
     def is_registered(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         try:
-            data = self.deserialize(request, request.body,
-                                    format=request.META.get(
-                                    'CONTENT_TYPE', 'application/json'))
+            data         = self.get_clean_data(request)
+            phone_number = self.get_clean_number(data)
         except:
-            logging.error(u'cannot deserialize data')
+            logging.error(u'something wrong with args')
             return self.create_response(request,
-                                        {'reason': u'cannot deserialize data'},
-                                        HttpBadRequest )
-        (req, result, status) = apifn.is_registered(request, data)
-        return self.create_response(req, result, status)
+                                        u'something wrong with args',
+                                        HttpBadRequest)
+        try:
+            number = self.find_number(phone_number)
+        except:
+            logging.error(u'new number')
+            return self.create_response(request,
+                                        {u'reason': u'new number'},
+                                        HttpUnauthorized)
+        if number.validated and number.user:
+            return self.create_response(request, {'method':'password'},
+                                        HttpResponse)
+        else:
+            logging.error(u'not registered')
+            return self.create_response(request,
+                                        {u'reason': u'not registered'},
+                                        HttpUnauthorized)
+
+    def social(self, request, access_token):
+        app = SocialApp.objects.get(provider="facebook")
+        token = SocialToken(app=app, token=access_token)
+        login = fb_complete_login(request, app, token)
+        login.token = token
+        login.state = SocialLogin.state_from_request(request)
+        complete_social_login(request, login)
+        return (request, login.user)
+
+    def social_login(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        # social registration
+        try:
+            data = self.get_clean_data(request)
+            access_token = self.get_clean_token(data)
+            (request, user) = self.social(request, access_token)
+        except:
+            logging.error(u'something went wrong with FB')
+            return self.create_response(request,
+                                        {u'something went wrong with FB'},
+                                        HttpBadRequest)
+        result =  {u'api_key' : user.api_key.key, u'userid' : user.id,
+                   u'username': user.username}
+        return self.create_response(request, result, HttpResponse)
+
+    def social_register(self, request, **kwargs):
+        self.method_check(request, allowed=['post'])
+        # pre register (control inputs)
+        try:
+            data         = self.get_clean_data(request)
+            phone_number = self.get_clean_number(data)
+            code         = self.get_clean_code(data)
+            access_token = self.get_clean_token(data)
+            number       = self.find_number(phone_number)
+        except:
+            logging.error(u'something went wrong with args')
+            return self.create_response(request,
+                                        u'something wrong with args',
+                                        HttpBadRequest)
+        # social registration
+        try:
+            (request, user) = self.social(request, access_token)
+        except:
+            logging.error(u'something went wrong with FB')
+            return self.create_response(request,
+                                        {u'something went wrong with FB'},
+                                        HttpBadRequest)
+        #link user number
+        try:
+            self.link_user_number(user, code, number, phone_number)
+        except:
+            return self.create_response(request,
+                                        u'link_user_number failed',
+                                        HttpBadRequest)
+        result =  {u'api_key' : user.api_key.key, u'userid' : user.id,
+                   u'username': user.username,    u'code':u'0'}
+        return self.create_response(request, result, HttpCreated)

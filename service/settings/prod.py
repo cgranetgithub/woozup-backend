@@ -129,6 +129,11 @@ from s3_storage import *
 
 # allauth configuration
 ACCOUNT_AUTHENTICATION_METHOD = "username"
+ACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_QUERY_EMAIL = False
+ACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 
 # Email (sendgrid)
 #EMAIL_HOST = 'smtp.sendgrid.net'

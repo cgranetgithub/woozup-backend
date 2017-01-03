@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 from django.db.models import Q
 from rq.decorators import job
 from worker import conn
-import django
 from service.utils import get_clean_number
 from django.contrib.auth import get_user_model
 

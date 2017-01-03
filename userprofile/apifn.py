@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import logging
+import logging, requests
 
 from base64 import b64decode
 
@@ -21,10 +21,6 @@ from tastypie.http import (HttpUnauthorized, HttpForbidden,
 from tastypie.models import ApiKey
 
 from link import push
-
-#from allauth.account.forms import SignupForm, LoginForm, ResetPasswordForm
-#from allauth.account.utils import complete_signup
-#from allauth.account import app_settings
 
 def setlast(request, data):
     if request.user and request.user.is_authenticated():
@@ -88,9 +84,16 @@ def setprofile(request, data):
 
 def setpicture(request, data):
     if request.user and request.user.is_authenticated():
-        b64_text = data.get('file', '')
-        filename = data.get('name', '')
-        image_data = b64decode(b64_text)
+        b64_text = data.get('file', False)
+        url_image = data.get('url_image', False)
+        filename = data.get('name', 'default')
+        if b64_text:
+            image_data = b64decode(b64_text)
+        elif url_image:
+            image_data = requests.get(url_image).content
+        else:
+            return (request, {u'reason': u"no input provided"},
+                    HttpBadRequest)
         request.user.profile.image = ContentFile(image_data, filename)
         request.user.profile.save()
         return (request, {}, HttpResponse)
@@ -98,87 +101,7 @@ def setpicture(request, data):
         return (request, {u'reason': u"You are not authenticated"},
                 HttpUnauthorized)
 
-def register(request, data):
-    reason = "Username is required"
-    try:
-        username = data.get('username').lower().strip()
-        if not username:
-            return (request, {u'reason': reason, u'code': '10'},
-                    HttpBadRequest)
-    except:
-        return (request, {u'reason': reason, u'code': '10'}, HttpBadRequest)
-    reason = "Password is required"
-    try:
-        password = data.get('password', '').strip()
-        if not password:
-            return (request, {u'reason': reason, u'code': '11'},
-                    HttpBadRequest)
-    except:
-        return (request, {u'reason': reason, u'code': '12'}, HttpBadRequest)
-    reason = "Number is required"
-    try:
-        phone_number = data.get('number', '').strip()
-        if not phone_number:
-            return (request, {u'reason': reason, u'code': '13'},
-                    HttpBadRequest)
-    except:
-        return (request, {u'reason': reason, u'code': '13'}, HttpBadRequest)
-    reason = "Verif code is required"
-    try:
-        code = data.get('code', '')
-        if type(code) is not int:
-            try:
-                code = code.strip()
-                code = int(code)
-            except:
-                return (request, {u'reason': u'code is not a number',
-                                  u'code': '15'}, HttpBadRequest)
-        if not code:
-            return (request, {u'reason': reason, u'code': '16'},
-                    HttpBadRequest)
-    except:
-        return (request, {u'reason': reason, u'code': '17'}, HttpBadRequest)
-    # find the number (must exist)
-    try:
-        number = Number.objects.get(phone_number=phone_number)
-    except:
-        return (request, {u'reason': u'number %s not found'%number,
-                          u'code': '18'}, HttpBadRequest)
-    # check if user already exists, otherwise create it
-    try:
-        user = User.objects.get(username=username)
-        return (request, {u'reason': u'user already exists',
-                            u'code': '200'}, HttpBadRequest)
-    except User.DoesNotExist:
-        try:
-            user = User.objects.create_user(username=username, password=password)
-        except:
-            return (request, {u'reason': u'user creation failed',
-                              u'code': '300'}, HttpBadRequest)
-    # make user <--> number association
-    validated = number.validate(user, phone_number, code)
-    if not validated:
-        return (request, {u'reason': u'user/number/code do not match',
-                          u'code': '19'}, HttpBadRequest)
-    # finish authentication
-    user = auth.authenticate(username=username, password=password)
-    if user:
-        if user.is_active:
-            auth.login(request, user)
-            return (request, {'api_key' : user.api_key.key,
-                              'userid'  : user.id,
-                              'username': user.username,
-                              'code'    : '0'}, HttpCreated)
-        else:
-            return (request, {u'reason': u'inactive user',
-                              u'code': '150'}, HttpForbidden)
-    else:
-        return (request, {u'reason': u'unable to authenticate',
-                          u'code': '400'}, HttpUnauthorized)
-
-def login(request, data):
-    username = data.get('username', '').lower().strip()
-    password = data.get('password', '').strip()
+def login(request, username, password):
     user = auth.authenticate(username=username, password=password)
     if user:
         if user.is_active:
@@ -187,12 +110,13 @@ def login(request, data):
                               'userid'  : user.id,
                               'username': user.username}, HttpResponse)
         else:
-            return (request, {u'reason': u'disabled'}, HttpForbidden)
+            return (request, {u'reason': u'inactive user',
+                              u'code': '150'}, HttpUnauthorized)
     else:
-        return (request, {u'reason': u'incorrect'}, HttpUnauthorized)
+        return (request, {u'reason': u'unable to authenticate',
+                          u'code': '400'}, HttpUnauthorized)
 
-def get_code(request, data):
-    phone_number = data.get('phone_number', '').lower().strip()
+def get_code(request, phone_number):
     nb = get_clean_number(phone_number)
     if nb:
         (number, created) = Number.objects.get_or_create(phone_number=nb)
@@ -203,53 +127,7 @@ def get_code(request, data):
         return (request, {u'reason': u'%s not a number valid number'%nb},
                 HttpBadRequest)
 
-def verif_code(request, data):
-    phone_number = data.get('phone_number', '').lower().strip()
-    code = data.get('code', '')
-    if type(code) is not int:
-        try:
-            code = code.strip()
-            code = int(code)
-        except:
-            return (request, {u'reason': u'code is not a number'}, HttpBadRequest)
-    try:
-        number = Number.objects.get(phone_number=phone_number)
-    except Number.DoesNotExist:
-        return (request, {u'reason': u'unknown phone_number'}, HttpBadRequest)
-    if number.verif_code(code):
-        return (request, {}, HttpResponse)
-    else:
-        return (request, {u'reason': u'incorrect code'}, HttpUnprocessableEntity)
-
-def is_registered(request, data):
-    phone_number = data.get('phone_number', '').lower().strip()
-    try:
-        number = Number.objects.get(phone_number=phone_number)
-    except Number.DoesNotExist:
-        logging.error(u'unknown phone_number')
-        return (request, {u'reason': u'unknown phone_number'}, HttpUnauthorized)
-    if number.validated and number.user:
-        return (request, {'method':'password'}, HttpResponse)
-    else:
-        logging.error(u'not registered')
-        return (request, {u'reason': u'not registered'}, HttpUnauthorized)
-
-def reset_password(request, data):
-    phone_number = data.get('phone_number', '').lower().strip()
-    code = data.get('code', '')
-    password = data.get('password', '')
-    if type(code) is not int:
-        try:
-            code = code.strip()
-            code = int(code)
-        except:
-            logging.error(u'code is not a number')
-            return (request, {u'reason': u'code is not a number'}, HttpBadRequest)
-    try:
-        number = Number.objects.get(phone_number=phone_number)
-    except Number.DoesNotExist:
-        logging.error(u'unknown phone_number')
-        return (request, {u'reason': u'unknown phone_number'}, HttpBadRequest)
+def reset_password(request, password, code, number):
     if number.verif_code(code):
         number.user.set_password(password)
         number.user.save()

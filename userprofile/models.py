@@ -55,8 +55,6 @@ class Profile(models.Model):
     gender = models.CharField(max_length=2, choices=GENDER, blank=True)
     birth_date = models.DateField(blank=True, null=True)
     locale = models.CharField(max_length=3, blank=True)
-    #image = models.ImageField(upload_to=image_path,
-                              #blank=True, null=True)
     image = models.ImageField(upload_to='profile_picture',
                               blank=True, null=True)
     updated_at  = models.DateTimeField(auto_now=True, help_text=u"""
@@ -66,8 +64,6 @@ autofield, not modifiable""")
         return self.user.email
     def __unicode__(self):
         return u'%s profile (%d)'%(self.user, self.user.id)
-    #class Meta:
-        #app_label = 'profile'
 
 class Position(models.Model):
     user   = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True)

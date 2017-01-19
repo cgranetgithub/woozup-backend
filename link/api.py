@@ -10,7 +10,7 @@ from django.conf.urls import url
 
 from doc import authdoc
 from link.tasks import create_connections
-from link.models import Invite, Link
+from link.models import Contact, Link
 from link.push import invite_validated
 
 import apidoc as doc
@@ -28,7 +28,7 @@ class LinkResource(ModelResource):
         allowed_methods = ['get']
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
-        #always_return_data = True
+        always_return_data = True
 
     def get_object_list(self, request):
         as_sender = Link.objects.filter(sender=request.user)
@@ -61,15 +61,15 @@ class LinkResource(ModelResource):
             return self.create_response(request, {u'reason': u'multiple links between 2 users!'}, HttpBadRequest)
 
 
-def change_invite_status(request, invite_id, new_status):
+def change_contact_status(request, contact_id, new_status):
     if request.user and request.user.is_authenticated():
         try:
-            invite = Invite.objects.get(id=invite_id)
-            invite.status = new_status
-            invite.save()
-            return (request, {'invite': invite}, HttpResponse)
-        except Invite.DoesNotExist:
-            return (request, {u'reason': u'Invite not found'}, HttpForbidden)
+            contact = Contact.objects.get(id=contact_id)
+            contact.status = new_status
+            contact.save()
+            return (request, {'contact': contact}, HttpResponse)
+        except Contact.DoesNotExist:
+            return (request, {u'reason': u'Contact not found'}, HttpForbidden)
         except:
             return (request, {u'reason': u'Unexpected'}, HttpForbidden)
     else:
@@ -77,80 +77,86 @@ def change_invite_status(request, invite_id, new_status):
                 HttpUnauthorized)
 
 
-class InviteResource(ModelResource):
+class ContactResource(ModelResource):
     #sender = fields.ToOneField(UserResource, 'sender', full=True)
     class Meta:
-        resource_name = 'invite'
-        queryset = Invite.objects.all()
+        resource_name = 'contact'
+        queryset = Contact.objects.all()
         allowed_methods = ['get']
         ordering = ['name']
-        filtering = {
-                    #'sender': ALL_WITH_RELATIONS,
-                    'name': ALL,
-                    'number': ALL,
-                    'status': ALL,
-                    }
+        #filtering = {
+                    ##'sender': ALL_WITH_RELATIONS,
+                    #'name': ALL,
+                    #'number': ALL,
+                    #'status': ALL,
+                    #}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
+        always_return_data = True
 
     def get_object_list(self, request):
-        return Invite.objects.filter( sender=request.user )
+        print Contact.objects.all().count()
+        print Contact.objects.filter( sender=request.user ).count()
+        return Contact.objects.filter( sender=request.user )
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/send/(?P<invite_id>\w[\w/-]*)%s$" %
+            url(r"^(?P<resource_name>%s)/send/(?P<contact_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('send'), name="api_send"),
-            url(r"^(?P<resource_name>%s)/ignore/(?P<invite_id>\w[\w/-]*)%s$" %
+            url(r"^(?P<resource_name>%s)/ignore/(?P<contact_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('ignore'), name="api_ignore"),
+            url(r'^(?P<resource_name>%s)/sort%s$' %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('sort'), name='api_sort'),
         ]
 
     def send(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        invite_id = kwargs['invite_id']
-        (req, result, status) = change_invite_status(request, invite_id, 'PEN')
+        contact_id = kwargs['contact_id']
+        (req, result, status) = change_contact_status(request, contact_id, 'PEN')
         # send invitation
-        invite = result.get('invite', False)
-        if invite:
-            invite_validated(invite)
+        contact = result.get('contact', False)
+        if contact:
+            invite_validated(contact)
         return self.create_response(req, result, status)
 
     def ignore(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
-        invite_id = kwargs['invite_id']
-        (req, result, status) = change_invite_status(request, invite_id, 'IGN')
+        contact_id = kwargs['contact_id']
+        (req, result, status) = change_contact_status(request, contact_id, 'IGN')
         # send invitation
-        # invite = result.get('invite', False)
-        # if invite:
-        #     invite_ignored(invite)
+        # contact = result.get('contact', False)
+        # if contact:
+        #     invite_ignored(contact)
         return self.create_response(req, result, status)
 
 
-class ContactResource(Resource):
-    class Meta:
-        resource_name = 'contact'
-        allowed_methods = []
-        authorization  = DjangoAuthorization()
-        authentication = ApiKeyAuthentication()
-        # for the doc:
-        extra_actions = [
-            {   u"name": u"sort",
-                u"http_method": u"POST",
-                "resource_type": "list",
-                u"summary": doc.ContactResourceSort,
-                u"fields": dict( authdoc.items() + doc.ContactResourceSortFields.items())
-            } ]
-    def prepend_urls(self):
-        return [
-            url(r'^(?P<resource_name>%s)/sort%s$' %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('sort'), name='api_sort'),
-        ]
+#class ContactResource(Resource):
+    #class Meta:
+        #resource_name = 'contact'
+        #allowed_methods = []
+        #authorization  = DjangoAuthorization()
+        #authentication = ApiKeyAuthentication()
+        ## for the doc:
+        #extra_actions = [
+            #{   u"name": u"sort",
+                #u"http_method": u"POST",
+                #"resource_type": "list",
+                #u"summary": doc.ContactResourceSort,
+                #u"fields": dict( authdoc.items() + doc.ContactResourceSortFields.items())
+            #} ]
+    #def prepend_urls(self):
+        #return [
+            #url(r'^(?P<resource_name>%s)/sort%s$' %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('sort'), name='api_sort'),
+        #]
 
     def sort(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
@@ -174,3 +180,7 @@ class ContactResource(Resource):
         else:
             return self.create_response(request, {'success': False},
                                                   HttpUnauthorized)
+
+class InviteResource(ContactResource):
+    class Meta(ContactResource.Meta):
+        resource_name = 'invite'

@@ -7,7 +7,7 @@ from journal.models import Record
 REQUEST_LINK = u"%s souhaite se connecter avec toi"
 ACCEPT_LINK = u"%s a accepté ton invitation"
 SMS_PERSONAL = u"%s t'invite sur Woozup ! Télécharge l'appli pour iphone ou Android."
-SMS_GENERIC = u"Découvre Woozup, le meilleur moyen de voir tes amis ! Télécharge Woozup pour iphone ou Android."
+#SMS_GENERIC = u"Découvre Woozup, le meilleur moyen de voir tes amis ! Télécharge Woozup pour iphone ou Android."
 
 def link_saved(sender, instance, created, update_fields, **kwargs):
     pass
@@ -59,34 +59,35 @@ def link_accepted(link, inverted, **kwargs):
         #context = {"other" : sender, "user" : recipient}
         #send_mail(template_prefix, emails, context)
 
-def send_invitation(invite, message, template_prefix, context, sms=False):
+def send_invitation(contacts, message, sms=True):
     ret = {'emails':0, 'sms':0}
     # email
-    #if invite.emails:
-        #emails = set([x.strip() for x in invite.emails.split(',')])
+    #if contact.emails:
+        #emails = set([x.strip() for x in contact.emails.split(',')])
         #send_mail(template_prefix, emails, context)
         #ret['emails'] += len(emails)
-        #invite.sent_at = timezone.now()
-        #invite.save()
+        #contact.sent_at = timezone.now()
+        #contact.save()
     # SMS
-    if (invite.numbers and sms):
-        numbers = set([x.strip() for x in invite.numbers.split(',')])
-        send_sms(message, numbers)
-        ret['sms'] += len(numbers)
-        invite.sent_at = timezone.now()
-        invite.save()
+    for c in contacts:
+        if c.numbers:
+            numbers = set([x.strip() for x in c.numbers.split(',')])
+            send_sms(message, numbers)
+            ret['sms'] += len(numbers)
+            c.sent_at = timezone.now()
+            c.save()
     return ret
 
-def invite_validated(invite):
-    template_prefix = "link/email/personal_invite"
-    context = {"other" : invite.sender}
-    message = SMS_PERSONAL%invite.sender.get_full_name()
-    return send_invitation(invite, message, template_prefix, context, True)
+def invite_validated(contact):
+    #template_prefix = "link/email/personal_invite"
+    #context = {"other" : contact.sender}
+    message = SMS_PERSONAL%contact.sender.get_full_name()
+    return send_invitation([contact], message, True)
 
-#def invite_ignored(invite):
+#def invite_ignored(contact):
     #template_prefix = "link/email/generic_invite"
     #context = {}
-    #return send_invitation(invite, SMS_GENERIC, template_prefix, context, True)
+    #return send_invitation(contact, SMS_GENERIC, template_prefix, context, True)
 
 #def send_bulk_generic_invitation(numbers, emails):
     #assert type(numbers) is set

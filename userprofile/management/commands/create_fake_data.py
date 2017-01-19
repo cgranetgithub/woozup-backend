@@ -1,6 +1,6 @@
 #import random, string
 #import datetime as dt
-#from link.models import Link, Invite
+#from link.models import Link, Contact
 #from event.models import Event, EventType, EventCategory
 ##!/usr/bin/python
 ## -*- coding: utf8 -*-
@@ -47,11 +47,11 @@
             #l.receiver_status = 'ACC'
             #l.save()
         ## invites
-        #Invite.objects.get_or_create(sender=u1.userprofile,
+        #Contact.objects.get_or_create(sender=u1.userprofile,
                             #number='+3365678956',
                             #email='invite1@fr.fr',
                             #name='invite1')
-        #Invite.objects.get_or_create(sender=u1.userprofile,
+        #Contact.objects.get_or_create(sender=u1.userprofile,
                             #number='+3365678988',
                             #email='invite2@fr.fr',
                             #name='invite2')

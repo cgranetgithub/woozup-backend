@@ -4,7 +4,7 @@ from service.notification import send_mail
 from userprofile.models import UserProfile
 from service.utils import is_personal_email, is_mobile_number
 from django.utils import timezone
-from link.models import Invite
+from link.models import Contact
 from link.push import send_bulk_generic_invitation
 
 class Command(BaseCommand):
@@ -17,10 +17,10 @@ class Command(BaseCommand):
 
     def send_generic_invite(self):
         # get invites
-        self.stdout.write('%d invites total'%(Invite.objects.count()))
-        already_sent = Invite.objects.exclude( sent_at=None )
+        self.stdout.write('%d invites total'%(Contact.objects.count()))
+        already_sent = Contact.objects.exclude( sent_at=None )
         self.stdout.write('%d already sent'%(already_sent.count()))
-        invites = Invite.objects.filter(sent_at=None).exclude(status='CLO'
+        invites = Contact.objects.filter(sent_at=None).exclude(status='CLO'
                                                     ).exclude(status='PEN'
                                                     ).exclude(status='ACC')
         self.stdout.write('%d invites IGN or NEW never sent'%(invites.count()))

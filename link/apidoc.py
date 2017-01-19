@@ -2,7 +2,7 @@ LinkResource = u"""
 When a user registers, its contact list is sent to the backend 
 (API contact/sort/).<br>A Link is created between the user and each contact 
 already registered as a user.<br>In parallel, the backend will look for all 
-Invites where the receiver is the new user and transform it into a link.<br>
+Contacts where the receiver is the new user and transform it into a link.<br>
 <ul>
 <li>sender_status = NEW</li>
 <li>receiver_status = NEW</li>

@@ -61,36 +61,25 @@ autofield, not modifiable""")
         return u'%s(%s)-->%s(%s)'%(self.sender, self.sender_status,
                                    self.receiver, self.receiver_status)
 
-class Invite(models.Model):
-    """ INVITE behavior
-    when a user is discovered on the device,
-    an invite is automatically created by the backend
-        - status=NEW
-    sender clicks on "invite" button, a message is sent to the receiver
-        - status=PENDING
-    sender clicks on "ignore" button
-        - status=IGNORED
-    receiver registered in the service => a link is created and the invitation is closed
-        - status=CLOSED
-    """
-    INVITE_STATUS = ( (NEW     , 'new'),
-                      (PENDING , 'pending'),
-                      (ACCEPTED, 'accepted'),
-                      (IGNORED , 'ignored'),
-                      (CLOSED  , 'closed' ) )
+class Contact(models.Model):
+    CONTACT_STATUS = ((NEW     , u'new'     ),
+                      (PENDING , u'pending' ),
+                      (ACCEPTED, u'accepted'),
+                      (IGNORED , u'ignored' ),
+                      (CLOSED  , u'closed'  ))
     sender  = models.ForeignKey(settings.AUTH_USER_MODEL)
     name    = models.CharField(max_length=255, blank=True,
-                               help_text='name to be displayed in the app')
+                               help_text=u'name to be displayed in the app')
     numbers = models.CharField(max_length=255, blank=True,
                                help_text=u'phone numbers list')
     emails  = models.CharField(max_length=255, blank=True,
                                help_text=u'email addresses list')
     photo   = models.CharField(max_length=255, blank=True,
-                               help_text='local path in the device to a picture')
+                               help_text=u'local path in the device to a picture')
     #avatar  = models.ImageField(upload_to=image_path,
                                #blank=True, null=True,
                                #help_text='not used for now')
-    status  = models.CharField(max_length=3, choices=INVITE_STATUS, default=NEW)
+    status  = models.CharField(max_length=3, choices=CONTACT_STATUS, default=NEW)
     sent_at = models.DateTimeField(blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")

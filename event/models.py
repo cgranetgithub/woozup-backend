@@ -65,6 +65,7 @@ class Event(models.Model):
     invitees = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                           blank=True,
                                           related_name='events_as_invitee')
+    contacts = models.ManyToManyField('link.Contact', blank=True)
     created_at = models.DateTimeField(auto_now_add=True, help_text=u"""
 autofield, not modifiable""")
     updated_at = models.DateTimeField(auto_now=True, help_text=u"""

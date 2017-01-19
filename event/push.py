@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from service.notification import send_notification
+from link.push import send_invitation
+from link.utils import accept_link
 #from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 from journal.models import Record
@@ -17,7 +19,7 @@ def invitees_changed(sender, instance, action, reverse,
         # push notification
         EVENT_CREATED = u"%s t'invite à : %s"
         msg = EVENT_CREATED%(instance.owner.get_full_name(),
-                            instance.event_type.name)
+                             instance.event_type.name)
         data = {u"title": u"Nouvelle invitation",
                 u"message": msg,
                 u"reason": u"newevent",
@@ -25,6 +27,21 @@ def invitees_changed(sender, instance, action, reverse,
         if instance.owner.profile.image:
             data[u'image'] = instance.owner.profile.image.url
         send_notification(invitees, data)
+        # update links
+        for i in invitees:
+            accept_link(instance.owner, i)
+
+def contacts_changed(sender, instance, action, reverse,
+                     model, pk_set, using, **kwargs):
+    print (sender, instance, action, reverse,
+                     model, pk_set, using, kwargs)
+    if action == u'post_add':
+        contacts = model.objects.filter(pk__in=pk_set)
+        print contacts
+        # push notification
+        EVENT_CREATED = u"""%s souhaite t'inviter à la sortie "%s". Télécharge l'appli WOOZUP sur ton smartphone pour voir le détail de l’invitation  et lui répondre."""
+        msg = EVENT_CREATED%(instance.owner.get_full_name(), instance.name)
+        send_invitation(contacts, msg)
     
 def event_created(sender, instance, **kwargs):
     # create journal record

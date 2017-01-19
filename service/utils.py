@@ -2,10 +2,11 @@ import phonenumbers
 
 def is_mobile_number(number):
     ### hack for French mobile only
-    if ( number.startswith('+336') or number.startswith('+337') ):
-        return True
-    return False
+    #if ( number.startswith('+336') or number.startswith('+337') ):
+        #return True
+    #return False
     ###
+    return True
 
 #def is_personal_email(email):
     #if '@' in email:

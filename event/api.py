@@ -14,6 +14,7 @@ from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 
 from event.models import EventCategory, EventType, Event, Comment
 from userprofile.api import UserResource
+from link.api import ContactResource
 from userprofile.utils import get_friends
 from django.contrib.auth import get_user_model
 
@@ -51,20 +52,49 @@ class EventTypeResource(ModelResource):
         ordering = ['order']
         always_return_data = True
 
-class AbstractEventResource(ModelResource):
+#class AbstractEventResource(ModelResource):
+    #event_type = fields.ToOneField(EventTypeResource, 'event_type',
+                                      #full=True)
+    #participants = fields.ToManyField(UserResource, 'participants',
+                                      #full=True, null=True)
+    #invitees = fields.ManyToManyField(UserResource, 'invitees',
+                                      #full=True, null=True)
+    #owner = fields.ToOneField(UserResource, 'owner', full=True, null=True)
+    #class Meta:
+        #abstract = True
+        #serializer = MyDateSerializer()
+        #queryset = Event.objects.all()
+        #list_allowed_methods = ['get']
+        #detail_allowed_methods = ['get']
+        #filtering = {
+                    ##'owner'       : ALL_WITH_RELATIONS,
+                    #'event_type' : ALL_WITH_RELATIONS,
+                    #'start'      : ALL,
+                    #'position'   : ALL,
+                    #'canceled'   : ALL,
+                    ##'participants': ALL_WITH_RELATIONS,
+                    #}
+        #ordering = ['start']
+        #authorization  = DjangoAuthorization()
+        #authentication = ApiKeyAuthentication()
+        #always_return_data = True
+
+class EventResource(ModelResource):
     event_type = fields.ToOneField(EventTypeResource, 'event_type',
                                       full=True)
     participants = fields.ToManyField(UserResource, 'participants',
                                       full=True, null=True)
     invitees = fields.ManyToManyField(UserResource, 'invitees',
                                       full=True, null=True)
+    contacts = fields.ManyToManyField(ContactResource, 'contacts',
+                                      full=True, null=True)
     owner = fields.ToOneField(UserResource, 'owner', full=True, null=True)
     class Meta:
-        abstract = True
+        resource_name = 'event'
         serializer = MyDateSerializer()
         queryset = Event.objects.all()
-        list_allowed_methods = ['get']
-        detail_allowed_methods = ['get']
+        list_allowed_methods = ['get', 'post']
+        detail_allowed_methods = ['get', 'delete']
         filtering = {
                     #'owner'       : ALL_WITH_RELATIONS,
                     'event_type' : ALL_WITH_RELATIONS,
@@ -78,96 +108,28 @@ class AbstractEventResource(ModelResource):
         authentication = ApiKeyAuthentication()
         always_return_data = True
 
-class AllEventsResource(AbstractEventResource):
-    class Meta(AbstractEventResource.Meta):
-        resource_name = 'events/all'
-
     def get_object_list(self, request):
         user = request.user
-        #me = get_user_model().objects.filter(id=user.id)
         mine = Event.objects.filter(owner=user)
-        # restrict result to my friends' events
-        myfriends = get_friends(user)
-        friend_events = Event.objects.filter(owner__in=myfriends
-                             ).filter( Q(invitees=None)
-                                     | Q(invitees__in=[user])
-                             )
-        #owners = me | myfriends
-        #events = Event.objects.filter(owner__in=owners).distinct()
-        events = mine | friend_events
+        invited_to = Event.objects.filter(invitees__in=[user])
+        events = mine | invited_to
         return events.distinct()
-
-class MyAgendaResource(AbstractEventResource):
-    class Meta(AbstractEventResource.Meta):
-        resource_name = 'events/agenda'
-
-    def get_object_list(self, request):
-        # restrict result to my events + the events I go to
-        mine = Event.objects.filter(owner=request.user)
-        participation = request.user.events_as_participant.all()
-        events = mine | participation
-        return events.distinct()
-
-class MyEventsResource(AbstractEventResource):
-    class Meta(AbstractEventResource.Meta):
-        resource_name = 'events/mine'
-        list_allowed_methods = ['get', 'post']
-        detail_allowed_methods = ['get', 'put', 'delete']
 
     def obj_create(self, bundle, **kwargs):
-        #force owner to the authorized user
         kwargs['owner'] = bundle.request.user
-        return super(MyEventsResource, self).obj_create(bundle, **kwargs)
+        return super(EventResource, self).obj_create(bundle, **kwargs)
 
     def obj_delete(self, bundle, **kwargs):
         if not hasattr(bundle.obj, 'delete'):
             try:
                 bundle.obj = self.obj_get(bundle=bundle, **kwargs)
             except ObjectDoesNotExist:
-                raise NotFound("A model instance matching the provided arguments could not be found.")
-        self.authorized_delete_detail(self.get_object_list(bundle.request), bundle)
+                raise NotFound("""A model instance matching the provided
+                    arguments could not be found.""")
+        self.authorized_delete_detail(self.get_object_list(bundle.request),
+                                      bundle)
         bundle.obj.canceled = True
         bundle.obj.save(update_fields=['canceled'])
-
-    def get_object_list(self, request):
-        # restrict result to my events
-        events = Event.objects.filter(owner=request.user)
-        return events
-
-class FriendsEventsResource(AbstractEventResource):
-    class Meta(AbstractEventResource.Meta):
-        resource_name = 'events/friends'
-        # for the doc:
-        extra_actions = [
-            {   u"name": u"join",
-                u"http_method": u"POST",
-                #"resource_type": "list",
-                u"summary": u"""[Custom API] - Requires authentication<br><br>
-User joins an event, that is, is added to the participant list.""",
-                "fields": authdoc
-            } ,
-            {   u"name": u"leave",
-                u"http_method": u"POST",
-                #"resource_type": "list",
-                u"summary": u"""[Custom API] - Requires authentication<br><br>
-User leaves an event, that is, is removed from the participant list.""",
-                "fields": authdoc
-            } ,
-        ]
-
-    def get_object_list(self, request):
-        user = request.user
-        # restrict result to my friends' events
-        myfriends = get_friends(user)
-        events = Event.objects.filter(owner__in=myfriends
-                             ).filter( Q(invitees=None)
-                                     | Q(invitees__in=[user])
-                             ).distinct()
-        # filter by distance TODO add an option for filtering
-        #if user.position.last:
-            #events = events.filter(location_coords__distance_lte=(
-                                            #user.position.last, D(km=100)))
-        return events
 
     def prepend_urls(self):
         return [
@@ -180,10 +142,6 @@ User leaves an event, that is, is removed from the participant list.""",
         ]
 
     def join(self, request, **kwargs):
-        """ Join an event.
-        Note: we need this API for security reason (instead of doing a PUT),
-        to avoid someone to manipulate events directly with a PUT
-        """
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
@@ -192,16 +150,87 @@ User leaves an event, that is, is removed from the participant list.""",
         return self.create_response(req, data, status)
 
     def leave(self, request, **kwargs):
-        """ Leave an event.
-        Note: we need this API for security reason (instead of doing a PUT),
-        to avoid someone to manipulate events directly with a PUT
-        """
         self.method_check(request, allowed=['post'])
         self.is_authenticated(request)
         self.throttle_check(request)
         event_id = kwargs['event_id']
         (req, data, status) = apifn.leave(request, event_id)
         return self.create_response(req, data, status)
+
+class AllEventsResource(EventResource):
+    class Meta(EventResource.Meta):
+        resource_name = 'events/all'
+
+    #def get_object_list(self, request):
+        #user = request.user
+        ##me = get_user_model().objects.filter(id=user.id)
+        #mine = Event.objects.filter(owner=user)
+        ## restrict result to my friends' events
+        #myfriends = get_friends(user)
+        #friend_events = Event.objects.filter(owner__in=myfriends
+                             #).filter( Q(invitees=None)
+                                     #| Q(invitees__in=[user])
+                             #)
+        ##owners = me | myfriends
+        ##events = Event.objects.filter(owner__in=owners).distinct()
+        #events = mine | friend_events
+        #return events.distinct()
+
+class MyAgendaResource(EventResource):
+    class Meta(EventResource.Meta):
+        resource_name = 'events/agenda'
+
+    def get_object_list(self, request):
+        # restrict result to my events + the events I go to
+        mine = Event.objects.filter(owner=request.user)
+        participation = request.user.events_as_participant.all()
+        events = mine | participation
+        return events.distinct()
+
+class MyEventsResource(EventResource):
+    class Meta(EventResource.Meta):
+        resource_name = 'events/mine'
+        #list_allowed_methods = ['get', 'post']
+        #detail_allowed_methods = ['get', 'put', 'delete']
+
+    #def obj_create(self, bundle, **kwargs):
+        ##force owner to the authorized user
+        #kwargs['owner'] = bundle.request.user
+        #return super(MyEventsResource, self).obj_create(bundle, **kwargs)
+
+    #def obj_delete(self, bundle, **kwargs):
+        #if not hasattr(bundle.obj, 'delete'):
+            #try:
+                #bundle.obj = self.obj_get(bundle=bundle, **kwargs)
+            #except ObjectDoesNotExist:
+                #raise NotFound("A model instance matching the provided arguments could not be found.")
+        #self.authorized_delete_detail(self.get_object_list(bundle.request), bundle)
+        #bundle.obj.canceled = True
+        #bundle.obj.save(update_fields=['canceled'])
+
+    #def get_object_list(self, request):
+        ## restrict result to my events
+        #events = Event.objects.filter(owner=request.user)
+        #return events
+
+class FriendsEventsResource(EventResource):
+    class Meta(EventResource.Meta):
+        resource_name = 'events/friends'
+
+    #def get_object_list(self, request):
+        #user = request.user
+        ## restrict result to my friends' events
+        #myfriends = get_friends(user)
+        #events = Event.objects.filter(owner__in=myfriends
+                             #).filter( Q(invitees=None)
+                                     #| Q(invitees__in=[user])
+                             #).distinct()
+        ## filter by distance TODO add an option for filtering
+        ##if user.position.last:
+            ##events = events.filter(location_coords__distance_lte=(
+                                            ##user.position.last, D(km=100)))
+        #return events
+
 
 class CommentResource(ModelResource):
     author = fields.ToOneField(UserResource, 'author', full=True)

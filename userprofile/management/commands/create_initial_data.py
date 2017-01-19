@@ -13,7 +13,8 @@ class Command(BaseCommand):
         p = []
         for i in ['add_event', 'change_event', 'delete_event',
                   'change_user', 'change_profile', 'change_position',
-                  'change_invite', 'change_record', 'add_comment', 'change_comment']:
+                  'change_contact', 'change_record',
+                  'add_comment', 'change_comment']:
             p.append(Permission.objects.get(codename=i))
         grp = Group.objects.create(name='std')
         grp.permissions = p

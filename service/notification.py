@@ -27,7 +27,7 @@ def send_sms(message, number_set):
     sender_phone = settings.SMS_SENDER_PHONE
     p = plivo.RestAPI(auth_id, auth_token)
     params = {
-        'src': sender_phone, # Sender's phone number with country code
+        'src': sender_phone,
         'dst' : dest, # Receiver's phone Number with country code
         'text' : message,
     }

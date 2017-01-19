@@ -2,6 +2,7 @@ from tastypie.http import HttpUnauthorized, HttpForbidden, HttpBadRequest
 from django.http import HttpResponse
 from event.models import Event
 from event import push
+from link.utils import accept_link
 
 def run_checks(request, event_id):
     if request.user and request.user.is_authenticated():
@@ -27,6 +28,7 @@ def join(request, event_id):
     (good, result) = run_checks(request, event_id)
     if good:
         (user, event) = result
+        accept_link(user, event.owner)
         if user not in event.participants.all():
             event.participants.add(user)
             event.save()

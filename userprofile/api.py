@@ -20,7 +20,7 @@ import apidoc as doc
 from doc import authdoc
 from userprofile.models import Profile, Position
 from event.models import Event
-from userprofile.utils import get_friends
+from userprofile.utils import get_friends, get_suggestions
 from service.b64field import Base64FileField
 from .models import Number
 #from link import push
@@ -273,6 +273,23 @@ class ProfileResource(ModelResource):
                                         HttpBadRequest )
         (req, result, status) = apifn.setpicture(request, data)
         return self.create_response(req, result, status)
+
+class SuggestionsResource(ModelResource):
+    profile = fields.ToOneField('userprofile.api.ProfileResource',
+                                'profile', full=True)
+    class Meta:
+        resource_name = 'suggestions'
+        queryset = get_user_model().objects.all()
+        excludes = ['password', 'is_superuser', 'is_staff']
+        list_allowed_methods = ['get']
+        detail_allowed_methods = []
+        ordering = ['first_name']
+        filtering = {'username': ALL, 'first_name': ALL}
+        authorization  = DjangoAuthorization()
+        authentication = ApiKeyAuthentication()
+
+    def get_object_list(self, request):
+        return get_suggestions(request.user).exclude(is_superuser=True)
 
 class MyFriendsResource(ModelResource):
     profile = fields.ToOneField('userprofile.api.ProfileResource',

@@ -67,7 +67,7 @@ def find_users_from_number_list(number_list):
 def create_connections(userid, data):
     import django
     django.setup()
-    from link.models import Invite, Link
+    from link.models import Contact, Link
     user = get_user_model().objects.get(id=userid)
     # for each contact
     for contact in data:
@@ -98,46 +98,46 @@ def create_connections(userid, data):
             if name and not name.startswith('.'):
                 if emails:
                     try:
-                        invite = Invite.objects.get(sender = user,
+                        invite = Contact.objects.get(sender = user,
                                                     emails = emails)
                         invite.name = name
                         invite.numbers = numbers
                         invite.photo = photo
                         invite.save()
-                    except Invite.DoesNotExist:
+                    except Contact.DoesNotExist:
                         if numbers:
                             try:
-                                invite = Invite.objects.get(sender = user,
+                                invite = Contact.objects.get(sender = user,
                                                             numbers = numbers)
                                 invite.name = name
                                 invite.emails = emails
                                 invite.photo = photo
                                 invite.save()
-                            except Invite.DoesNotExist:
-                                Invite.objects.create(sender = user,
+                            except Contact.DoesNotExist:
+                                Contact.objects.create(sender = user,
                                                       name=name,
                                                       emails = emails,
                                                       numbers = numbers)
                             except:
                                 logger.error("""contact has no corresponding \
-user, name/emails/numbers exist, more than one Invite with same numbers \
+user, name/emails/numbers exist, more than one Contact with same numbers \
 %s %s %s"""%(name, emails, numbers))
                 elif numbers:
                     try:
-                        invite = Invite.objects.get(sender = user,
+                        invite = Contact.objects.get(sender = user,
                                                     numbers = numbers)
                         invite.name = name
                         #invite.emails = emails #not needed
                         invite.photo = photo
                         invite.save()
-                    except Invite.DoesNotExist:
-                        Invite.objects.create(sender = user, name=name,
+                    except Contact.DoesNotExist:
+                        Contact.objects.create(sender = user, name=name,
                                               emails = emails,
                                               numbers = numbers,
                                               photo = photo)
                     except:
                         logger.error("""contact has no corresponding user, \
-no emails, name/numbers exist, more than one Invite with same numbers \
+no emails, name/numbers exist, more than one Contact with same numbers \
 %s %s"""%(name, numbers))
 
 # called by userprofile.apps on post_save signal
@@ -148,21 +148,23 @@ def transform_invites_from_number(sender, instance, **kwargs):
         return 0
     user = instance.user
     cnt = 0
-    from link.models import Link, Invite
-    invites = Invite.objects.filter(numbers__icontains=instance.phone_number
+    from .models import Link, Contact
+    from .utils import get_link
+    invites = Contact.objects.filter(numbers__icontains=instance.phone_number
                                     ).exclude(status='CLO')
     for i in invites:
         if user != i.sender:
-            try:
-                Link.objects.get(sender=user, receiver=i.sender)
-            except Link.DoesNotExist:
-                try:
-                    Link.objects.get(sender=i.sender, receiver=user)
-                except Link.DoesNotExist:
-                    Link.objects.create(sender=i.sender, receiver=user)
-                    i.status = 'CLO'
-                    i.save()
-                    cnt += 1
+            # create link
+            if not get_link(i.sender, user):
+                Link.objects.create(sender=i.sender, receiver=user)
+                i.status = 'CLO'
+                i.save()
+                cnt += 1
+            # find event as invited contact and add to invitees
+            from event.models import Event
+            events = Event.objects.filter(contacts=i)
+            for e in events:
+                e.invitees.add(user)
     return cnt
 
 # called by userprofile.apps on post_save signal
@@ -172,21 +174,21 @@ def transform_invites_from_user(sender, instance, **kwarg):
     if not user.email:
         return 0
     cnt = 0
-    from link.models import Link, Invite
-    invites = Invite.objects.filter(emails__icontains=user.email
+    from .models import Link, Contact
+    from .utils import get_link
+    invites = Contact.objects.filter(emails__icontains=user.email
                                     ).exclude(status='CLO')
     for i in invites:
         if user != i.sender:
-            try:
-                Link.objects.get(sender=user, receiver=i.sender)
-            except Link.DoesNotExist:
-                try:
-                    Link.objects.get(sender=i.sender,
-                                     receiver=user)
-                except Link.DoesNotExist:
-                    Link.objects.create(sender=i.sender,
-                                        receiver=user)
-                    i.status = 'CLO'
-                    i.save()
-                    cnt += 1
+            # create link
+            if not get_link(i.sender, user):
+                Link.objects.create(sender=i.sender, receiver=user)
+                i.status = 'CLO'
+                i.save()
+                cnt += 1
+            # find event as invited contact and add to invitees
+            from event.models import Event
+            events = Event.objects.filter(contacts=i)
+            for e in events:
+                e.invitees.add(user)
     return cnt

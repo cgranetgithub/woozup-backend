@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 #from tastypie.test import ResourceTestCase
 
 from link.tasks import create_connections
-from link.models import Link, Invite
+from link.models import Link, Contact
 from userprofile.models import Profile
 from service.testutils import register, login
 
@@ -156,11 +156,11 @@ class LinkTestCase(TestCase):
         auth = '?username=%s&api_key=%s'%(username, api_key)
         sort_contact(self.c, username, user1_contacts)
         self.assertEqual(Link.objects.count(), 8) #7initial+user9
-        self.assertEqual(Invite.objects.count(), 9)
+        self.assertEqual(Contact.objects.count(), 9)
         # the following should NOT raise a DoesNotExist exception
-        Invite.objects.get(sender__user__username=username,
+        Contact.objects.get(sender__user__username=username,
                            numbers='+33600000001')
-        Invite.objects.get(sender__user__username=username,
+        Contact.objects.get(sender__user__username=username,
                            numbers='+33600000002')
         Link.objects.get(sender__user__username=username,
                          receiver__user__email='user9@fr.fr')
@@ -186,7 +186,7 @@ class LinkTestCase(TestCase):
         auth = '?username=%s&api_key=%s'%(username, api_key)
         sort_contact(self.c, username, user2_contacts)
         self.assertEqual(Link.objects.count(), 11) #+user9 +newuser1
-        self.assertEqual(Invite.objects.count(), 14)
+        self.assertEqual(Contact.objects.count(), 14)
         #the following MUST raise a DoesNotExist exception
         with self.assertRaises(Link.DoesNotExist):
             Link.objects.get(sender=self.u02.profile,
@@ -199,7 +199,7 @@ class LinkTestCase(TestCase):
         auth = '?username=%s&api_key=%s'%(username, api_key)
         sort_contact(self.c, username, user3_contacts)
         self.assertEqual(Link.objects.count(), 11)
-        self.assertEqual(Invite.objects.count(), 19)
+        self.assertEqual(Contact.objects.count(), 19)
         #the following MUST raise a DoesNotExist exception
         with self.assertRaises(Link.DoesNotExist):
             Link.objects.get(sender=self.u03.profile,
@@ -223,18 +223,18 @@ class LinkTestCase(TestCase):
         auth = '?username=%s&api_key=%s'%(username, api_key)
         sort_contact(self.c, username, user1_contacts)
         self.assertEqual(Link.objects.count(), 8)
-        self.assertEqual(Invite.objects.count(), 9)
+        self.assertEqual(Contact.objects.count(), 9)
         # check invites created (must not throw error)
-        Invite.objects.get(sender__user__username=username,
+        Contact.objects.get(sender__user__username=username,
                            name='localnumber', numbers='+33634567890')
-        Invite.objects.get(sender__user__username=username,
+        Contact.objects.get(sender__user__username=username,
                            name='intnumber', numbers='+33610077009')
-        with self.assertRaises(Invite.DoesNotExist):
-            Invite.objects.get(sender__user__username=username,
+        with self.assertRaises(Contact.DoesNotExist):
+            Contact.objects.get(sender__user__username=username,
                                name='wrongnumber', numbers='666'),
-        Invite.objects.get(sender__user__username=username,
+        Contact.objects.get(sender__user__username=username,
                            name='duplnumber', numbers='+33601203003'),
-        Invite.objects.get(sender__user__username=username, name='2numbers',
+        Contact.objects.get(sender__user__username=username, name='2numbers',
                            numbers='+33602200010, +33675894632'),
 
     def test_contact_big(self):
@@ -259,10 +259,10 @@ class LinkTestCase(TestCase):
             Link.objects.create(sender=self.u09.profile,
                                 receiver=self.u09.profile)
 
-class InviteTestCase(TestCase):
+class ContactTestCase(TestCase):
     c = Client(enforce_csrf_checks=True)
     def setUp(self):
-        super(InviteTestCase, self).setUp()
+        super(ContactTestCase, self).setUp()
         call_command('create_initial_data')
         self.u01 = register(self.c, 'user1@fr.fr')
     def test_invite(self):
@@ -272,16 +272,16 @@ class InviteTestCase(TestCase):
         sort_contact(self.c, username, user1_contacts)
         # check number is correct
         self.assertEqual(Link.objects.count(), 0)
-        self.assertEqual(Invite.objects.count(), 10)
+        self.assertEqual(Contact.objects.count(), 10)
         # check number is correct, with API
         res = self.c.get('/api/v1/invite/%s'%auth)
         self.assertEqual(res.status_code, 200)
         content = json.loads(res.content)
         self.assertEqual(content['meta']['total_count'], 10)
         # check invites are NEW
-        i1 = Invite.objects.get(sender__user__username=username,
+        i1 = Contact.objects.get(sender__user__username=username,
                                 numbers='+33600000001')
-        i2 = Invite.objects.get(sender__user__username=username,
+        i2 = Contact.objects.get(sender__user__username=username,
                                 numbers='+33600000002')
         self.assertEqual(i1.status, 'NEW')
         self.assertEqual(i2.status, 'NEW')
@@ -294,9 +294,9 @@ class InviteTestCase(TestCase):
                           data = json.dumps({}),
                           content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        i1 = Invite.objects.get(sender__user__username=username,
+        i1 = Contact.objects.get(sender__user__username=username,
                                 numbers='+33600000001')
-        i2 = Invite.objects.get(sender__user__username=username,
+        i2 = Contact.objects.get(sender__user__username=username,
                                 numbers='+33600000002')
         self.assertEqual(i1.status, 'PEN')
         self.assertEqual(i2.status, 'IGN')
@@ -354,7 +354,7 @@ class TransformTestCase(TestCase):
         sort_contact(self.c, username, user1_contacts)
     def test_creating_user(self):
         self.assertEqual(Link.objects.count(), 0)
-        self.assertEqual(Invite.objects.count(), 10)
+        self.assertEqual(Contact.objects.count(), 10)
         # new user whom email is in an invite
         register(self.c, 'newuser1@fr.fr')
         # must NOT throw any error:
@@ -368,7 +368,7 @@ class TransformTestCase(TestCase):
         (api_key, username) = login(self.c, email)
         auth = '?username=%s&api_key=%s'%(username, api_key)
         self.assertEqual(Link.objects.count(), 0)
-        self.assertEqual(Invite.objects.count(), 10)
+        self.assertEqual(Contact.objects.count(), 10)
         # change email into something known
         res = self.c.post('/api/v1/userprofile/setprofile/%s'%auth,
                           data = json.dumps({'email':'newuser21@fr.fr'}),
@@ -389,7 +389,7 @@ class TransformTestCase(TestCase):
                          receiver__user__email='newuser2@fr.fr')
     def test_changing_number(self):
         self.assertEqual(Link.objects.count(), 0)
-        self.assertEqual(Invite.objects.count(), 10)
+        self.assertEqual(Contact.objects.count(), 10)
         # new user, email unknown (not in any invite)
         email = 'unknown2@bidon2.com'
         register(self.c, email)

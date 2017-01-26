@@ -76,6 +76,7 @@ class UserResource(ModelResource):
     """
     profile = fields.ToOneField('userprofile.api.ProfileResource',
                                 'profile', full=True)
+    name = fields.CharField(attribute='get_full_name', readonly=True)
     class Meta:
         resource_name = 'user'
         queryset = get_user_model().objects.all()
@@ -108,7 +109,6 @@ class UserResource(ModelResource):
                 "fields": dict( authdoc.items() + doc.UserResourcePushNotifRegFields.items() )
             } ,
         ]
-
     def get_object_list(self, request):
         return get_user_model().objects.exclude(is_superuser=True)
 
@@ -277,6 +277,7 @@ class ProfileResource(ModelResource):
 class SuggestionsResource(ModelResource):
     profile = fields.ToOneField('userprofile.api.ProfileResource',
                                 'profile', full=True)
+    name = fields.CharField(attribute='get_full_name', readonly=True)
     class Meta:
         resource_name = 'suggestions'
         queryset = get_user_model().objects.all()

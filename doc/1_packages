@@ -1,17 +1,17 @@
 #for development
 sudo apt-get install python-pip git python-dev
 
-#for postgresql database
-sudo apt-get install postgresql phppgadmin postgresql-server-dev-9.3
+#for postgresql database ((Ubuntu 16.10)
+sudo apt-get install postgresql phppgadmin postgresql-server-dev-9.5
 
-#for geodjango (Ubuntu 14.04)
-sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.3-postgis-2.1 python-psycopg2 libgdal1h python-gdal libgeos-3.4.2 proj-bin proj-data libproj0 python-pyproj libxml2 libjson0
+#for geodjango (Ubuntu 16.10)
+sudo apt-get install binutils libgeos-dev libproj-dev libgdal-dev gdal-bin postgis postgresql-9.5-postgis-2.2 python-psycopg2 libgdal1i python-gdal libgeos-3.5.0 proj-bin proj-data libproj9 python-pyproj libxml2 libjson0
 
 # for redis
 sudo apt-get install redis-server
 
 # for PIL
-sudo apt-get install libjeg8-dev
+sudo apt-get install libjpeg9-dev
 
 #for django (a venv is highly recommended)
 sudo pip virtualenv
@@ -37,8 +37,14 @@ pip freeze --local | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
 
 ARCHIVE
 -------
+#for postgresql database
+sudo apt-get install postgresql phppgadmin postgresql-server-dev-9.3
+
 #for geodjango
 sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.1-postgis python-psycopg2 libgdal1 python-gdal libgeos-3.3.3 proj-bin proj-data libxml2 libjson0 
+
+#for geodjango (Ubuntu 14.04)
+sudo apt-get install binutils libproj-dev gdal-bin postgis postgresql-9.3-postgis-2.1 python-psycopg2 libgdal1h python-gdal libgeos-3.4.2 proj-bin proj-data libproj0 python-pyproj libxml2 libjson0
 
 # on ubuntu 12.04LTS, 
 # enable postgres repository:

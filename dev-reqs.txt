@@ -1,7 +1,6 @@
-coverage==4.0.3
-django-extensions==1.6.1
--e git://github.com/concentricsky/django-tastypie-swagger.git#egg=django-tastypie-swagger
+coverage==4.3.4
+django-extensions==1.7.6
 django-toolbelt==0.0.1
-docutils==0.12
+docutils==0.13.1
 heroku==0.1.4
-unittest-xml-reporting==2.0.0
+unittest-xml-reporting==2.1.0

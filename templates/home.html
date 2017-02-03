@@ -2,19 +2,15 @@
 {% load staticfiles %}
 
 {% block content %}
-  <h1>"Le meilleur moyen de voir tes amis"</h1>
-  <br>
-  <br>
-  <br>
-  <p>
-    <a href="https://itunes.apple.com/us/app/woozup/id1071815542?l=fr&ls=1&mt=8">
-      <img src="{% static "img/badge_appstore.svg" %}"
-           class="badge_store"
-           alt="Disponible dans l'Apple App Store"></img>
-    </a>
+<h1>Installe l'appli sur ton smartphone !</h1>
+<p>
     <a href="https://play.google.com/store/apps/details?id=com.varioware.woozup&utm_source=global_co&utm_medium=prtnr&utm_content=Mar2515&utm_campaign=PartBadge&pcampaignid=MKT-AC-global-none-all-co-pr-py-PartBadges-Oct1515-1">
-      <img src="https://play.google.com/intl/en_us/badges/images/apps/fr-play-badge.png" class="badge_store"
-           alt="Disponible dans le Google Play Store"></img>
+    <img src="https://play.google.com/intl/en_us/badges/images/apps/fr-play-badge.png" class="badge_store" alt="Disponible dans le Google Play Store" width="400px;"></img>
     </a>
-  </p>
+</p>
+<p>
+    <a href="https://itunes.apple.com/us/app/woozup/id1071815542?l=fr&ls=1&mt=8">
+    <img src="{% static "img/badge_appstore.svg" %}" class="badge_store" alt="Disponible dans l'Apple App Store" width="400px;"></img>
+    </a>
+</p>
 {% endblock %}

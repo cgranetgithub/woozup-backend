@@ -33,11 +33,8 @@ def invitees_changed(sender, instance, action, reverse,
 
 def contacts_changed(sender, instance, action, reverse,
                      model, pk_set, using, **kwargs):
-    print (sender, instance, action, reverse,
-                     model, pk_set, using, kwargs)
     if action == u'post_add':
         contacts = model.objects.filter(pk__in=pk_set)
-        print contacts
         # push notification
         EVENT_CREATED = u"""%s souhaite t'inviter à la sortie "%s". Télécharge l'appli WOOZUP sur ton smartphone pour voir le détail de l’invitation  et lui répondre."""
         msg = EVENT_CREATED%(instance.owner.get_full_name(), instance.name)

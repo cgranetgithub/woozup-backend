@@ -9,7 +9,7 @@ from link.api import *
 from event.api import *
 from userprofile.api import *
 from journal.api import *
-from web.views import home, profile
+from web.views import home, profile, stats, notif
 
 from service.settings.prod import STATIC_URL
 #from service.notification import GCMDeviceAuthenticatedResource
@@ -58,7 +58,8 @@ urlpatterns = [
     url(r'^apple-touch-icon.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),
     url(r'^robots.txt$', RedirectView.as_view(url=STATIC_URL+'robots.txt')),
     #url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
-    #url(r'^home/$', home),
+    url(r'^stats/$', stats),
+    url(r'^notif/$', notif),
     #url(r'^logout/$', social_logout),
 ]
 

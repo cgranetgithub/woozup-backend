@@ -95,8 +95,6 @@ class ContactResource(ModelResource):
         always_return_data = True
 
     def get_object_list(self, request):
-        print Contact.objects.all().count()
-        print Contact.objects.filter( sender=request.user ).count()
         return Contact.objects.filter( sender=request.user )
 
     def prepend_urls(self):

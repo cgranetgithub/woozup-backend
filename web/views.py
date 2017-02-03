@@ -1,3 +1,5 @@
+ #-*- coding: utf-8 -*-
+
 #from django.http import JsonResponse
 #from django.contrib.auth import login
 #from django.contrib.auth import logout as auth_logout
@@ -6,8 +8,13 @@ from django.contrib.auth.models import User
 #from service.notification import send_mail
 from django.shortcuts import render_to_response, redirect, render
 from django.db.models import Count
-#from event.models import Event
+from event.models import Event
+from link.models import Link, Contact
 #from event.push import get_event_context
+from django.db.models import Q
+from django.http import HttpResponse
+from django import forms
+from django.contrib.admin.views.decorators import staff_member_required
 
 def home(request):
     return render_to_response('home.html')
@@ -50,6 +57,7 @@ def home(request):
             #send_mail(template_prefix, emails, context)
     #return render(request, 'web/emails.html')
 
+@staff_member_required
 def users(request):
     data = User.objects.extra(
                 # get specific dates (not hours for example)
@@ -67,6 +75,47 @@ def events(request):
 
 def profile(request):
     return render(request, 'web/profile.html', {'user': request.user})
+
+@staff_member_required
+def stats(request):
+    users = User.objects.count()
+    links_total = Link.objects.count()
+    links_new = Link.objects.filter(sender_status='NEW', receiver_status='NEW').count()
+    links_pen = Link.objects.filter(Q(sender_status='PEN')| Q(receiver_status='PEN')).count()
+    links_acc = Link.objects.filter(sender_status='ACC', receiver_status='ACC').count()
+    contacts_total = Contact.objects.count()
+    contacts_new = Contact.objects.filter(status='NEW').count()
+    contacts_pen = Contact.objects.filter(status='PEN').count()
+    contacts_acc = Contact.objects.filter(status='CLO').count()
+    events = Event.objects.count()
+    return render(request, 'web/stats.html',
+                  {'users':users, 'links_total':links_total,
+                   'links_new':links_new, 'links_pen':links_pen,
+                   'links_acc':links_acc, 'links_acc':links_acc,
+                   'contacts_total':contacts_total, 'contacts_new':contacts_new,
+                   'contacts_pen':contacts_pen, 'contacts_acc':contacts_acc,
+                   'events':events})
+
+class GlobalNotificationForm(forms.Form):
+    message = forms.CharField(label=u"""Notification à tous les users""",
+                              widget=forms.Textarea)
+
+@staff_member_required
+def notif(request):
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = GlobalNotificationForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            return HttpResponse('result')
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = GlobalNotificationForm()
+    return render(request, 'web/notif.html', {'form': form})
 
 #def register_by_access_token(request, backend):
     #token = request.GET.get('access_token')

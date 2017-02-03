@@ -8,11 +8,8 @@ launch psql
 
 create user and table
 ---------------------
-> postgres=# CREATE USER --superuser testdjango;
- CREATE ROLE ;
-
-# Note, it doesn't work on my 14.04, use commandline tool
-$ createuser --superuser testdjango
+postgres=# CREATE USER testdjango WITH SUPERUSER;
+CREATE ROLE
 
 > postgres=# ALTER ROLE testdjango WITH CREATEDB ;
  ALTER ROLE

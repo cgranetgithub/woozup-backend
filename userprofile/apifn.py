@@ -173,17 +173,23 @@ def push_notif_reg(request, data):
             return (request, {u'reason': u"empty platform"}, HttpBadRequest)
         try:
             if platform == 'ios':
-                (device, created) = APNSDevice.objects.get_or_create(
-                                                    user=request.user,
-                                                    device_id=device_id)
+                #(device, created) = APNSDevice.objects.get_or_create(
+                                                    #user=request.user,
+                                                    #device_id=device_id)
+                APNSDevice.objects.filter(user=request.user).delete()
+                device = APNSDevice(user=request.user, device_id=device_id,
+                                    registration_id=registration_id)
             elif platform == 'android':
-                (device, created) = GCMDevice.objects.get_or_create(
-                                                    user=request.user,
-                                                    device_id=device_id)
+                #(device, created) = GCMDevice.objects.get_or_create(
+                                                    #user=request.user,
+                                                    #device_id=device_id)
+                GCMDevice.objects.filter(user=request.user).delete()
+                device = GCMDevice(user=request.user, device_id=device_id,
+                                   registration_id=registration_id)
             else:
                 logging.error(u"unknown platform")
                 return (request, {u'reason': "unknown platform"}, HttpBadRequest)
-            device.registration_id = registration_id
+            #device.registration_id = registration_id
             try:
                 name = data.get('name').strip()
                 if name:

@@ -11,7 +11,6 @@ from tastypie.http import (HttpUnauthorized, HttpForbidden,
                            HttpCreated, HttpBadRequest,
                            HttpUnprocessableEntity)
 
-#from django.db.models import Q
 from django.http import HttpResponse
 from django.conf.urls import url
 from django.contrib.auth import get_user_model
@@ -29,6 +28,7 @@ from allauth.socialaccount import providers
 from allauth.socialaccount.models import SocialLogin, SocialToken, SocialApp
 from allauth.socialaccount.providers.facebook.views import fb_complete_login
 from allauth.socialaccount.helpers import complete_social_login
+from allauth.account.utils import perform_login
 
 import apifn
 
@@ -88,27 +88,7 @@ class UserResource(ModelResource):
         filtering = {'username': ALL, 'first_name': ALL}
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
-        # for the doc:
-        extra_actions = [
-            {   "name": u"logout",
-                "http_method": u"GET",
-                "resource_type": u"list",
-                "summary": doc.UserResourceLogout,
-                "fields": authdoc
-            } ,
-            {   "name": u"check_auth",
-                "http_method": u"GET",
-                "resource_type": u"list",
-                "summary": doc.UserResourceCheckAuth,
-                "fields": authdoc
-            } ,
-            {   "name": u"push_notif_reg",
-                "http_method": u"POST",
-                "resource_type": "list",
-                "summary": doc.UserResourcePushNotifReg,
-                "fields": dict( authdoc.items() + doc.UserResourcePushNotifRegFields.items() )
-            } ,
-        ]
+
     def get_object_list(self, request):
         return get_user_model().objects.exclude(is_superuser=True)
 
@@ -369,21 +349,6 @@ class AuthResource(ModelResource):
         fields = ['username', 'first_name', 'last_name', 'email']
         allowed_methods = []
         resource_name = 'auth'
-        # for the doc:
-        extra_actions = [
-            {"name": u"register",
-             "http_method": u"POST",
-             "resource_type": u"list",
-             "summary": doc.AuthResourceRegister,
-             "fields": doc.AuthResourceRegisterFields
-            } ,
-            {"name": "login",
-             "http_method": "POST",
-             "resource_type": "list",
-             "summary": doc.AuthResourceLogin,
-             "fields": doc.AuthResourceLoginFields
-            } ,
-        ]
 
     def prepend_urls(self):
         return [
@@ -663,18 +628,34 @@ class AuthResource(ModelResource):
 
     def social_login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
-        # social registration
+        # new way
         try:
-            data = self.get_clean_data(request)
+            data         = self.get_clean_data(request)
             access_token = self.get_clean_token(data)
-            (request, user) = self.social(request, access_token)
         except:
-            logging.error(u'something went wrong with FB')
             return self.create_response(request,
-                                        {u'something went wrong with FB'},
+                                        u'something wrong with args',
                                         HttpBadRequest)
+        if 'phone_number' in data:
+            phone_number = self.get_clean_number(data)
+            number       = self.find_number(phone_number)
+            if number.validated and number.user:
+                perform_login(request, number.user, None)
+                user = number.user
+        else:
+            # social registration (legacy)
+            try:
+                data = self.get_clean_data(request)
+                access_token = self.get_clean_token(data)
+                (request, user) = self.social(request, access_token)
+            except:
+                logging.error(u'something went wrong with FB')
+                return self.create_response(request,
+                                            {u'something went wrong with FB'},
+                                            HttpBadRequest)
+            ###############
         result =  {u'api_key' : user.api_key.key, u'userid' : user.id,
-                   u'username': user.username}
+                    u'username': user.username}
         return self.create_response(request, result, HttpResponse)
 
     def social_register(self, request, **kwargs):

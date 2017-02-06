@@ -17,8 +17,8 @@ def accept_link(user_who_accept, user2):
             l.receiver_status = 'PEN'
         l.save()
     except Link.DoesNotExist:
-        # will raise error if not found
-        l = Link.objects.get(sender=user2, receiver=user_who_accept)
+        (l, created) = Link.objects.get_or_create(sender=user2,
+                                                  receiver=user_who_accept)
         l.receiver_status = 'ACC'
         if l.sender_status not in ['ACC', 'BLO']:
             l.sender_status = 'PEN'

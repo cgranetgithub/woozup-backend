@@ -6,7 +6,7 @@ from django.db.models.signals import post_save
 from django.contrib.auth.models import Group
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
-from service.notification import send_sms
+from service.notification import enqueue_send_sms
 from django.conf import settings
 
 MALE   = 'MA'
@@ -28,7 +28,7 @@ class Number(models.Model):
         self.code_sent_at = timezone.now()
         self.save()
         try:
-            send_sms('Code de vérification Woozup : %s'%self.validation_code,
+            enqueue_send_sms('Code de vérification Woozup : %s'%self.validation_code,
                     set([unicode(self.phone_number)]))
         except:
             return "Code sending failed"

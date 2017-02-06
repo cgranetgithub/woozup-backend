@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from service.notification import send_notification, send_sms
+from service.notification import enqueue_send_notification, enqueue_send_sms
 from django.utils import timezone
 from journal.models import Record
 
@@ -26,7 +26,7 @@ def link_requested(link, inverted, **kwargs):
     data[u"id"] = sender.id
     if sender.profile.image:
         data[u"image"] = sender.profile.image.url
-    send_notification([recipient], data)
+    enqueue_send_notification([recipient], data)
     # email
     #if recipient.user.email:
         #template_prefix = "link/email/request"
@@ -48,7 +48,7 @@ def link_accepted(link, inverted, **kwargs):
     data[u"id"] = sender.id
     if sender.profile.image:
         data[u"image"] = sender.profile.image.url
-    send_notification([recipient], data)
+    enqueue_send_notification([recipient], data)
     # create journal record
     Record.objects.create(record_type='NEWFRIEND', user=sender,
                           refering_user=recipient)
@@ -72,7 +72,7 @@ def send_invitation(contacts, message, sms=True):
     for c in contacts:
         if c.numbers:
             numbers = set([x.strip() for x in c.numbers.split(',')])
-            send_sms(message, numbers)
+            enqueue_send_sms(message, numbers)
             ret['sms'] += len(numbers)
             c.sent_at = timezone.now()
             c.save()
@@ -95,4 +95,4 @@ def invite_validated(contact):
     #template_prefix = "link/email/generic_invite"
     #context = {}
     #send_mail(template_prefix, emails, context)
-    #send_sms(SMS_GENERIC, numbers)
+    #enqueue_send_sms(SMS_GENERIC, numbers)

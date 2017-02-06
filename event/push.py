@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from service.notification import send_notification
+from service.notification import enqueue_send_notification
 from link.push import send_invitation
 from link.utils import accept_link
 #from django.contrib.gis.db.models.functions import Distance
@@ -26,7 +26,7 @@ def invitees_changed(sender, instance, action, reverse,
                 u"id": instance.id}
         if instance.owner.profile.image:
             data[u'image'] = instance.owner.profile.image.url
-        send_notification(invitees, data)
+        enqueue_send_notification(invitees, data)
         # update links
         for i in invitees:
             accept_link(instance.owner, i)
@@ -36,7 +36,7 @@ def contacts_changed(sender, instance, action, reverse,
     if action == u'post_add':
         contacts = model.objects.filter(pk__in=pk_set)
         # push notification
-        EVENT_CREATED = u"""%s souhaite t'inviter à la sortie "%s". Télécharge l'appli WOOZUP sur ton smartphone pour voir le détail de l’invitation  et lui répondre."""
+        EVENT_CREATED = u"""%s t'invite à la sortie "%s". Télécharge l'application WOOZUP pour voir l'invitation et lui répondre"""
         msg = EVENT_CREATED%(instance.owner.get_full_name(), instance.name)
         send_invitation(contacts, msg)
     
@@ -60,7 +60,7 @@ def event_canceled(sender, instance, **kwargs):
             u"id": instance.id}
     if instance.owner.profile.image:
         data[u'image'] = instance.owner.profile.image.url
-    send_notification(friends, data)
+    enqueue_send_notification(friends, data)
     # email
     #template_prefix = "event/email/event_canceled"
     #emails = friends.values_list('user__email', flat=True)
@@ -97,7 +97,7 @@ def participant_joined(request, user, event):
             u"id": event.id}
     if user.profile.image:
         data[u'image'] = user.profile.image.url
-    send_notification(recepients, data)
+    enqueue_send_notification(recepients, data)
     # email
     #template_prefix = "event/email/participant_joined"
     #emails = [r.user.email for r in recepients]
@@ -119,7 +119,7 @@ def participant_left(request, user, event):
             u"id": event.id}
     if user.profile.image:
         data[u'image'] = user.profile.image.url
-    send_notification(recepients, data)
+    enqueue_send_notification(recepients, data)
     # email
     #template_prefix = "event/email/participant_left"
     #emails = [r.user.email for r in recepients]
@@ -151,7 +151,7 @@ def comment_saved(sender, instance, created, update_fields, **kwargs):
                 u"id":instance.event.id}
         if instance.author.profile.image:
             data[u'image'] = instance.author.profile.image.url
-        send_notification(recepients, data)
+        enqueue_send_notification(recepients, data)
     elif update_fields:
         pass
     
@@ -176,7 +176,7 @@ def comment_saved(sender, instance, created, update_fields, **kwargs):
 #                         instance.name)
 #     data = {u"title":u"Changement Woozup", u"message":msg,
 #             u"reason":u"eventchanged", u"id":instance.id}
-#     send_notification(friends, data)
+#     enqueue_send_notification(friends, data)
 #     # email
 #     template_prefix = "event/email/event_modified"
 #     emails = friends.values_list('user__email', flat=True)

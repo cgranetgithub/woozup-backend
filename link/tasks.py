@@ -4,40 +4,44 @@ import logging
 logger = logging.getLogger(__name__)
 
 from django.db.models import Q
-from rq.decorators import job
-from worker import conn
 from service.utils import get_clean_number
 from django.contrib.auth import get_user_model
 
+from rq.decorators import job
+from worker import conn
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.conf import settings
+
+def get_clean_data(contact, key):
+    try:
+        data = contact.get(key)
+        if not data:
+            return []
+    except:
+        return []
+    raw_data_list = data.split(',')
+    new_data_list = []
+    for i in raw_data_list:
+        i = i.strip()
+        if i not in new_data_list:
+            new_data_list.append(i)
+    new_data_list.sort()
+    return new_data_list
+    
 def is_email(email):
     return ( '@' in email )
 
 def get_clean_emails(contact):
-    try:
-        emails = contact.get('emails')
-        emails = emails.strip()
-        if not emails:
-            return []
-    except:
-        return []
-    raw_email_list = emails.split(',')
+    raw_email_list = get_clean_data(contact, 'emails')
     new_email_list = []
     for i in raw_email_list:
         if is_email(i):
-            new_email_list.append(i.strip())
-    result = list(set(new_email_list))
-    result.sort()
-    return result
+            new_email_list.append(i)
+    return new_email_list
 
 def get_clean_numbers(contact):
-    try:
-        numbers = contact.get('numbers')
-        numbers = numbers.strip()
-        if not numbers:
-            return []
-    except:
-        return []
-    raw_number_list = numbers.split(',')
+    raw_number_list = get_clean_data(contact, 'numbers')
     new_number_list = []
     for i in raw_number_list:
         num = get_clean_number(i)
@@ -64,11 +68,11 @@ def find_users_from_number_list(number_list):
         return get_user_model().objects.none()
 
 @job('default', connection=conn)
-def create_connections(userid, data):
+def create_connections(userId, data):
     import django
     django.setup()
     from link.models import Contact, Link
-    user = get_user_model().objects.get(id=userid)
+    user = get_user_model().objects.get(id=userId)
     # for each contact
     for contact in data:
         email_list = get_clean_emails(contact)
@@ -94,12 +98,12 @@ def create_connections(userid, data):
             name = contact.get('name', '')
             emails = ', '.join(email_list)
             numbers = ', '.join(number_list)
-            photo = contact.get('photo', '')
+            photo = get_clean_data(contact, 'photo')
             if name and not name.startswith('.'):
                 if emails:
                     try:
                         invite = Contact.objects.get(sender = user,
-                                                    emails = emails)
+                                                     emails = emails)
                         invite.name = name
                         invite.numbers = numbers
                         invite.photo = photo
@@ -140,17 +144,14 @@ user, name/emails/numbers exist, more than one Contact with same numbers \
 no emails, name/numbers exist, more than one Contact with same numbers \
 %s %s"""%(name, numbers))
 
-# called by userprofile.apps on post_save signal
-def transform_invites_from_number(sender, instance, **kwargs):
-    from userprofile.models import Number
-    assert type(instance) is Number
-    if (not instance.phone_number) or (not instance.user):
-        return 0
-    user = instance.user
-    cnt = 0
+@job('default', connection=conn)
+def transform_invites_from_number(userId, phone_number):
+    import django
+    django.setup()
     from .models import Link, Contact
     from .utils import get_link
-    invites = Contact.objects.filter(numbers__icontains=instance.phone_number
+    user = get_user_model().objects.get(id=userId)
+    invites = Contact.objects.filter(numbers__icontains=phone_number
                                     ).exclude(status='CLO')
     for i in invites:
         if user != i.sender:
@@ -159,21 +160,19 @@ def transform_invites_from_number(sender, instance, **kwargs):
                 Link.objects.create(sender=i.sender, receiver=user)
                 i.status = 'CLO'
                 i.save()
-                cnt += 1
             # find event as invited contact and add to invitees
             from event.models import Event
             events = Event.objects.filter(contacts=i)
             for e in events:
                 e.invitees.add(user)
-    return cnt
 
-# called by userprofile.apps on post_save signal
-def transform_invites_from_user(sender, instance, **kwarg):
-    assert type(instance) is get_user_model()
-    user = instance
+@job('default', connection=conn)
+def transform_invites_from_user(userId):
+    import django
+    django.setup()
+    user = get_user_model().objects.get(id=userId)
     if not user.email:
         return 0
-    cnt = 0
     from .models import Link, Contact
     from .utils import get_link
     invites = Contact.objects.filter(emails__icontains=user.email
@@ -185,10 +184,21 @@ def transform_invites_from_user(sender, instance, **kwarg):
                 Link.objects.create(sender=i.sender, receiver=user)
                 i.status = 'CLO'
                 i.save()
-                cnt += 1
             # find event as invited contact and add to invitees
             from event.models import Event
             events = Event.objects.filter(contacts=i)
             for e in events:
                 e.invitees.add(user)
-    return cnt
+
+
+@receiver(post_save, sender="userprofile.Number")
+def enqueue_transform_invites_from_number(sender, instance, **kwargs):
+    if not (instance.phone_number and instance.user):
+        return 0
+    transform_invites_from_number.delay(instance.user.id,
+                                        unicode(instance.phone_number))
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def enqueue_transform_invites_from_user(sender, instance, **kwarg):
+    transform_invites_from_user.delay(instance.id)
+    

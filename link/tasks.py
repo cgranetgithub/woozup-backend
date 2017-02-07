@@ -156,7 +156,7 @@ def transform_contacts(userId):
     if user.email:
         from_email = Contact.objects.filter(emails__icontains=user.email
                                             ).exclude(status='CLO')
-    if user.number:
+    if hasattr(user, 'number') and user.number:
         phone_number = user.number.phone_number
         from_num = Contact.objects.filter(numbers__icontains=phone_number
                                             ).exclude(status='CLO')

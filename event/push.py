@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from service.notification import enqueue_send_notification
+from service.notification import enqueue_send_notification, enqueue_send_sms
 from link.push import send_invitation
 from link.utils import accept_link
 #from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D # ``D`` is a shortcut for ``Distance``
 from journal.models import Record
+from django.utils import timezone
 
 def invitees_changed(sender, instance, action, reverse,
                      model, pk_set, using, **kwargs):
@@ -35,11 +36,19 @@ def contacts_changed(sender, instance, action, reverse,
                      model, pk_set, using, **kwargs):
     if action == u'post_add':
         contacts = model.objects.filter(pk__in=pk_set)
+        numbers = []
+        for c in contacts:
+            if c.numbers:
+                numbers += [x.strip() for x in c.numbers.split(',')]
+                c.sent_at = timezone.now()
+                c.status = 'PEN'
+                c.save()
         # push notification
         EVENT_CREATED = u"""%s t'invite à la sortie "%s". Télécharge l'application WOOZUP pour voir l'invitation et lui répondre"""
         msg = EVENT_CREATED%(instance.owner.get_full_name(), instance.name)
-        send_invitation(contacts, msg)
-    
+        enqueue_send_sms(msg, set(numbers))
+        #send_invitation(contacts, msg)
+
 def event_created(sender, instance, **kwargs):
     # create journal record
     Record.objects.create(record_type='NEWEVENT', user=instance.owner,

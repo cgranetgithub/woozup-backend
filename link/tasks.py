@@ -144,40 +144,21 @@ user, name/emails/numbers exist, more than one Contact with same numbers \
 no emails, name/numbers exist, more than one Contact with same numbers \
 %s %s"""%(name, numbers))
 
-@job('default', connection=conn)
-def transform_invites_from_number(userId, phone_number):
-    import django
-    django.setup()
-    from .models import Link, Contact
-    from .utils import get_link
-    user = get_user_model().objects.get(id=userId)
-    invites = Contact.objects.filter(numbers__icontains=phone_number
-                                    ).exclude(status='CLO')
-    for i in invites:
-        if user != i.sender:
-            # create link
-            if not get_link(i.sender, user):
-                Link.objects.create(sender=i.sender, receiver=user)
-                i.status = 'CLO'
-                i.save()
-            # find event as invited contact and add to invitees
-            from event.models import Event
-            events = Event.objects.filter(contacts=i)
-            for e in events:
-                e.invitees.add(user)
 
 @job('default', connection=conn)
-def transform_invites_from_user(userId):
+def transform_contacts(userId):
     import django
     django.setup()
-    user = get_user_model().objects.get(id=userId)
-    if not user.email:
-        return 0
     from .models import Link, Contact
     from .utils import get_link
-    invites = Contact.objects.filter(emails__icontains=user.email
-                                    ).exclude(status='CLO')
-    for i in invites:
+    user = get_user_model().objects.get(id=userId)
+    phone_number = user.number.phone_number
+    from_email = Contact.objects.filter(emails__icontains=user.email
+                                        ).exclude(status='CLO')
+    from_num = Contact.objects.filter(numbers__icontains=phone_number
+                                      ).exclude(status='CLO')
+    contacts = from_email | from_num
+    for i in contacts:
         if user != i.sender:
             # create link
             if not get_link(i.sender, user):
@@ -193,12 +174,9 @@ def transform_invites_from_user(userId):
 
 @receiver(post_save, sender="userprofile.Number")
 def enqueue_transform_invites_from_number(sender, instance, **kwargs):
-    if not (instance.phone_number and instance.user):
-        return 0
-    transform_invites_from_number.delay(instance.user.id,
-                                        unicode(instance.phone_number))
+    if instance.phone_number and instance.user:
+        transform_contacts.delay(instance.id)
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def enqueue_transform_invites_from_user(sender, instance, **kwarg):
-    transform_invites_from_user.delay(instance.id)
-    
+    transform_contacts.delay(instance.id)

@@ -111,12 +111,12 @@ class UserResource(ModelResource):
             url(r'^(?P<resource_name>%s)/push_notif_reg%s$' %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('push_notif_reg'), name='api_push_notif_reg'),
-            url(r"^(?P<resource_name>%s)/accept/(?P<user_id>\w[\w/-]*)%s$" %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('accept'), name="api_accept"),
-            url(r"^(?P<resource_name>%s)/reject/(?P<user_id>\w[\w/-]*)%s$" %
-                (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('reject'), name="api_reject"),
+            #url(r"^(?P<resource_name>%s)/accept/(?P<user_id>\w[\w/-]*)%s$" %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('accept'), name="api_accept"),
+            #url(r"^(?P<resource_name>%s)/reject/(?P<user_id>\w[\w/-]*)%s$" %
+                #(self._meta.resource_name, trailing_slash()),
+                #self.wrap_view('reject'), name="api_reject"),
             url(r"^(?P<resource_name>%s)/friendscount/(?P<user_id>\w[\w/-]*)%s$" %
                 (self._meta.resource_name, trailing_slash()),
                 self.wrap_view('friendscount'), name="api_friendscount"),
@@ -166,19 +166,19 @@ class UserResource(ModelResource):
         (req, result, status) = apifn.push_notif_reg(request, data)
         return self.create_response(req, result, status)
 
-    def accept(self, request, **kwargs):
-        self.method_check(request, allowed=['post'])
-        self.is_authenticated(request)
-        self.throttle_check(request)
-        (req, result, status) = apifn.accept(request, kwargs['user_id'])
-        return self.create_response(req, result, status)
+    #def accept(self, request, **kwargs):
+        #self.method_check(request, allowed=['post'])
+        #self.is_authenticated(request)
+        #self.throttle_check(request)
+        #(req, result, status) = apifn.accept(request, kwargs['user_id'])
+        #return self.create_response(req, result, status)
 
-    def reject(self, request, **kwargs):
-        self.method_check(request, allowed=['post'])
-        self.is_authenticated(request)
-        self.throttle_check(request)
-        (req, result, status) = apifn.reject(request, kwargs['user_id'])
-        return self.create_response(req, result, status)
+    #def reject(self, request, **kwargs):
+        #self.method_check(request, allowed=['post'])
+        #self.is_authenticated(request)
+        #self.throttle_check(request)
+        #(req, result, status) = apifn.reject(request, kwargs['user_id'])
+        #return self.create_response(req, result, status)
 
     def friendscount(self, request, **kwargs):
         self.method_check(request, allowed=['get'])

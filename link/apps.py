@@ -5,7 +5,7 @@ class LinkConfig(AppConfig):
     name = 'link'
     verbose_name = "Link"
 
-    def ready(self):
-        from link.push import link_saved
-        Link = self.get_model('Link')
-        post_save.connect(link_saved, sender=Link)
+    #def ready(self):
+        #from link.push import link_saved
+        #Link = self.get_model('Link')
+        #post_save.connect(link_saved, sender=Link)

@@ -206,80 +206,80 @@ def push_notif_reg(request, data):
         return (request, {u'reason': u"You are not authenticated"},
                     HttpUnauthorized)
 
-def accept(request, receiver_id):
-    sender = request.user
-    receiver = User.objects.get(id=receiver_id)
-    if request.user and request.user.is_authenticated():
-        inverted = False
-        try:
-            link = Link.objects.get(sender=sender, receiver=receiver)
-            if link.sender_status == 'NEW' and link.receiver_status == 'NEW':
-                link.receiver_status = 'PEN'
-                push.link_requested(link, inverted)
-            elif link.sender_status == 'PEN' and link.receiver_status == 'ACC':
-                push.link_accepted(link, inverted)
-            link.sender_status = 'ACC'
-            link.save()
-        except Link.DoesNotExist:
-            try:
-                (link, created) = Link.objects.get_or_create(sender=receiver,
-                                                             receiver=sender)
-                inverted = True
-                if link.sender_status == 'NEW' and link.receiver_status == 'NEW':
-                    link.sender_status = 'PEN'
-                    push.link_requested(link, inverted)
-                elif link.sender_status == 'ACC' and link.receiver_status == 'PEN':
-                    push.link_accepted(link, inverted)
-                link.receiver_status = 'ACC'
-                link.save()
-            except:
-                logging.error(u'not found => created => issue')
-                return (request, {u'reason': u'not found => created => issue'},
-                        HttpUnprocessableEntity)
-        except:
-            logging.error(u'found => issue')
-            return (request, {u'reason': u'found => issue'},
-                    HttpUnprocessableEntity)
-        return (request, {}, HttpResponse)
-    else:
-        return (request, {u'reason': u"You are not authenticated"},
-                HttpUnauthorized)
+#def accept(request, receiver_id):
+    #sender = request.user
+    #receiver = User.objects.get(id=receiver_id)
+    #if request.user and request.user.is_authenticated():
+        #inverted = False
+        #try:
+            #link = Link.objects.get(sender=sender, receiver=receiver)
+            #if link.sender_status == 'NEW' and link.receiver_status == 'NEW':
+                #link.receiver_status = 'PEN'
+                #push.link_requested(link, inverted)
+            #elif link.sender_status == 'PEN' and link.receiver_status == 'ACC':
+                #push.link_accepted(link, inverted)
+            #link.sender_status = 'ACC'
+            #link.save()
+        #except Link.DoesNotExist:
+            #try:
+                #(link, created) = Link.objects.get_or_create(sender=receiver,
+                                                             #receiver=sender)
+                #inverted = True
+                #if link.sender_status == 'NEW' and link.receiver_status == 'NEW':
+                    #link.sender_status = 'PEN'
+                    #push.link_requested(link, inverted)
+                #elif link.sender_status == 'ACC' and link.receiver_status == 'PEN':
+                    #push.link_accepted(link, inverted)
+                #link.receiver_status = 'ACC'
+                #link.save()
+            #except:
+                #logging.error(u'not found => created => issue')
+                #return (request, {u'reason': u'not found => created => issue'},
+                        #HttpUnprocessableEntity)
+        #except:
+            #logging.error(u'found => issue')
+            #return (request, {u'reason': u'found => issue'},
+                    #HttpUnprocessableEntity)
+        #return (request, {}, HttpResponse)
+    #else:
+        #return (request, {u'reason': u"You are not authenticated"},
+                #HttpUnauthorized)
 
-def reject(request, receiver_id):
-    sender = request.user
-    receiver = User.objects.get(id=receiver_id)
-    if request.user and request.user.is_authenticated():
-        inverted = False
-        try:
-            link = Link.objects.get(sender=sender, receiver=receiver)
-            if link.sender_status == 'NEW':
-                link.sender_status = 'IGN'
-            elif link.sender_status == 'PEN':
-                link.sender_status = 'REJ'
-            else:
-                link.sender_status = 'BLO'
-            link.save()
-        except Link.DoesNotExist:
-            try:
-                link = Link.objects.get(sender=receiver, receiver=sender)
-                inverted = True
-                if link.receiver_status == 'NEW':
-                    link.receiver_status = 'IGN'
-                elif link.receiver_status == 'PEN':
-                    link.receiver_status = 'REJ'
-                else:
-                    link.receiver_status = 'BLO'
-                link.save()
-            except Link.DoesNotExist:
-                return (request, {u'reason': u'Link not found'},
-                        HttpForbidden)
-            except:
-                return (request, {u'reason': u'Link found but error'},
-                        HttpForbidden)
-        except:
-            return (request, {u'reason': u'Unexpected'},
-                    HttpForbidden)
-        return (request, {}, HttpResponse)
-    else:
-        return (request, {u'reason': u"You are not authenticated"},
-                HttpUnauthorized)
+#def reject(request, receiver_id):
+    #sender = request.user
+    #receiver = User.objects.get(id=receiver_id)
+    #if request.user and request.user.is_authenticated():
+        #inverted = False
+        #try:
+            #link = Link.objects.get(sender=sender, receiver=receiver)
+            #if link.sender_status == 'NEW':
+                #link.sender_status = 'IGN'
+            #elif link.sender_status == 'PEN':
+                #link.sender_status = 'REJ'
+            #else:
+                #link.sender_status = 'BLO'
+            #link.save()
+        #except Link.DoesNotExist:
+            #try:
+                #link = Link.objects.get(sender=receiver, receiver=sender)
+                #inverted = True
+                #if link.receiver_status == 'NEW':
+                    #link.receiver_status = 'IGN'
+                #elif link.receiver_status == 'PEN':
+                    #link.receiver_status = 'REJ'
+                #else:
+                    #link.receiver_status = 'BLO'
+                #link.save()
+            #except Link.DoesNotExist:
+                #return (request, {u'reason': u'Link not found'},
+                        #HttpForbidden)
+            #except:
+                #return (request, {u'reason': u'Link found but error'},
+                        #HttpForbidden)
+        #except:
+            #return (request, {u'reason': u'Unexpected'},
+                    #HttpForbidden)
+        #return (request, {}, HttpResponse)
+    #else:
+        #return (request, {u'reason': u"You are not authenticated"},
+                #HttpUnauthorized)

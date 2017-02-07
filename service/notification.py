@@ -20,10 +20,10 @@ def send_notification(id_list, data):
     django.setup()
     from push_notifications.models import APNSDevice, GCMDevice
     android_push = GCMDevice.objects.filter(user__id__in=id_list,
-                                            is_active=True)
+                                            active=True)
     android_push.send_message(data['message'], extra=data)
     ios_push = APNSDevice.objects.filter(user__id__in=id_list,
-                                            is_active=True)
+                                            active=True)
     ios_push.send_message(data['message'], extra=data)
 
 def enqueue_send_notification(user_list, data):
@@ -31,11 +31,9 @@ def enqueue_send_notification(user_list, data):
     send_notification.delay(id_list, data)
 
 @job('default', connection=conn)
-def send_sms(message, number_set):
-    # set to make sure no duplicates
-    assert type(number_set) is set
+def send_sms(message, numbers):
     # keep only mobile numbers
-    numbers = [n for n in number_set if is_mobile_number(n)]
+    #numbers = [n for n in number_set if is_mobile_number(n)]
     logger.info("Sending %d SMS"%len(numbers))
     dest = '<'.join(numbers)
     p = plivo.RestAPI(auth_id, auth_token)
@@ -47,7 +45,14 @@ def send_sms(message, number_set):
     response = p.send_message(params)
 
 def enqueue_send_sms(message, number_set):
-    send_sms.delay(message, number_set)
+    # set to make sure no duplicates
+    assert type(number_set) is set
+    # each SMS take 1s and rq timeout is 180s
+    # split number set in chuncks
+    size = 50
+    chunks = [list(number_set)[i:i+size] for i in range(0, len(number_set), size)]
+    for c in chunks:
+        send_sms.delay(message, c)
 
 #def render_mail(template_prefix, emails, context):
     #"""

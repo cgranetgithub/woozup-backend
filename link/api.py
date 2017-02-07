@@ -84,12 +84,12 @@ class ContactResource(ModelResource):
         queryset = Contact.objects.all()
         allowed_methods = ['get']
         ordering = ['name']
-        #filtering = {
+        filtering = {
                     ##'sender': ALL_WITH_RELATIONS,
                     #'name': ALL,
                     #'number': ALL,
-                    #'status': ALL,
-                    #}
+                    'status': ALL,
+                    }
         authorization  = DjangoAuthorization()
         authentication = ApiKeyAuthentication()
         always_return_data = True

@@ -231,12 +231,37 @@ class FriendsEventsResource(EventResource):
                                             ##user.position.last, D(km=100)))
         #return events
 
-
-class CommentResource(ModelResource):
+# DEPRECATED
+class CommentsResource(ModelResource):
     author = fields.ToOneField(UserResource, 'author', full=True)
     event = fields.ToOneField(AllEventsResource, 'event', full=True)
     class Meta:
         resource_name = 'comments'
+        queryset = Comment.objects.all()
+        list_allowed_methods = ['get', 'post']
+        detail_allowed_methods = ['get', 'put', 'delete']
+        ordering = ['-updated_at']
+        filtering = {
+                    'event': ALL_WITH_RELATIONS,
+                    }
+        always_return_data = True
+        authentication = ApiKeyAuthentication()
+        authorization  = DjangoAuthorization()
+
+    #def get_object_list(self, request):
+        #queryset = Comment.objects.all()
+        #return queryset
+
+    def obj_create(self, bundle, **kwargs):
+        #force owner to the authorized user
+        kwargs['author'] = bundle.request.user
+        return super(CommentResource, self).obj_create(bundle, **kwargs)
+
+class CommentResource(ModelResource):
+    author = fields.ToOneField(UserResource, 'author', full=True)
+    event = fields.ToOneField(EventResource, 'event', full=True)
+    class Meta:
+        resource_name = 'comment'
         queryset = Comment.objects.all()
         list_allowed_methods = ['get', 'post']
         detail_allowed_methods = ['get', 'put', 'delete']

@@ -255,7 +255,7 @@ class CommentsResource(ModelResource):
     def obj_create(self, bundle, **kwargs):
         #force owner to the authorized user
         kwargs['author'] = bundle.request.user
-        return super(CommentResource, self).obj_create(bundle, **kwargs)
+        return super(CommentsResource, self).obj_create(bundle, **kwargs)
 
 class CommentResource(ModelResource):
     author = fields.ToOneField(UserResource, 'author', full=True)

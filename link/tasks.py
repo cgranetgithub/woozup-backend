@@ -152,11 +152,14 @@ def transform_contacts(userId):
     from .models import Link, Contact
     from .utils import get_link
     user = get_user_model().objects.get(id=userId)
-    phone_number = user.number.phone_number
-    from_email = Contact.objects.filter(emails__icontains=user.email
-                                        ).exclude(status='CLO')
-    from_num = Contact.objects.filter(numbers__icontains=phone_number
-                                      ).exclude(status='CLO')
+    from_email = from_num = Contact.objects.none()
+    if user.email:
+        from_email = Contact.objects.filter(emails__icontains=user.email
+                                            ).exclude(status='CLO')
+    if user.number:
+        phone_number = user.number.phone_number
+        from_num = Contact.objects.filter(numbers__icontains=phone_number
+                                            ).exclude(status='CLO')
     contacts = from_email | from_num
     for i in contacts:
         if user != i.sender:
@@ -175,7 +178,7 @@ def transform_contacts(userId):
 @receiver(post_save, sender="userprofile.Number")
 def enqueue_transform_invites_from_number(sender, instance, **kwargs):
     if instance.phone_number and instance.user:
-        transform_contacts.delay(instance.id)
+        transform_contacts.delay(instance.user.id)
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def enqueue_transform_invites_from_user(sender, instance, **kwarg):

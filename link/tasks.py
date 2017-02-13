@@ -72,6 +72,7 @@ def create_connections(userId, data):
     import django
     django.setup()
     from link.models import Contact, Link
+    from link.push import friend_registered
     user = get_user_model().objects.get(id=userId)
     # for each contact
     for contact in data:
@@ -93,6 +94,7 @@ def create_connections(userId, data):
                 except Link.DoesNotExist:
                     # NO => create a new Link
                     Link.objects.create(sender=user, receiver=u)
+                    friend_registered(user, u)
         # NO corresponding user => check invites
         if not users:
             name = contact.get('name', '')
@@ -151,6 +153,7 @@ def transform_contacts(userId):
     django.setup()
     from .models import Link, Contact
     from .utils import get_link
+    from .push import friend_registered
     user = get_user_model().objects.get(id=userId)
     from_email = from_num = Contact.objects.none()
     if user.email:
@@ -168,6 +171,7 @@ def transform_contacts(userId):
                 Link.objects.create(sender=i.sender, receiver=user)
                 i.status = 'CLO'
                 i.save()
+                friend_registered(user, i.sender, i.name)
             # find event as invited contact and add to invitees
             from event.models import Event
             events = Event.objects.filter(contacts=i)

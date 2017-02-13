@@ -9,6 +9,23 @@ from journal.models import Record
 SMS_PERSONAL = u"%s t'invite sur Woozup ! Télécharge l'appli pour iphone ou Android."
 #SMS_GENERIC = u"Découvre Woozup, le meilleur moyen de voir tes amis ! Télécharge Woozup pour iphone ou Android."
 
+def friend_registered(friend, receiver, friend_name=None):
+    if friend_name:
+        name = friend_name
+    else:
+        name = friend.get_full_name()
+    recepients = [ receiver ]
+    # push notification
+    FRIEND_REGISTERED = u"%s vient de s'inscrire sur Woozup. Lance-lui une invitation !"
+    msg = FRIEND_REGISTERED%(name)
+    data = {u"title": u"%s est sur Woozup"%name,
+            u"message": msg,
+            u"reason": u"friendregistered",
+            u"id": friend.id}
+    if friend.profile.image:
+        data[u'image'] = friend.profile.image.url
+    enqueue_send_notification(recepients, data)
+
 #def link_saved(sender, instance, created, update_fields, **kwargs):
     #pass
 

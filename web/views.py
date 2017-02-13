@@ -1,5 +1,8 @@
  #-*- coding: utf-8 -*-
 
+import datetime
+from django.utils import timezone
+
 #from django.http import JsonResponse
 #from django.contrib.auth import login
 #from django.contrib.auth import logout as auth_logout
@@ -78,23 +81,38 @@ def profile(request):
 
 @staff_member_required
 def stats(request):
+    today = timezone.now()
+    week = datetime.timedelta(days=7)
     users = User.objects.count()
+    users_new = User.objects.filter(last_login__gte=today-week).count()
+    users_active = User.objects.filter(date_joined__gte=today-week).count()
     links_total = Link.objects.count()
-    links_new = Link.objects.filter(sender_status='NEW', receiver_status='NEW').count()
-    links_pen = Link.objects.filter(Q(sender_status='PEN')| Q(receiver_status='PEN')).count()
-    links_acc = Link.objects.filter(sender_status='ACC', receiver_status='ACC').count()
+    links_new = Link.objects.filter(sender_status='NEW', receiver_status='NEW'
+                                    ).count()
+    links_pen = Link.objects.filter(Q(sender_status='PEN')
+                                    | Q(receiver_status='PEN')).count()
+    links_acc = Link.objects.filter(sender_status='ACC', receiver_status='ACC'
+                                    ).count()
     contacts_total = Contact.objects.count()
     contacts_new = Contact.objects.filter(status='NEW').count()
     contacts_pen = Contact.objects.filter(status='PEN').count()
     contacts_acc = Contact.objects.filter(status='CLO').count()
-    events = Event.objects.count()
+    events_total     = Event.objects.count()
+    events_last_week = Event.objects.filter(created_at__gte=today-week).count()
+    events_coming    = Event.objects.filter(start__gte=today).count()
     return render(request, 'web/stats.html',
-                  {'users':users, 'links_total':links_total,
+                  {'users':users, 'users_new':users_new,
+                   'users_active':users_active,
+                   'links_total':links_total,
                    'links_new':links_new, 'links_pen':links_pen,
                    'links_acc':links_acc, 'links_acc':links_acc,
-                   'contacts_total':contacts_total, 'contacts_new':contacts_new,
-                   'contacts_pen':contacts_pen, 'contacts_acc':contacts_acc,
-                   'events':events})
+                   'contacts_total':contacts_total,
+                   'contacts_new':contacts_new,
+                   'contacts_pen':contacts_pen,
+                   'contacts_acc':contacts_acc,
+                   'events_total':events_total,
+                   'events_last_week':events_last_week,
+                   'events_coming':events_coming, })
 
 class GlobalNotificationForm(forms.Form):
     message = forms.CharField(label=u"""Notification à tous les users""",

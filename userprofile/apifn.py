@@ -20,7 +20,7 @@ from tastypie.http import (HttpUnauthorized, HttpForbidden,
                            HttpUnprocessableEntity)
 from tastypie.models import ApiKey
 
-from link import push
+#from link import push
 
 def setlast(request, data):
     if request.user and request.user.is_authenticated():
@@ -150,61 +150,62 @@ def logout(request):
 
 def push_notif_reg(request, data):
     if request.user and request.user.is_authenticated():
-        try:
-            device_id = data.get('device_id').strip()
-        except:
-            logging.error(u"missing device_id")
-            return (request, {u'reason': u"empty device_id"}, HttpBadRequest)
-        if not device_id:
-            logging.error(u"empty device_id")
-            return (request, {u'reason': u"empty device_id"}, HttpBadRequest)
-        try:
-            platform = data.get('platform').strip()
-        except:
-            logging.error(u"empty platform")
-            return (request, {u'reason': u"empty platform"}, HttpBadRequest)
+        # most important: registration_id
         try:
             registration_id = data.get('registration_id').strip()
             if not registration_id:
-                logging.error(u"empty registration_id")
-                return (request, {u'reason': u"empty registration_id"}, HttpBadRequest)
+                msg = u"empty registration_id"
+                logging.error(msg)
+                return (request, {u'reason': msg}, HttpBadRequest)
         except:
-            logging.error(u"empty platform")
-            return (request, {u'reason': u"empty platform"}, HttpBadRequest)
+            msg = u"no registration_id passed"
+            logging.error(msg)
+            return (request, {u'reason': msg}, HttpBadRequest)
+        # needed: platform (to determine APN/GCM)
         try:
-            if platform == 'ios':
-                #(device, created) = APNSDevice.objects.get_or_create(
-                                                    #user=request.user,
-                                                    #device_id=device_id)
-                APNSDevice.objects.filter(user=request.user).delete()
-                device = APNSDevice(user=request.user, device_id=device_id,
-                                    registration_id=registration_id)
-            elif platform == 'android':
-                #(device, created) = GCMDevice.objects.get_or_create(
-                                                    #user=request.user,
-                                                    #device_id=device_id)
-                GCMDevice.objects.filter(user=request.user).delete()
-                device = GCMDevice(user=request.user, device_id=device_id,
-                                   registration_id=registration_id)
-            else:
-                logging.error(u"unknown platform")
-                return (request, {u'reason': "unknown platform"}, HttpBadRequest)
-            #device.registration_id = registration_id
-            try:
-                name = data.get('name').strip()
-                if name:
-                    device.name = name
-            except:
-                pass
-            device.save()
-            return (request, {'userid':request.user.id }, HttpResponse)
+            platform = data.get('platform').strip()
         except:
-            logging.error(u"error during registration")
-            return (request, {u'reason': u'error during registration'},
-                        HttpBadRequest)
+            msg = u"no platform passed"
+            logging.error(msg)
+            return (request, {u'reason': msg}, HttpBadRequest)
+        # get push object
+        if platform == 'ios':
+            (device, created) = APNSDevice.objects.get_or_create(
+                                        registration_id=registration_id)
+        elif platform == 'android':
+            (device, created) = GCMDevice.objects.get_or_create(
+                                        registration_id=registration_id)
+        else:
+            logging.error(u"unknown platform")
+            return (request, {u'reason': "unknown platform"}, HttpBadRequest)
+        modified = False
+        # set user
+        if device.user != request.user:
+            device.user = request.user
+            modified = True
+        # optional device_id
+        device_id = data.get('device_id', '').strip()
+        if device_id:
+            if device.device_id != device_id:
+                device.device_id = device_id
+                modified = True
+        else:
+            logging.warning(u"empty device_id")
+        # optional device name
+        name = data.get('name', '').strip()
+        if name:
+            if device.name != name:
+                device.name = name
+                modified = True
+        else:
+            logging.warning(u"empty name")
+        # save if changed
+        if modified:
+            device.save()
+        return (request, {'userid':request.user.id }, HttpResponse)
     else:
         return (request, {u'reason': u"You are not authenticated"},
-                    HttpUnauthorized)
+                HttpUnauthorized)
 
 #def accept(request, receiver_id):
     #sender = request.user

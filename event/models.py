@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.contrib.gis.db import models
 from django.conf import settings
 from userprofile.utils import get_friends
@@ -72,8 +74,10 @@ autofield, not modifiable""")
 autofield, not modifiable""")
 
     def __unicode__(self):
-        return u"%s (%s)"%(self.name, self.event_type)
-
+        return u"%s - %d participants, %d invités, %d contacts (%s)"%(
+            self.name, self.participants.count(), self.invitees.count(),
+            self.contacts.count(), self.owner.get_full_name())
+    
 class Comment(models.Model):
     text       = models.TextField()
     event      = models.ForeignKey(Event)

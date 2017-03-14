@@ -16,6 +16,7 @@ sender_phone = settings.SMS_SENDER_PHONE
 
 @job('default', connection=conn)
 def send_notification(id_list, data):
+    # need to pass id because of unpickle!
     import django
     django.setup()
     from push_notifications.models import APNSDevice, GCMDevice

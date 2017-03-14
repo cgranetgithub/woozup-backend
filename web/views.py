@@ -2,23 +2,24 @@
 
 import datetime
 from django.utils import timezone
+from django.shortcuts import render_to_response, redirect, render
+from django.db.models import Count
+from django.contrib.auth.models import User
+from django.db.models import Q
+from django.http import HttpResponse
+from django import forms
+from django.contrib.admin.views.decorators import staff_member_required
 
 #from django.http import JsonResponse
 #from django.contrib.auth import login
 #from django.contrib.auth import logout as auth_logout
 #from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 #from service.notification import send_mail
-from django.shortcuts import render_to_response, redirect, render
-from django.db.models import Count
 from event.models import Event
 from link.models import Link, Contact
 from journal.models import Record
 #from event.push import get_event_context
-from django.db.models import Q
-from django.http import HttpResponse
-from django import forms
-from django.contrib.admin.views.decorators import staff_member_required
+from service.notification import enqueue_send_notification
 
 def home(request):
     return render_to_response('home.html')
@@ -140,9 +141,13 @@ def notif(request):
         # check whether it's valid:
         if form.is_valid():
             # process the data in form.cleaned_data as required
-            # ...
+            data = {u"title": u"News de Woozup",
+                    u"message": form.cleaned_data["message"]}
+            recepients = User.objects.all()
+            #recepients = User.objects.filter(first_name__icontains="charles")
+            enqueue_send_notification(recepients, data)
             # redirect to a new URL:
-            return HttpResponse('result')
+            return HttpResponse('Envoyé à %s'%recepients.count())
     # if a GET (or any other method) we'll create a blank form
     else:
         form = GlobalNotificationForm()

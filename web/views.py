@@ -13,6 +13,7 @@ from django.shortcuts import render_to_response, redirect, render
 from django.db.models import Count
 from event.models import Event
 from link.models import Link, Contact
+from journal.models import Record
 #from event.push import get_event_context
 from django.db.models import Q
 from django.http import HttpResponse
@@ -72,6 +73,18 @@ def users(request):
                 ).annotate(number=Count('id'))
     return render(request, 'web/users.html',
                   {'data': data, 'total': User.objects.count()})
+
+def events(request):
+    return render_to_response('home.html')
+
+def profile(request):
+    return render(request, 'web/profile.html', {'user': request.user})
+
+@staff_member_required
+def records(request):
+    data = Record.objects.all()
+    return render(request, 'web/records.html',
+                  {'data': data})
 
 def events(request):
     return render_to_response('home.html')

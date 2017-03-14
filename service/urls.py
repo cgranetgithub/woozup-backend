@@ -3,13 +3,13 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 import drf
+from web import urls as web
 from tastypie.api import Api
 
 from link.api import *
 from event.api import *
 from userprofile.api import *
 from journal.api import *
-from web.views import home, profile, stats, notif
 
 from service.settings.prod import STATIC_URL
 #from service.notification import GCMDeviceAuthenticatedResource
@@ -47,24 +47,21 @@ v1_api.register(CommentsResource())
 #v1_api.register(GCMDeviceAuthenticatedResource())
 
 urlpatterns = [
-    url(r'^$', home),
     url(r'^api/'  , include(v1_api.urls)),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include('allauth.urls')),
-    url(r'^accounts/profile/', profile),
-    url(r'^web/', include('web.urls')),
+    #url(r'^web/', include('web.urls')),
     # usual web static files
     url(r'^favicon.ico$', RedirectView.as_view(url=STATIC_URL+'favicon.ico')),
     url(r'^apple-touch-icon-precomposed.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),
     url(r'^apple-touch-icon.png$', RedirectView.as_view(url=STATIC_URL+'icon.png')),
     url(r'^robots.txt$', RedirectView.as_view(url=STATIC_URL+'robots.txt')),
     #url(r'^register-by-token/(?P<backend>[^/]+)/$', register_by_access_token),
-    url(r'^stats/$', stats),
-    url(r'^notif/$', notif),
     #url(r'^logout/$', social_logout),
 ]
 
 urlpatterns += drf.urlpatterns
+urlpatterns += web.urlpatterns
 
 #if module_exists('tastypie_swagger'):
     #urlpatterns += [

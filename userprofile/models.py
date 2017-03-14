@@ -63,7 +63,7 @@ autofield, not modifiable""")
     def email(self):
         return self.user.email
     def __unicode__(self):
-        return u'%s profile (%d)'%(self.user, self.user.id)
+        return u'[%d] %s (%s)'%(self.user.id, self.user.get_full_name(), self.user)
 
 class Position(models.Model):
     user   = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True)

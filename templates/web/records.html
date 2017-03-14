@@ -1,0 +1,11 @@
+<table>
+    {% for d in data %}
+        <tr>
+            <td>{{ d.updated_at }}</td>
+            <td>{{ d.record_type }}</td>
+            <td>{{ d.user.profile }}</td>
+            <td>{{ d.refering_event }}</td>
+            <td>{{ d.refering_user.profile }}</td>
+        </tr>
+    {% endfor %}
+</table>
